@@ -1,0 +1,98 @@
+# 🧠 Banco de Questões – Gerador de Provas (React + Google Drive)
+
+Uma aplicação web moderna desenvolvida em **React** para **geração automática de provas e simulados** em formatos **DOCX e PDF**, com **integração ao Google Drive** para armazenamento em nuvem.  
+O sistema permite importar questões e layouts personalizados, montar avaliações de forma dinâmica e exportar os arquivos finalizados localmente ou diretamente para sua conta Google Drive.
+
+---
+
+## 🚀 Funcionalidades Principais
+
+- ✏️ **Criação e gerenciamento de questões**
+  - Adicione, edite ou importe questões de arquivos `.docx`
+  - Suporte a enunciado e alternativas (a, b, c, d...)
+
+- 🧩 **Layouts personalizados**
+  - Crie modelos de cabeçalho e rodapé
+  - Importe layouts prontos em `.docx`
+
+- 📄 **Geração automática de documentos**
+  - Exporte em **DOCX** (Word) ou **PDF**
+  - Estrutura de prova formatada automaticamente
+
+- ☁️ **Integração com Google Drive**
+  - Login OAuth2 via Google
+  - Criação automática da pasta `banco_de_questoes`
+  - Upload e listagem de arquivos `.docx`
+
+- 🧠 **Importação inteligente**
+  - Leitura e parsing de arquivos `.docx`
+  - Extração automática de questões e layouts
+
+---
+
+## 🧰 Tecnologias Utilizadas
+
+| Categoria | Tecnologias |
+|------------|--------------|
+| **Framework** | [React 18+](https://react.dev/), [Vite](https://vitejs.dev/) |
+| **UI Components** | [HeroUI](https://heroui.dev/), [Lucide Icons](https://lucide.dev/) |
+| **Documentos** | [docx](https://www.npmjs.com/package/docx), [mammoth](https://www.npmjs.com/package/mammoth), [jspdf](https://www.npmjs.com/package/jspdf), [file-saver](https://www.npmjs.com/package/file-saver) |
+| **Integração Google Drive** | Google APIs (`gapi`, `google.accounts.oauth2`) |
+| **Gerenciamento de estado e hooks customizados** | React Hooks (`useState`, `useEffect`, `useCallback`, `useMemo`, etc.) |
+
+---
+
+## ⚙️ Estrutura do Projeto
+
+src/
+├── App.jsx
+├── main.jsx
+├── provider.jsx
+├── components/
+│ ├── layout/
+│ │ ├── Header.jsx
+│ │ ├── Container.jsx
+│ │ └── LayoutsTab.jsx
+│ ├── questions/
+│ │ └── QuestionsTab.jsx
+│ ├── generate/
+│ │ └── GenerateTab.jsx
+│ └── common/
+│ └── (inputs, textareas, uploaders, etc.)
+│
+├── hooks/
+│ ├── useDocumentGenerator.js
+│ ├── useDriveClient.js
+│ ├── useImportHandlers.js
+│ ├── useLayouts.js
+│ └── useQuestions.js
+│
+└── styles/
+└── globals.css
+
+## 🔑 Integração com o Google Drive
+
+Para que a integração funcione corretamente, é necessário configurar credenciais no **Google Cloud Console**:
+
+1. Crie um projeto em: [https://console.cloud.google.com](https://console.cloud.google.com)
+2. Ative a API do **Google Drive v3**
+3. Configure uma credencial **OAuth 2.0 Client ID** com tipo **Web Application**
+4. Adicione seu domínio local ou hospedado nas “Authorized JavaScript origins”
+5. Copie os valores e adicione ao arquivo `.env`:
+
+```bash
+VITE_GOOGLE_CLIENT_ID=SEU_CLIENT_ID_AQUI
+VITE_GOOGLE_API_KEY=SUA_API_KEY_AQUI
+
+# Clone o repositório
+git clone https://github.com/seuusuario/banco-de-questoes.git
+
+# Acesse a pasta do projeto
+cd banco-de-questoes
+
+# Instale as dependências
+npm install
+
+# Execute o servidor de desenvolvimento
+npm run dev
+
