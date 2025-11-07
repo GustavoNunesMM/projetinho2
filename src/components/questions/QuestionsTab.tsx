@@ -6,21 +6,20 @@ import { useImportHandlers } from "../../hooks/useImportHandlers.ts";
 import Button from "../common/Button";
 import useDocumentGenerator from "../../hooks/useDocumentGenerator.ts";
 import { Toast } from "../common/Toast.tsx";
-import { Question, QuestionFormData } from "../../types/question";
+import { Question, QuestionFormData } from "../../types/index";
+import { useQuestions } from "../../hooks/useQuestions";
 
-interface QuestionsTabProps {
-  questions: Question[];
-  onAdd: (question: QuestionFormData) => Question;
-  onUpdate: (id: number, question: QuestionFormData) => void;
-  onDelete: (id: number) => void;
-}
+const QuestionsTab = () => {
+  const {
+    questions,
+    loading,
+    error,
+    addQuestion,
+    updateQuestion,
+    deleteQuestion,
+    importMultipleQuestions,
+  } = useQuestions();
 
-const QuestionsTab = ({
-  questions,
-  onAdd,
-  onUpdate,
-  onDelete,
-}: QuestionsTabProps) => {
   const [showModal, setShowModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [importing, setImporting] = useState(false);
@@ -35,21 +34,40 @@ const QuestionsTab = ({
     setShowModal(true);
   };
 
-  const handleSave = (questionData: QuestionFormData) => {
-    if (editingQuestion) {
-      onUpdate(editingQuestion.id, questionData);
-    } else {
-      try {
-        const question = onAdd(questionData);
-        generateQuestionDocx(question);
-      } catch (e) {
-        Toast({
-          message: String(e),
-        });
+  const handleSave = async (questionData: QuestionFormData) => {
+    try {
+      if (editingQuestion) {
+        await updateQuestion(editingQuestion.id, questionData);
+        Toast({ message: "Questão atualizada com sucesso!" });
+      } else {
+        const question = await addQuestion(questionData);
+        Toast({ message: "Questão criada com sucesso!" });
+
+        try {
+          await generateQuestionDocx(question);
+        } catch (docError) {
+          console.error("Erro ao gerar documento:", docError);
+          // Não bloqueia o salvamento se falhar a geração do documento
+        }
       }
+      setShowModal(false);
+      setEditingQuestion(null);
+    } catch (err) {
+      Toast({ message: String(err) });
     }
-    setShowModal(false);
-    setEditingQuestion(null);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Deseja realmente excluir esta questão?")) {
+      return;
+    }
+
+    try {
+      await deleteQuestion(id);
+      Toast({ message: "Questão excluída com sucesso!" });
+    } catch (err) {
+      Toast({ message: `Erro ao excluir: ${err}` });
+    }
   };
 
   const handleLocalImport = async (
@@ -60,13 +78,7 @@ const QuestionsTab = ({
 
     setImporting(true);
     try {
-      const importedQuestions = await importQuestions(
-        file,
-        (questions: any) => {
-          questions.forEach((q: any) => onAdd(q));
-        }
-      );
-
+      const importedQuestions = await importMultipleQuestions(file);
       Toast({
         message: `${importedQuestions.length} questão(ões) importada(s) com sucesso!`,
       });
@@ -83,8 +95,13 @@ const QuestionsTab = ({
     try {
       const importedQuestions = await importQuestions(
         fileId,
-        (questions: any) => {
-          questions.forEach((q: any) => onAdd(q));
+        async (questions: any) => {
+          const imported: Question[] = [];
+          for (const q of questions) {
+            const newQ = await addQuestion(q);
+            imported.push(newQ);
+          }
+          return imported;
         }
       );
 
@@ -100,6 +117,26 @@ const QuestionsTab = ({
       setImporting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader className="animate-spin mr-2" />
+        <span>Carregando questões...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-4">{error}</p>
+        <Button variant="primary" onClick={() => window.location.reload()}>
+          Recarregar
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -168,11 +205,7 @@ const QuestionsTab = ({
               key={question.id}
               question={question}
               onEdit={() => handleEdit(question)}
-              onDelete={() => {
-                if (confirm("Deseja realmente excluir esta questão?")) {
-                  onDelete(question.id);
-                }
-              }}
+              onDelete={() => handleDelete(question.id)}
             />
           ))}
         </div>

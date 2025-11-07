@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "./components/layout/Header.tsx";
 import Container from "./components/layout/Container.tsx";
 import LayoutsTab from "./components/layouts/LayoutsTab.tsx";
@@ -9,14 +9,33 @@ import { useQuestions } from "./hooks/useQuestions.ts";
 import { useImportHandlers } from "./hooks/useImportHandlers.ts";
 import { Tabs, Tab } from "@heroui/react";
 import { Toast } from "./components/common/Toast.tsx";
-import { LayoutFormData } from "./types/layout.ts";
-import { getDatabase } from "./database/database.ts";
+import { LayoutFormData } from "./types/index";
+import { getDatabase, getStatistics } from "./database/database.ts";
 
 const App = () => {
   const [activeTab, setActiveTab] = useState("generate");
   const { layouts, addLayout, updateLayout, deleteLayout } = useLayouts();
+  const [stats, setStats] = useState({
+    questions: 0,
+    categories: 0,
+    layouts: 0,
+  });
+
   const { questions, addQuestion, updateQuestion, deleteQuestion } =
     useQuestions();
+
+  useEffect(() => {
+    loadStats();
+  }, [activeTab]);
+
+  const loadStats = async () => {
+    try {
+      const statistics = await getStatistics();
+      setStats(statistics);
+    } catch (error) {
+      console.error("Erro ao carregar estatísticas:", error);
+    }
+  };
 
   const { importLayout } = useImportHandlers();
 
@@ -49,13 +68,11 @@ const App = () => {
       });
       return false;
     }
-
   };
 
   return (
     <div className="min-h-screen">
       <Header />
-      <button onClick={getDatabase}>Testar Comunicação</button>
       <Tabs
         variant="underlined"
         selectedKey={activeTab}
