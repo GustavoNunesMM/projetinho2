@@ -18,7 +18,8 @@ type ChipColor =
   | "secondary";
 
 const QuestionCard = ({ question, onEdit, onDelete }: QuestionCardProps) => {
-  const { generateQuestionDocx } = useDocumentGenerator();
+  const { generateQuestionDocx, saveFile } = useDocumentGenerator();
+
   const getDifficultyColor = (difficulty: string): ChipColor => {
     const variants: Record<string, ChipColor> = {
       facil: "success",
@@ -31,8 +32,15 @@ const QuestionCard = ({ question, onEdit, onDelete }: QuestionCardProps) => {
   const getTypeColor = (type: string): ChipColor => {
     return type === "multipla" ? "secondary" : "warning";
   };
-  const saveFile = (question: any) => {
-    generateQuestionDocx(question);
+
+  const handleSaveFile = async () => {
+    try {
+      const blob = await generateQuestionDocx(question);
+      const fileName = `${question.title || "questao"}.docx`;
+      saveFile(blob, fileName);
+    } catch (error) {
+      console.error("Erro ao salvar questão:", error);
+    }
   };
 
   return (
@@ -61,8 +69,8 @@ const QuestionCard = ({ question, onEdit, onDelete }: QuestionCardProps) => {
           <Button
             isIconOnly
             variant="light"
-            color="danger"
-            onPress={saveFile}
+            color="success"
+            onPress={handleSaveFile}
             aria-label="Salvar como word"
           >
             <Save size={16} />
@@ -77,7 +85,7 @@ const QuestionCard = ({ question, onEdit, onDelete }: QuestionCardProps) => {
           <img
             src={question.contentImage}
             alt="Imagem do enunciado"
-            className="max-w-md rounded border"
+            className="max-w-[100px] rounded border"
           />
         </div>
       )}
@@ -89,12 +97,16 @@ const QuestionCard = ({ question, onEdit, onDelete }: QuestionCardProps) => {
         <Chip size="sm" color={getDifficultyColor(question.difficulty)}>
           {question.difficulty}
         </Chip>
-        <Chip size="sm" color="default">
-          {question.subject}
-        </Chip>
-        <Chip size="sm" color="secondary">
-          {question.category}
-        </Chip>
+        {question.subject && (
+          <Chip size="sm" color="default">
+            {question.subject}
+          </Chip>
+        )}
+        {question.category && (
+          <Chip size="sm" color="secondary">
+            {question.category}
+          </Chip>
+        )}
         {question.importedFrom && (
           <Chip size="sm" color="primary">
             Importada de: {question.importedFrom}
@@ -117,7 +129,7 @@ const QuestionCard = ({ question, onEdit, onDelete }: QuestionCardProps) => {
                       <img
                         src={question.optionImages[idx]!}
                         alt={`Imagem alternativa ${String.fromCharCode(65 + idx)}`}
-                        className="max-w-xs rounded border mt-1 ml-4"
+                        className="max-w-[100px] rounded border mt-1 ml-4"
                       />
                     )}
                   </div>

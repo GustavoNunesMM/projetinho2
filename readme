@@ -1,98 +1,166 @@
-# 🧠 Banco de Questões – Gerador de Provas (React + Google Drive)
 
-Uma aplicação web moderna desenvolvida em **React** para **geração automática de provas e simulados** em formatos **DOCX e PDF**, com **integração ao Google Drive** para armazenamento em nuvem.  
-O sistema permite importar questões e layouts personalizados, montar avaliações de forma dinâmica e exportar os arquivos finalizados localmente ou diretamente para sua conta Google Drive.
+## 🔧 Funcionalidades Principais
 
----
+### 1. Gerenciamento de Questões
+- Criar, editar e deletar questões
+- Suporte a questões múltipla escolha e abertas
+- Categorização por matéria, categoria e dificuldade
+- Upload de imagens para questões e alternativas
+- Importação em lote de documentos DOCX
 
-## 🚀 Funcionalidades Principais
+### 2. Layouts Personalizados
+- Criar layouts customizados para provas
+- Gerenciar cabeçalhos, rodapés e formatação
+- Salvar e reutilizar layouts
 
-- ✏️ **Criação e gerenciamento de questões**
-  - Adicione, edite ou importe questões de arquivos `.docx`
-  - Suporte a enunciado e alternativas (a, b, c, d...)
+### 3. Geração de Documentos
+- Exportar provas em PDF
+- Exportar provas em DOCX
+- Preview de documentos antes da exportação
+- Aplicar layouts personalizados
 
-- 🧩 **Layouts personalizados**
-  - Crie modelos de cabeçalho e rodapé
-  - Importe layouts prontos em `.docx`
+### 4. Integração Google Drive
+- Upload de provas para Google Drive
+- Sincronização de arquivos
+- Gerenciamento de credenciais
 
-- 📄 **Geração automática de documentos**
-  - Exporte em **DOCX** (Word) ou **PDF**
-  - Estrutura de prova formatada automaticamente
+### 5. Filtros e Busca
+- Filtrar questões por matéria, categoria, dificuldade
+- Busca por texto
+- Seleção múltipla de questões
 
-- ☁️ **Integração com Google Drive**
-  - Login OAuth2 via Google
-  - Criação automática da pasta `banco_de_questoes`
-  - Upload e listagem de arquivos `.docx`
+## 📦 Hooks Customizados
 
-- 🧠 **Importação inteligente**
-  - Leitura e parsing de arquivos `.docx`
-  - Extração automática de questões e layouts
+### `useQuestions`
+Gerencia o estado e operações CRUD de questões.
 
----
+**Funções:**
+- `addQuestion(question)` - Adiciona nova questão
+- `updateQuestion(id, question)` - Atualiza questão existente
+- `deleteQuestion(id)` - Remove questão
+- `importMultipleQuestions(file)` - Importa questões de DOCX
+- `refreshQuestions()` - Recarrega questões do banco
 
-## 🧰 Tecnologias Utilizadas
+**Estados:**
+- `questions` - Array de questões
+- `loading` - Estado de carregamento
+- `error` - Mensagens de erro
 
-| Categoria | Tecnologias |
-|------------|--------------|
-| **Framework** | [React 18+](https://react.dev/), [Vite](https://vitejs.dev/) |
-| **UI Components** | [HeroUI](https://heroui.dev/), [Lucide Icons](https://lucide.dev/) |
-| **Documentos** | [docx](https://www.npmjs.com/package/docx), [mammoth](https://www.npmjs.com/package/mammoth), [jspdf](https://www.npmjs.com/package/jspdf), [file-saver](https://www.npmjs.com/package/file-saver) |
-| **Integração Google Drive** | Google APIs (`gapi`, `google.accounts.oauth2`) |
-| **Gerenciamento de estado e hooks customizados** | React Hooks (`useState`, `useEffect`, `useCallback`, `useMemo`, etc.) |
+### `useLayouts`
+Gerencia layouts personalizados de provas.
 
----
+**Funções:**
+- `addLayout(layout)` - Cria novo layout
+- `updateLayout(id, layout)` - Atualiza layout
+- `deleteLayout(id)` - Remove layout
+- `getLayout(id)` - Busca layout específico
 
-## ⚙️ Estrutura do Projeto
+### `useDocumentGenerator`
+Gera documentos PDF e DOCX.
 
-src/
-├── App.jsx
-├── main.jsx
-├── provider.jsx
-├── components/
-│ ├── layout/
-│ │ ├── Header.jsx
-│ │ ├── Container.jsx
-│ │ └── LayoutsTab.jsx
-│ ├── questions/
-│ │ └── QuestionsTab.jsx
-│ ├── generate/
-│ │ └── GenerateTab.jsx
-│ └── common/
-│ └── (inputs, textareas, uploaders, etc.)
-│
-├── hooks/
-│ ├── useDocumentGenerator.js
-│ ├── useDriveClient.js
-│ ├── useImportHandlers.js
-│ ├── useLayouts.js
-│ └── useQuestions.js
-│
-└── styles/
-└── globals.css
+**Funções:**
+- `generatePDF(questions, layout)` - Gera PDF
+- `generateDOCX(questions, layout)` - Gera DOCX
+- `readDocx(file)` - Lê arquivo DOCX
+- `parseQuestionsFromText(text)` - Extrai questões de texto
 
-## 🔑 Integração com o Google Drive
+### `useDriveClient`
+Integração com Google Drive.
 
-Para que a integração funcione corretamente, é necessário configurar credenciais no **Google Cloud Console**:
+**Funções:**
+- `authenticate()` - Autentica usuário
+- `uploadFile(file)` - Faz upload de arquivo
+- `listFiles()` - Lista arquivos
+- `downloadFile(fileId)` - Baixa arquivo
 
-1. Crie um projeto em: [https://console.cloud.google.com](https://console.cloud.google.com)
-2. Ative a API do **Google Drive v3**
-3. Configure uma credencial **OAuth 2.0 Client ID** com tipo **Web Application**
-4. Adicione seu domínio local ou hospedado nas “Authorized JavaScript origins”
-5. Copie os valores e adicione ao arquivo `.env`:
+### `useFilters`
+Gerencia filtros de questões.
 
-```bash
-VITE_GOOGLE_CLIENT_ID=SEU_CLIENT_ID_AQUI
-VITE_GOOGLE_API_KEY=SUA_API_KEY_AQUI
+**Funções:**
+- `setSubjectFilter(subject)` - Filtra por matéria
+- `setCategoryFilter(category)` - Filtra por categoria
+- `setDifficultyFilter(difficulty)` - Filtra por dificuldade
+- `setSearchText(text)` - Busca por texto
+- `clearFilters()` - Limpa todos os filtros
 
-# Clone o repositório
-git clone https://github.com/seuusuario/banco-de-questoes.git
+### `useSelection`
+Gerencia seleção de questões.
 
-# Acesse a pasta do projeto
-cd banco-de-questoes
+**Funções:**
+- `selectQuestion(id)` - Seleciona questão
+- `deselectQuestion(id)` - Deseleciona questão
+- `selectAll()` - Seleciona todas
+- `clearSelection()` - Limpa seleção
+- `toggleSelection(id)` - Alterna seleção
 
-# Instale as dependências
-npm install
+### `useImportHandlers`
+Gerencia importação de arquivos.
 
-# Execute o servidor de desenvolvimento
-npm run dev
+**Funções:**
+- `handleFileUpload(file)` - Processa upload
+- `validateFile(file)` - Valida arquivo
+- `parseFile(file)` - Faz parsing do arquivo
 
+## 🗄️ Banco de Dados
+
+### Tabela: `questions`
+```sql
+- id: INTEGER PRIMARY KEY
+- title: TEXT
+- content: TEXT
+- contentImage: TEXT (base64)
+- difficulty: TEXT (facil|media|dificil)
+- subject: TEXT
+- category: TEXT
+- type: TEXT (multipla|aberta)
+- options: TEXT (JSON)
+- optionImages: TEXT (JSON)
+- correctAnswer: TEXT
+- explanation: TEXT
+- importedFrom: TEXT
+- createdAt: DATETIME
+- updatedAt: DATETIME
+# Banco de Questões
+
+Sistema desktop para gerenciamento de questões e provas, desenvolvido com React, TypeScript, Tauri e HeroUI.
+
+## 📋 Descrição
+
+Aplicação desktop multiplataforma para criar, gerenciar e organizar questões de provas. Permite importação de documentos DOCX, geração de provas em PDF/DOCX, integração com Google Drive e gerenciamento de layouts personalizados.
+
+## 🚀 Tecnologias
+
+### Frontend
+- **React 18.3.1** - Biblioteca UI
+- **TypeScript 5.6.3** - Linguagem
+- **Vite 6.0.11** - Build tool
+- **HeroUI 2.8.5** - Componentes UI
+- **TailwindCSS 4.1.11** - Estilização
+- **React Router DOM 6.23.0** - Roteamento
+- **Framer Motion 11.18.2** - Animações
+- **Lucide React** - Ícones
+
+### Backend/Desktop
+- **Tauri 2.9.0** - Framework desktop
+- **Better SQLite3** - Banco de dados local
+
+### Geração de Documentos
+- **jsPDF 3.0.3** - Geração de PDFs
+- **docx 9.5.1** - Geração de DOCX
+- **mammoth 1.11.0** - Leitura de DOCX
+- **docx-preview 0.3.7** - Preview de documentos
+
+### APIs
+- **@tauri-apps/plugin-fs** - Sistema de arquivos
+- **@tauri-apps/plugin-sql** - Banco de dados SQL
+
+## 📁 Estrutura do Projeto
+- id: INTEGER PRIMARY KEY
+- name: TEXT
+- header: TEXT
+- footer: TEXT
+- fontSize: INTEGER
+- fontFamily: TEXT
+- margins: TEXT (JSON)
+- createdAt: DATETIME
+- updatedAt: DATETIME

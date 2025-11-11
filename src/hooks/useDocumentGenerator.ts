@@ -13,6 +13,7 @@ import {
   WidthType,
   BorderStyle,
   convertInchesToTwip,
+  ImageRun,
 } from "docx";
 import { saveAs } from "file-saver";
 import * as mammoth from "mammoth";
@@ -34,7 +35,6 @@ interface ParsedQuestion {
   alternatives: Alternative[];
 }
 
-// Função auxiliar para converter string de margem para twips
 const marginToTwips = (margin: string): number => {
   const value = parseFloat(margin);
   if (margin.includes("cm")) {
@@ -42,20 +42,40 @@ const marginToTwips = (margin: string): number => {
   } else if (margin.includes("in")) {
     return convertInchesToTwip(value);
   }
-  // Assume cm por padrão
   return convertInchesToTwip(value / 2.54);
 };
 
-// Função auxiliar para converter tamanho de fonte
 const fontSizeToHalfPoints = (fontSize: string): number => {
   const value = parseFloat(fontSize);
-  return value * 2; // docx usa half-points
+  return value * 2;
 };
 
-// Função auxiliar para converter espaçamento de linha
 const lineSpacingToValue = (spacing: string): number => {
   const value = parseFloat(spacing);
-  return Math.round(value * 240); // docx line spacing
+  return Math.round(value * 240);
+};
+
+const base64ToUint8Array = (base64: string): Uint8Array => {
+  const base64Data = base64.includes(",") ? base64.split(",")[1] : base64;
+  const binaryString = atob(base64Data);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+};
+
+const getImageDimensions = (
+  base64: string
+): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height });
+    };
+    img.onerror = reject;
+    img.src = base64;
+  });
 };
 
 export function useDocumentGenerator() {
@@ -68,7 +88,6 @@ export function useDocumentGenerator() {
       try {
         const sections: (Paragraph | Table)[] = [];
 
-        // Configurações de página baseadas no layout
         const pageMargins = {
           top: marginToTwips(layout.marginTop || "2.54cm"),
           bottom: marginToTwips(layout.marginBottom || "2.54cm"),
@@ -81,13 +100,11 @@ export function useDocumentGenerator() {
           layout.lineSpacing || "1.15"
         );
 
-        // Adiciona cabeçalho importado (se houver)
         if (importedHeaderContent && importedHeaderContent.length > 0) {
           importedHeaderContent.forEach((element) => {
             sections.push(element);
           });
 
-          // Linha separadora após cabeçalho importado
           sections.push(
             new Paragraph({
               text: "_".repeat(80),
@@ -95,7 +112,6 @@ export function useDocumentGenerator() {
             })
           );
         } else if (layout.header || layout.headerText) {
-          // Cabeçalho simples (se não houver importado)
           sections.push(
             new Paragraph({
               text: layout.header || layout.headerText || "",
@@ -106,9 +122,9 @@ export function useDocumentGenerator() {
           );
         }
 
-        // Questões
-        questions.forEach((question, index) => {
-          // Número da questão
+        for (let index = 0; index < questions.length; index++) {
+          const question = questions[index];
+
           sections.push(
             new Paragraph({
               children: [
@@ -127,7 +143,6 @@ export function useDocumentGenerator() {
             })
           );
 
-          // Título da questão (se existir)
           if (question.title) {
             sections.push(
               new Paragraph({
@@ -144,7 +159,6 @@ export function useDocumentGenerator() {
             );
           }
 
-          // Conteúdo/Enunciado da questão
           sections.push(
             new Paragraph({
               children: [
@@ -158,14 +172,51 @@ export function useDocumentGenerator() {
             })
           );
 
-          // Alternativas (apenas para questões de múltipla escolha)
+          if (question.contentImage) {
+            try {
+              const imageData = base64ToUint8Array(question.contentImage);
+              const dimensions = await getImageDimensions(
+                question.contentImage
+              );
+
+              const maxWidth = 400;
+              const scale =
+                dimensions.width > maxWidth ? maxWidth / dimensions.width : 1;
+              const width = dimensions.width * scale;
+              const height = dimensions.height * scale;
+
+              sections.push(
+                new Paragraph({
+                  children: [
+                    new ImageRun({
+                      data: imageData,
+                      transformation: {
+                        width: width,
+                        height: height,
+                      },
+                    }),
+                  ],
+                  spacing: { before: 100, after: 200 },
+                })
+              );
+            } catch (error) {
+              console.error("Erro ao adicionar imagem do conteúdo:", error);
+            }
+          }
+
           if (
             question.type === "multipla" &&
             question.options &&
             question.options.length > 0
           ) {
-            question.options.forEach((option, optIndex) => {
-              const letter = String.fromCharCode(97 + optIndex); // a, b, c, d...
+            for (
+              let optIndex = 0;
+              optIndex < question.options.length;
+              optIndex++
+            ) {
+              const option = question.options[optIndex];
+              const letter = String.fromCharCode(97 + optIndex); 
+
               sections.push(
                 new Paragraph({
                   children: [
@@ -176,10 +227,50 @@ export function useDocumentGenerator() {
                     }),
                   ],
                   spacing: { after: 100, line: defaultLineSpacing },
-                  indent: { left: 720 }, // 0.5 inch
+                  indent: { left: 720 },
                 })
               );
-            });
+
+              if (question.optionImages && question.optionImages[optIndex]) {
+                try {
+                  const imageData = base64ToUint8Array(
+                    question.optionImages[optIndex]!
+                  );
+                  const dimensions = await getImageDimensions(
+                    question.optionImages[optIndex]!
+                  );
+
+                  const maxWidth = 300;
+                  const scale =
+                    dimensions.width > maxWidth
+                      ? maxWidth / dimensions.width
+                      : 1;
+                  const width = dimensions.width * scale;
+                  const height = dimensions.height * scale;
+
+                  sections.push(
+                    new Paragraph({
+                      children: [
+                        new ImageRun({
+                          data: imageData,
+                          transformation: {
+                            width: width,
+                            height: height,
+                          },
+                        }),
+                      ],
+                      spacing: { before: 50, after: 100 },
+                      indent: { left: 720 },
+                    })
+                  );
+                } catch (error) {
+                  console.error(
+                    `Erro ao adicionar imagem da alternativa ${letter}:`,
+                    error
+                  );
+                }
+              }
+            }
           }
 
           sections.push(
@@ -188,16 +279,15 @@ export function useDocumentGenerator() {
               spacing: { after: 400 },
             })
           );
-        });
+        }
 
-        // Rodapé
         if (layout.footer || layout.footerText) {
           sections.push(
             new Paragraph({
               children: [
                 new TextRun({
                   text: layout.footer || layout.footerText || "",
-                  size: defaultFontSize - 4, // Slightly smaller
+                  size: defaultFontSize - 4, 
                   font: layout.fontFamily || "Arial",
                 }),
               ],
@@ -266,7 +356,7 @@ export function useDocumentGenerator() {
                           text: text.trim(),
                           bold: isBold,
                           underline: isUnderline ? {} : undefined,
-                          size: 20, // 10pt
+                          size: 20, 
                         }),
                       ],
                     }),
@@ -307,7 +397,6 @@ export function useDocumentGenerator() {
           }
         });
 
-        // Procura por parágrafos formatados
         const paragraphs = doc.querySelectorAll("p");
         paragraphs.forEach((p) => {
           const text = p.textContent || "";
@@ -385,6 +474,36 @@ export function useDocumentGenerator() {
           })
         );
 
+        if (question.contentImage) {
+          try {
+            const imageData = base64ToUint8Array(question.contentImage);
+            const dimensions = await getImageDimensions(question.contentImage);
+
+            const maxWidth = 400;
+            const scale =
+              dimensions.width > maxWidth ? maxWidth / dimensions.width : 1;
+            const width = dimensions.width * scale;
+            const height = dimensions.height * scale;
+
+            sections.push(
+              new Paragraph({
+                children: [
+                  new ImageRun({
+                    data: imageData,
+                    transformation: {
+                      width: width,
+                      height: height,
+                    },
+                  }),
+                ],
+                spacing: { before: 100, after: 200 },
+              })
+            );
+          } catch (error) {
+            console.error("Erro ao adicionar imagem do conteúdo:", error);
+          }
+        }
+
         if (
           question.type === "multipla" &&
           question.options &&
@@ -403,8 +522,14 @@ export function useDocumentGenerator() {
             })
           );
 
-          question.options.forEach((option, optIndex) => {
+          for (
+            let optIndex = 0;
+            optIndex < question.options.length;
+            optIndex++
+          ) {
+            const option = question.options[optIndex];
             const letter = String.fromCharCode(65 + optIndex);
+
             sections.push(
               new Paragraph({
                 text: `${letter}) ${option}`,
@@ -412,56 +537,45 @@ export function useDocumentGenerator() {
                 indent: { left: 360 },
               })
             );
-          });
-        }
 
-        if (question.subject) {
-          sections.push(
-            new Paragraph({
-              text: "",
-              spacing: { after: 200 },
-            })
-          );
+            if (question.optionImages && question.optionImages[optIndex]) {
+              try {
+                const imageData = base64ToUint8Array(
+                  question.optionImages[optIndex]!
+                );
+                const dimensions = await getImageDimensions(
+                  question.optionImages[optIndex]!
+                );
 
-          sections.push(
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Disciplina: ${question.subject}`,
-                  italics: true,
-                }),
-              ],
-              spacing: { after: 100 },
-            })
-          );
-        }
+                const maxWidth = 300;
+                const scale =
+                  dimensions.width > maxWidth ? maxWidth / dimensions.width : 1;
+                const width = dimensions.width * scale;
+                const height = dimensions.height * scale;
 
-        if (question.difficulty) {
-          sections.push(
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Dificuldade: ${question.difficulty}`,
-                  italics: true,
-                }),
-              ],
-              spacing: { after: 100 },
-            })
-          );
-        }
-
-        if (question.category) {
-          sections.push(
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Categoria: ${question.category}`,
-                  italics: true,
-                }),
-              ],
-              spacing: { after: 100 },
-            })
-          );
+                sections.push(
+                  new Paragraph({
+                    children: [
+                      new ImageRun({
+                        data: imageData,
+                        transformation: {
+                          width: width,
+                          height: height,
+                        },
+                      }),
+                    ],
+                    spacing: { before: 50, after: 100 },
+                    indent: { left: 360 },
+                  })
+                );
+              } catch (error) {
+                console.error(
+                  `Erro ao adicionar imagem da alternativa ${letter}:`,
+                  error
+                );
+              }
+            }
+          }
         }
 
         const doc = new Document({
@@ -561,6 +675,7 @@ export function useDocumentGenerator() {
         const doc = new jsPDF();
         let yPosition = parseFloat(layout.marginTop || "20");
         const pageHeight = doc.internal.pageSize.height;
+        const pageWidth = doc.internal.pageSize.width;
         const marginLeft = parseFloat(layout.marginLeft || "20");
         const marginRight = parseFloat(layout.marginRight || "20");
         const marginBottom = parseFloat(layout.marginBottom || "20");
@@ -568,10 +683,9 @@ export function useDocumentGenerator() {
         const lineHeight =
           (fontSize * parseFloat(layout.lineSpacing || "1.15")) / 2;
 
-        // Adiciona cabeçalho
         if (layout.header || layout.headerText) {
           doc.setFontSize(16);
-          doc.setFont("helvetica", "bold");
+          doc.setFont("arial", "bold");
           doc.text(
             layout.header || layout.headerText || "",
             marginLeft,
@@ -581,7 +695,10 @@ export function useDocumentGenerator() {
         }
 
         doc.setFontSize(fontSize);
-        questions.forEach((question, index) => {
+
+        for (let index = 0; index < questions.length; index++) {
+          const question = questions[index];
+
           if (yPosition > pageHeight - marginBottom - 40) {
             doc.addPage();
             yPosition = parseFloat(layout.marginTop || "20");
@@ -595,7 +712,7 @@ export function useDocumentGenerator() {
             doc.setFont("helvetica", "bold");
             const titleLines = doc.splitTextToSize(
               question.title,
-              doc.internal.pageSize.width - marginLeft - marginRight
+              pageWidth - marginLeft - marginRight
             );
             doc.text(titleLines, marginLeft + 5, yPosition);
             yPosition += lineHeight * titleLines.length;
@@ -604,34 +721,111 @@ export function useDocumentGenerator() {
           doc.setFont("helvetica", "normal");
           const contentLines = doc.splitTextToSize(
             question.content || "",
-            doc.internal.pageSize.width - marginLeft - marginRight
+            pageWidth - marginLeft - marginRight
           );
           doc.text(contentLines, marginLeft + 5, yPosition);
           yPosition += lineHeight * contentLines.length + lineHeight;
+
+          if (question.contentImage) {
+            try {
+              const dimensions = await getImageDimensions(
+                question.contentImage
+              );
+
+              const maxWidth = pageWidth - marginLeft - marginRight - 10;
+              const scale =
+                dimensions.width > maxWidth ? maxWidth / dimensions.width : 1;
+              const imgWidth = dimensions.width * scale * 0.264583; 
+              const imgHeight = dimensions.height * scale * 0.264583;
+
+              if (yPosition + imgHeight > pageHeight - marginBottom) {
+                doc.addPage();
+                yPosition = parseFloat(layout.marginTop || "20");
+              }
+
+              doc.addImage(
+                question.contentImage,
+                "PNG",
+                marginLeft + 5,
+                yPosition,
+                imgWidth,
+                imgHeight
+              );
+              yPosition += imgHeight + lineHeight;
+            } catch (error) {
+              console.error(
+                "Erro ao adicionar imagem do conteúdo no PDF:",
+                error
+              );
+            }
+          }
 
           if (
             question.type === "multipla" &&
             question.options &&
             question.options.length > 0
           ) {
-            question.options.forEach((option, optIndex) => {
+            for (
+              let optIndex = 0;
+              optIndex < question.options.length;
+              optIndex++
+            ) {
+              const option = question.options[optIndex];
+
               if (yPosition > pageHeight - marginBottom - 20) {
                 doc.addPage();
                 yPosition = parseFloat(layout.marginTop || "20");
               }
+
               const letter = String.fromCharCode(97 + optIndex);
               const optText = `${letter}) ${option}`;
               const optLines = doc.splitTextToSize(
                 optText,
-                doc.internal.pageSize.width - marginLeft - marginRight - 10
+                pageWidth - marginLeft - marginRight - 10
               );
               doc.text(optLines, marginLeft + 10, yPosition);
               yPosition += lineHeight * optLines.length;
-            });
+
+              if (question.optionImages && question.optionImages[optIndex]) {
+                try {
+                  const dimensions = await getImageDimensions(
+                    question.optionImages[optIndex]!
+                  );
+
+                  const maxWidth = pageWidth - marginLeft - marginRight - 20;
+                  const scale =
+                    dimensions.width > maxWidth
+                      ? maxWidth / dimensions.width
+                      : 1;
+                  const imgWidth = dimensions.width * scale * 0.264583;
+                  const imgHeight = dimensions.height * scale * 0.264583;
+
+                  if (yPosition + imgHeight > pageHeight - marginBottom) {
+                    doc.addPage();
+                    yPosition = parseFloat(layout.marginTop || "20");
+                  }
+
+                  doc.addImage(
+                    question.optionImages[optIndex]!,
+                    "PNG",
+                    marginLeft + 10,
+                    yPosition,
+                    imgWidth,
+                    imgHeight
+                  );
+                  yPosition += imgHeight + lineHeight / 2;
+                } catch (error) {
+                  console.error(
+                    `Erro ao adicionar imagem da alternativa ${letter} no PDF:`,
+                    error
+                  );
+                }
+              }
+            }
           }
 
           yPosition += lineHeight;
-        });
+        }
 
         if (layout.footer || layout.footerText) {
           const totalPages = doc.internal.pages.length - 1;

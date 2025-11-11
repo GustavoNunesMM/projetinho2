@@ -1,65 +1,111 @@
 import { useState, useEffect } from "react";
 import { Layout, LayoutFormData } from "../types/layout";
+import {
+  getAllLayouts,
+  insertLayout,
+  updateLayout as updateLayoutDB,
+  deleteLayout as deleteLayoutDB,
+} from "../database/database";
 
-interface ElectronAPI {
-  loadLayouts: () => Promise<Layout[]>;
-  saveLayout: (layout: Layout) => void;
-  deleteLayout: (id: number) => void;
+function deserializeLayout(l: any): Layout {
+  return {
+    ...l,
+    headerLocked: Boolean(l.headerLocked),
+  };
 }
 
-declare global {
-  interface Window {
-    electronAPI?: ElectronAPI;
-  }
+function serializeLayout(l: LayoutFormData) {
+  return {
+    ...l,
+    headerLocked: l.headerLocked ? 1 : 0,
+  };
 }
 
 export const useLayouts = () => {
   const [layouts, setLayouts] = useState<Layout[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (window.electronAPI) {
-      window.electronAPI.loadLayouts().then(setLayouts);
-    } else {
-      const savedLayouts = localStorage.getItem("questionBankLayouts");
-      if (savedLayouts) {
-        setLayouts(JSON.parse(savedLayouts));
-      }
-    }
+    loadLayouts();
   }, []);
 
-  useEffect(() => {
-    if (window.electronAPI) {
-      layouts.forEach((layout) => {
-        window.electronAPI!.saveLayout(layout);
-      });
-    } else {
-      localStorage.setItem("questionBankLayouts", JSON.stringify(layouts));
+  const loadLayouts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getAllLayouts();
+      const deserialized = data.map(deserializeLayout);
+      setLayouts(deserialized);
+      console.log("📐 Layouts carregados:", deserialized.length);
+    } catch (err) {
+      const message = `Erro ao carregar layouts: ${(err as Error).message}`;
+      setError(message);
+      console.error(message, err);
+    } finally {
+      setLoading(false);
     }
-  }, [layouts]);
-
-  const addLayout = (layout: LayoutFormData): Layout => {
-    const newLayout: Layout = { ...layout, id: Date.now() };
-    setLayouts([...layouts, newLayout]);
-    return newLayout;
   };
 
-  const updateLayout = (id: number, updatedLayout: LayoutFormData) => {
-    setLayouts(
-      layouts.map((l) => (l.id === id ? { ...updatedLayout, id } : l))
-    );
+  const addLayout = async (layout: LayoutFormData): Promise<Layout> => {
+    try {
+      const serialized = serializeLayout(layout);
+      const saved = await insertLayout(serialized as any);
+      const deserialized = deserializeLayout(saved);
+
+      setLayouts((prev) => [deserialized, ...prev]);
+      console.log("✅ Layout adicionado:", deserialized.name);
+
+      return deserialized;
+    } catch (err) {
+      const message = `Erro ao adicionar layout: ${(err as Error).message}`;
+      setError(message);
+      console.error(message, err);
+      throw err;
+    }
   };
 
-  const deleteLayout = (id: number) => {
-    if (window.electronAPI) {
-      window.electronAPI.deleteLayout(id);
+  const updateLayout = async (
+    id: number,
+    updatedLayout: LayoutFormData
+  ): Promise<void> => {
+    try {
+      const serialized = serializeLayout(updatedLayout);
+      await updateLayoutDB(id, serialized as any);
+
+      const data = await getAllLayouts();
+      const deserialized = data.map(deserializeLayout);
+      setLayouts(deserialized);
+
+      console.log("✏️ Layout atualizado:", id);
+    } catch (err) {
+      const message = `Erro ao atualizar layout: ${(err as Error).message}`;
+      setError(message);
+      console.error(message, err);
+      throw err;
     }
-    setLayouts(layouts.filter((l) => l.id !== id));
+  };
+
+  const deleteLayout = async (id: number): Promise<void> => {
+    try {
+      await deleteLayoutDB(id);
+      setLayouts((prev) => prev.filter((l) => l.id !== id));
+      console.log("🗑️ Layout deletado:", id);
+    } catch (err) {
+      const message = `Erro ao deletar layout: ${(err as Error).message}`;
+      setError(message);
+      console.error(message, err);
+      throw err;
+    }
   };
 
   return {
     layouts,
+    loading,
+    error,
     addLayout,
     updateLayout,
     deleteLayout,
+    refreshLayouts: loadLayouts,
   };
 };

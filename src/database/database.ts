@@ -1,6 +1,4 @@
 import Database from "@tauri-apps/plugin-sql";
-import { appDataDir, join } from "@tauri-apps/api/path";
-import { exists, mkdir } from "@tauri-apps/plugin-fs";
 
 // ==================== Tipagens ====================
 
@@ -21,18 +19,9 @@ export interface Question {
   created_at?: string;
 }
 
-export interface Category {
-  id: number;
-  nome: string;
-  descricao?: string;
-  created_at?: string;
-}
-
 export interface Layout {
   id: number;
   name: string;
-  header?: string;
-  footer?: string;
   fontSize: string;
   fontFamily: string;
   lineSpacing: string;
@@ -41,7 +30,7 @@ export interface Layout {
   marginLeft: string;
   marginRight: string;
   headerText: string;
-  headerLocked: boolean;
+  headerLocked: number;
   footerText: string;
   importedFrom: string | null;
   created_at?: string;
@@ -54,32 +43,16 @@ let db: Database | null = null;
 export async function getDatabase(): Promise<Database> {
   if (db) return db;
 
-  const dir = await appDataDir();
-  const dbPath = await join(dir, "banco_questoes.db");
-
-  const dirExists = await exists(dir);
-  if (!dirExists) {
-    await mkdir(dir, { recursive: true });
-  }
-
-  db = await Database.load(`sqlite:${dbPath}`);
-  console.log("📦 Banco de dados carregado:", dbPath);
+  db = await Database.load("sqlite:banco_questoes.db");
+  console.log("📦 Banco SQLite Tauri carregado");
 
   await initializeDatabase(db);
   return db;
 }
-
 async function initializeDatabase(db: Database) {
   await db.execute(`
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
-
-    CREATE TABLE IF NOT EXISTS categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT NOT NULL UNIQUE,
-      descricao TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
 
     CREATE TABLE IF NOT EXISTS questions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -90,10 +63,10 @@ async function initializeDatabase(db: Database) {
       subject TEXT NOT NULL,
       category TEXT NOT NULL,
       type TEXT NOT NULL CHECK(type IN ('multipla', 'aberta')),
-      options TEXT NOT NULL,
-      optionImages TEXT,
-      correctAnswer TEXT NOT NULL,
-      explanation TEXT NOT NULL,
+      options TEXT NOT NULL DEFAULT '[]',
+      optionImages TEXT DEFAULT '[]',
+      correctAnswer TEXT NOT NULL DEFAULT '',
+      explanation TEXT NOT NULL DEFAULT '',
       importedFrom TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -101,8 +74,6 @@ async function initializeDatabase(db: Database) {
     CREATE TABLE IF NOT EXISTS layouts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
-      header TEXT,
-      footer TEXT,
       fontSize TEXT NOT NULL DEFAULT '12',
       fontFamily TEXT NOT NULL DEFAULT 'Arial',
       lineSpacing TEXT NOT NULL DEFAULT '1.5',
@@ -118,9 +89,8 @@ async function initializeDatabase(db: Database) {
     );
   `);
 
-  console.log("✅ Tabelas verificadas/criadas com sucesso.");
+  console.log("✅ Schema do banco criado/atualizado");
 }
-
 // ==================== CRUD: Questões ====================
 
 export async function insertQuestion(
@@ -128,34 +98,44 @@ export async function insertQuestion(
 ): Promise<Question> {
   const db = await getDatabase();
 
-  await db.execute("BEGIN");
+  console.log("📝 Inserindo questão:", {
+    title: q.title,
+    type: q.type,
+    difficulty: q.difficulty,
+  });
+
   const result = await db.execute(
-    `INSERT INTO questions (title, content, contentImage, difficulty, subject, category, type, options, optionImages, correctAnswer, explanation, importedFrom)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO questions (
+      title, content, contentImage, difficulty, subject, category, 
+      type, options, optionImages, correctAnswer, explanation, importedFrom
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
     [
       q.title,
       q.content,
-      q.contentImage,
+      q.contentImage || null,
       q.difficulty,
       q.subject,
       q.category,
       q.type,
       q.options,
-      q.optionImages,
+      q.optionImages || "[]",
       q.correctAnswer,
       q.explanation,
-      q.importedFrom,
+      q.importedFrom || null,
     ]
   );
-  await db.execute("COMMIT");
 
-  const insertedId = result.lastInsertId;
-  console.log("🧩 Questão inserida:", q.title, "ID:", insertedId);
+  const insertedId = Number(result.lastInsertId);
+  console.log("✅ Questão inserida com ID:", insertedId);
 
   const inserted = await db.select<Question[]>(
-    "SELECT * FROM questions WHERE id = ?",
+    "SELECT * FROM questions WHERE id = $1",
     [insertedId]
   );
+
+  if (!inserted || inserted.length === 0) {
+    throw new Error("Falha ao recuperar questão inserida");
+  }
 
   return inserted[0];
 }
@@ -165,28 +145,30 @@ export async function updateQuestion(
   q: Omit<Question, "id" | "created_at">
 ): Promise<void> {
   const db = await getDatabase();
+
   await db.execute(
     `UPDATE questions SET 
-      title = ?, content = ?, contentImage = ?, difficulty = ?, 
-      subject = ?, category = ?, type = ?, options = ?, 
-      optionImages = ?, correctAnswer = ?, explanation = ?, importedFrom = ?
-     WHERE id = ?`,
+      title = $1, content = $2, contentImage = $3, difficulty = $4, 
+      subject = $5, category = $6, type = $7, options = $8, 
+      optionImages = $9, correctAnswer = $10, explanation = $11, importedFrom = $12
+     WHERE id = $13`,
     [
       q.title,
       q.content,
-      q.contentImage,
+      q.contentImage || null,
       q.difficulty,
       q.subject,
       q.category,
       q.type,
       q.options,
-      q.optionImages,
+      q.optionImages || "[]",
       q.correctAnswer,
       q.explanation,
-      q.importedFrom,
+      q.importedFrom || null,
       id,
     ]
   );
+
   console.log(`✏️ Questão ${id} atualizada`);
 }
 
@@ -201,31 +183,8 @@ export async function getAllQuestions(): Promise<Question[]> {
 
 export async function deleteQuestion(id: number): Promise<void> {
   const db = await getDatabase();
-  await db.execute("DELETE FROM questions WHERE id = ?", [id]);
+  await db.execute("DELETE FROM questions WHERE id = $1", [id]);
   console.log(`🗑️ Questão ${id} removida`);
-}
-
-// ==================== CRUD: Categorias ====================
-
-export async function insertCategory(
-  cat: Omit<Category, "id" | "created_at">
-): Promise<void> {
-  const db = await getDatabase();
-  await db.execute("BEGIN");
-  await db.execute(`INSERT INTO categories (nome, descricao) VALUES (?, ?)`, [
-    cat.nome,
-    cat.descricao ?? "",
-  ]);
-  await db.execute("COMMIT");
-  console.log("🏷️ Categoria criada:", cat.nome);
-}
-
-export async function getAllCategories(): Promise<Category[]> {
-  const db = await getDatabase();
-  const rows = await db.select<Category[]>(
-    "SELECT * FROM categories ORDER BY nome"
-  );
-  return rows;
 }
 
 // ==================== CRUD: Layouts ====================
@@ -234,16 +193,21 @@ export async function insertLayout(
   l: Omit<Layout, "id" | "created_at">
 ): Promise<Layout> {
   const db = await getDatabase();
-  await db.execute("BEGIN");
+
+  console.log("📐 Inserindo layout:", {
+    name: l.name,
+    fontSize: l.fontSize,
+    fontFamily: l.fontFamily,
+  });
+
   const result = await db.execute(
-    `INSERT INTO layouts (name, header, footer, fontSize, fontFamily, lineSpacing, 
-      marginTop, marginBottom, marginLeft, marginRight, headerText, headerLocked, 
-      footerText, importedFrom) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO layouts (
+      name, fontSize, fontFamily, lineSpacing, 
+      marginTop, marginBottom, marginLeft, marginRight, 
+      headerText, headerLocked, footerText, importedFrom
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
     [
       l.name,
-      l.header ?? "",
-      l.footer ?? "",
       l.fontSize,
       l.fontFamily,
       l.lineSpacing,
@@ -252,25 +216,25 @@ export async function insertLayout(
       l.marginLeft,
       l.marginRight,
       l.headerText,
-      l.headerLocked ? 1 : 0,
+      l.headerLocked,
       l.footerText,
-      l.importedFrom,
+      l.importedFrom || null,
     ]
   );
-  await db.execute("COMMIT");
 
-  const insertedId = result.lastInsertId;
-  console.log("📐 Layout criado:", l.name, "ID:", insertedId);
+  const insertedId = Number(result.lastInsertId);
+  console.log("✅ Layout criado com ID:", insertedId);
 
   const inserted = await db.select<Layout[]>(
-    "SELECT * FROM layouts WHERE id = ?",
+    "SELECT * FROM layouts WHERE id = $1",
     [insertedId]
   );
 
-  return {
-    ...inserted[0],
-    headerLocked: Boolean(inserted[0].headerLocked),
-  };
+  if (!inserted || inserted.length === 0) {
+    throw new Error("Falha ao recuperar layout inserido");
+  }
+
+  return inserted[0];
 }
 
 export async function updateLayout(
@@ -278,17 +242,15 @@ export async function updateLayout(
   l: Omit<Layout, "id" | "created_at">
 ): Promise<void> {
   const db = await getDatabase();
+
   await db.execute(
     `UPDATE layouts SET 
-      name = ?, header = ?, footer = ?, fontSize = ?, fontFamily = ?, 
-      lineSpacing = ?, marginTop = ?, marginBottom = ?, marginLeft = ?, 
-      marginRight = ?, headerText = ?, headerLocked = ?, footerText = ?, 
-      importedFrom = ?
-     WHERE id = ?`,
+      name = $1, fontSize = $2, fontFamily = $3, lineSpacing = $4, 
+      marginTop = $5, marginBottom = $6, marginLeft = $7, marginRight = $8,
+      headerText = $9, headerLocked = $10, footerText = $11, importedFrom = $12
+     WHERE id = $13`,
     [
       l.name,
-      l.header ?? "",
-      l.footer ?? "",
       l.fontSize,
       l.fontFamily,
       l.lineSpacing,
@@ -297,12 +259,13 @@ export async function updateLayout(
       l.marginLeft,
       l.marginRight,
       l.headerText,
-      l.headerLocked ? 1 : 0,
+      l.headerLocked,
       l.footerText,
-      l.importedFrom,
+      l.importedFrom || null,
       id,
     ]
   );
+
   console.log(`✏️ Layout ${id} atualizado`);
 }
 
@@ -311,15 +274,13 @@ export async function getAllLayouts(): Promise<Layout[]> {
   const rows = await db.select<Layout[]>(
     "SELECT * FROM layouts ORDER BY created_at DESC"
   );
-  return rows.map((row) => ({
-    ...row,
-    headerLocked: Boolean(row.headerLocked),
-  }));
+  console.log("📐 Layouts carregados:", rows.length);
+  return rows;
 }
 
 export async function deleteLayout(id: number): Promise<void> {
   const db = await getDatabase();
-  await db.execute("DELETE FROM layouts WHERE id = ?", [id]);
+  await db.execute("DELETE FROM layouts WHERE id = $1", [id]);
   console.log(`🗑️ Layout ${id} removido`);
 }
 
@@ -331,16 +292,13 @@ export async function getStatistics() {
   const q = await db.select<{ count: number }[]>(
     "SELECT COUNT(*) as count FROM questions"
   );
-  const c = await db.select<{ count: number }[]>(
-    "SELECT COUNT(*) as count FROM categories"
-  );
   const l = await db.select<{ count: number }[]>(
     "SELECT COUNT(*) as count FROM layouts"
   );
 
   return {
     questions: q[0]?.count || 0,
-    categories: c[0]?.count || 0,
+    categories: 0,
     layouts: l[0]?.count || 0,
   };
 }
@@ -348,7 +306,6 @@ export async function getStatistics() {
 export async function clearDatabase() {
   const db = await getDatabase();
   await db.execute("DELETE FROM questions");
-  await db.execute("DELETE FROM categories");
   await db.execute("DELETE FROM layouts");
-  console.log("🧹 Banco de dados limpo.");
+  console.log("🧹 Banco limpo");
 }

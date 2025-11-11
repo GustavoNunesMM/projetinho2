@@ -1,12 +1,29 @@
 import { useState, useEffect } from "react";
-import { Question, QuestionFormData } from "../types/index";
-import { useDocumentGenerator } from "./useDocumentGenerator";
+import { Question, QuestionFormData } from "../types/question";
 import {
   getAllQuestions,
   insertQuestion,
   updateQuestion as updateQuestionDB,
   deleteQuestion as deleteQuestionDB,
 } from "../database/database";
+import { useDocumentGenerator } from "./useDocumentGenerator";
+
+function serializeQuestion(q: QuestionFormData) {
+  return {
+    ...q,
+    options: JSON.stringify(q.options),
+    optionImages: JSON.stringify(q.optionImages),
+  };
+}
+
+function deserializeQuestion(q: any): Question {
+  return {
+    ...q,
+    options: typeof q.options === "string" ? JSON.parse(q.options) : [],
+    optionImages:
+      typeof q.optionImages === "string" ? JSON.parse(q.optionImages) : [],
+  };
+}
 
 export const useQuestions = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -14,7 +31,6 @@ export const useQuestions = () => {
   const [error, setError] = useState<string | null>(null);
   const { readDocx, parseQuestionsFromText } = useDocumentGenerator();
 
-  // Carregar questões do banco ao montar
   useEffect(() => {
     loadQuestions();
   }, []);
@@ -24,22 +40,9 @@ export const useQuestions = () => {
       setLoading(true);
       setError(null);
       const data = await getAllQuestions();
-
-      // Deserializar arrays JSON
-      const questionsWithArrays = data.map((q) => ({
-        ...q,
-        options:
-          typeof q.options === "string"
-            ? JSON.parse(q.options)
-            : q.options || [],
-        optionImages: q.optionImages
-          ? typeof q.optionImages === "string"
-            ? JSON.parse(q.optionImages)
-            : q.optionImages
-          : [null, null, null, null],
-      }));
-
-      setQuestions(questionsWithArrays as Question[]);
+      const deserialized = data.map(deserializeQuestion);
+      setQuestions(deserialized);
+      console.log("📚 Questões carregadas:", deserialized.length);
     } catch (err) {
       const message = `Erro ao carregar questões: ${(err as Error).message}`;
       setError(message);
@@ -51,24 +54,21 @@ export const useQuestions = () => {
 
   const addQuestion = async (question: QuestionFormData): Promise<Question> => {
     try {
-      // Serializar arrays para JSON antes de salvar
-      const questionToSave = {
-        ...question,
-        options: JSON.stringify(question.options),
-        optionImages: JSON.stringify(question.optionImages),
-      };
+      const serialized = serializeQuestion(question);
+      console.log("🔄 Adicionando questão:", {
+        title: serialized.title,
+        options: serialized.options,
+      });
 
-      const savedQuestion = await insertQuestion(questionToSave as any);
+      const saved = await insertQuestion(serialized as any);
+      const deserialized = deserializeQuestion(saved);
 
-      // Deserializar arrays de volta para o estado
-      const questionWithArrays = {
-        ...savedQuestion,
-        options: JSON.parse(savedQuestion.options as any),
-        optionImages: JSON.parse((savedQuestion.optionImages as any) || "[]"),
-      } as Question;
+      setQuestions((prev) => [deserialized, ...prev]);
+      console.log("✅ Questão adicionada no estado:", deserialized.id);
 
-      setQuestions((prev) => [questionWithArrays, ...prev]);
-      return questionWithArrays;
+      await loadQuestions();
+
+      return deserialized;
     } catch (err) {
       const message = `Erro ao adicionar questão: ${(err as Error).message}`;
       setError(message);
@@ -82,26 +82,14 @@ export const useQuestions = () => {
     updatedQuestion: QuestionFormData
   ): Promise<void> => {
     try {
-      // Serializar arrays para JSON antes de salvar
-      const questionToUpdate = {
-        ...updatedQuestion,
-        options: JSON.stringify(updatedQuestion.options),
-        optionImages: JSON.stringify(updatedQuestion.optionImages),
-      };
+      const serialized = serializeQuestion(updatedQuestion);
+      await updateQuestionDB(id, serialized as any);
 
-      await updateQuestionDB(id, questionToUpdate as any);
+      const data = await getAllQuestions();
+      const deserialized = data.map(deserializeQuestion);
+      setQuestions(deserialized);
 
-      // Atualizar estado local
-      setQuestions((prev) =>
-        prev.map((q) =>
-          q.id === id
-            ? {
-                ...updatedQuestion,
-                id,
-              }
-            : q
-        )
-      );
+      console.log("✏️ Questão atualizada:", id);
     } catch (err) {
       const message = `Erro ao atualizar questão: ${(err as Error).message}`;
       setError(message);
@@ -114,6 +102,7 @@ export const useQuestions = () => {
     try {
       await deleteQuestionDB(id);
       setQuestions((prev) => prev.filter((q) => q.id !== id));
+      console.log("🗑️ Questão deletada:", id);
     } catch (err) {
       const message = `Erro ao deletar questão: ${(err as Error).message}`;
       setError(message);
@@ -122,94 +111,46 @@ export const useQuestions = () => {
     }
   };
 
-  const importQuestion = async (file: File): Promise<Question> => {
-    try {
-      const text = await readDocx(file);
-      const parsedQuestions = parseQuestionsFromText(text);
-
-      if (parsedQuestions.length === 0) {
-        throw new Error("Nenhuma questão encontrada no arquivo");
-      }
-
-      const parsedQuestion = parsedQuestions[0];
-      const questionData: QuestionFormData = {
-        title: parsedQuestion.statement.substring(0, 50) + "...",
-        content: parsedQuestion.statement,
-        contentImage: null,
-        difficulty:
-          (parsedQuestion.difficulty as "facil" | "media" | "dificil") ||
-          "media",
-        subject: parsedQuestion.subject || "",
-        category: "",
-        type:
-          parsedQuestion.alternatives && parsedQuestion.alternatives.length > 0
-            ? "multipla"
-            : "aberta",
-        options: parsedQuestion.alternatives
-          ? parsedQuestion.alternatives
-              .map((alt) => alt.text || alt.texto || "")
-              .slice(0, 4)
-          : ["", "", "", ""],
-        optionImages: [null, null, null, null],
-        correctAnswer: "",
-        explanation: "",
-        importedFrom: file.name,
-      };
-
-      return await addQuestion(questionData);
-    } catch (error) {
-      console.error("Erro ao importar questão:", error);
-      throw new Error(`Falha ao importar questão: ${(error as Error).message}`);
-    }
-  };
-
   const importMultipleQuestions = async (file: File): Promise<Question[]> => {
     try {
       const text = await readDocx(file);
-      const parsedQuestions = parseQuestionsFromText(text);
+      const parsed = parseQuestionsFromText(text);
 
-      if (parsedQuestions.length === 0) {
-        throw new Error("Nenhuma questão encontrada no arquivo");
+      if (parsed.length === 0) {
+        throw new Error("Nenhuma questão encontrada no documento");
       }
 
       const importedQuestions: Question[] = [];
 
-      for (const parsedQuestion of parsedQuestions) {
+      for (const q of parsed) {
         const questionData: QuestionFormData = {
-          title: parsedQuestion.statement.substring(0, 50) + "...",
-          content: parsedQuestion.statement,
+          title: q.statement || "Questão sem título",
+          content: q.statement || "",
           contentImage: null,
           difficulty:
-            (parsedQuestion.difficulty as "facil" | "media" | "dificil") ||
-            "media",
-          subject: parsedQuestion.subject || "",
-          category: "",
-          type:
-            parsedQuestion.alternatives &&
-            parsedQuestion.alternatives.length > 0
-              ? "multipla"
-              : "aberta",
-          options: parsedQuestion.alternatives
-            ? parsedQuestion.alternatives
-                .map((alt) => alt.text || alt.texto || "")
-                .slice(0, 4)
-            : ["", "", "", ""],
-          optionImages: [null, null, null, null],
+            q.difficulty === "dificil" || q.difficulty === "media" || q.difficulty === "facil"
+              ? q.difficulty
+              : "media",
+          subject: q.subject || "Geral",
+          category: q.category || "Importada",
+          type: q.alternatives?.length ? "multipla" : "aberta",
+          options: q.alternatives?.map((a: any) => a.text || a.texto || "") || [],
+          optionImages: q.alternatives?.map(() => null) || [],
           correctAnswer: "",
           explanation: "",
           importedFrom: file.name,
         };
 
-        const newQuestion = await addQuestion(questionData);
-        importedQuestions.push(newQuestion);
+        const saved = await addQuestion(questionData);
+        importedQuestions.push(saved);
       }
 
+      console.log(`✅ ${importedQuestions.length} questões importadas com sucesso`);
       return importedQuestions;
-    } catch (error) {
-      console.error("Erro ao importar questões:", error);
-      throw new Error(
-        `Falha ao importar questões: ${(error as Error).message}`
-      );
+    } catch (err) {
+      const message = `Erro ao importar questões: ${(err as Error).message}`;
+      console.error(message, err);
+      throw err;
     }
   };
 
@@ -220,7 +161,6 @@ export const useQuestions = () => {
     addQuestion,
     updateQuestion,
     deleteQuestion,
-    importQuestion,
     importMultipleQuestions,
     refreshQuestions: loadQuestions,
   };
