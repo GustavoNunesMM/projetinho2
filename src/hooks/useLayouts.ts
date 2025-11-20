@@ -37,7 +37,6 @@ export const useLayouts = () => {
       const data = await getAllLayouts();
       const deserialized = data.map(deserializeLayout);
       setLayouts(deserialized);
-      console.log("📐 Layouts carregados:", deserialized.length);
     } catch (err) {
       const message = `Erro ao carregar layouts: ${(err as Error).message}`;
       setError(message);
@@ -54,7 +53,6 @@ export const useLayouts = () => {
       const deserialized = deserializeLayout(saved);
 
       setLayouts((prev) => [deserialized, ...prev]);
-      console.log("✅ Layout adicionado:", deserialized.name);
 
       return deserialized;
     } catch (err) {
@@ -77,7 +75,6 @@ export const useLayouts = () => {
       const deserialized = data.map(deserializeLayout);
       setLayouts(deserialized);
 
-      console.log("✏️ Layout atualizado:", id);
     } catch (err) {
       const message = `Erro ao atualizar layout: ${(err as Error).message}`;
       setError(message);
@@ -90,7 +87,6 @@ export const useLayouts = () => {
     try {
       await deleteLayoutDB(id);
       setLayouts((prev) => prev.filter((l) => l.id !== id));
-      console.log("🗑️ Layout deletado:", id);
     } catch (err) {
       const message = `Erro ao deletar layout: ${(err as Error).message}`;
       setError(message);

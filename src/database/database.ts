@@ -36,15 +36,13 @@ export interface Layout {
   created_at?: string;
 }
 
-// ==================== Inicialização ====================
-
 let db: Database | null = null;
+
 
 export async function getDatabase(): Promise<Database> {
   if (db) return db;
 
   db = await Database.load("sqlite:banco_questoes.db");
-  console.log("📦 Banco SQLite Tauri carregado");
 
   await initializeDatabase(db);
   return db;
@@ -89,7 +87,6 @@ async function initializeDatabase(db: Database) {
     );
   `);
 
-  console.log("✅ Schema do banco criado/atualizado");
 }
 // ==================== CRUD: Questões ====================
 
@@ -97,12 +94,6 @@ export async function insertQuestion(
   q: Omit<Question, "id" | "created_at">
 ): Promise<Question> {
   const db = await getDatabase();
-
-  console.log("📝 Inserindo questão:", {
-    title: q.title,
-    type: q.type,
-    difficulty: q.difficulty,
-  });
 
   const result = await db.execute(
     `INSERT INTO questions (
@@ -126,7 +117,6 @@ export async function insertQuestion(
   );
 
   const insertedId = Number(result.lastInsertId);
-  console.log("✅ Questão inserida com ID:", insertedId);
 
   const inserted = await db.select<Question[]>(
     "SELECT * FROM questions WHERE id = $1",
@@ -169,7 +159,6 @@ export async function updateQuestion(
     ]
   );
 
-  console.log(`✏️ Questão ${id} atualizada`);
 }
 
 export async function getAllQuestions(): Promise<Question[]> {
@@ -177,14 +166,12 @@ export async function getAllQuestions(): Promise<Question[]> {
   const rows = await db.select<Question[]>(
     "SELECT * FROM questions ORDER BY created_at DESC"
   );
-  console.log("📋 Questões carregadas:", rows.length);
   return rows;
 }
 
 export async function deleteQuestion(id: number): Promise<void> {
   const db = await getDatabase();
   await db.execute("DELETE FROM questions WHERE id = $1", [id]);
-  console.log(`🗑️ Questão ${id} removida`);
 }
 
 // ==================== CRUD: Layouts ====================
@@ -194,11 +181,7 @@ export async function insertLayout(
 ): Promise<Layout> {
   const db = await getDatabase();
 
-  console.log("📐 Inserindo layout:", {
-    name: l.name,
-    fontSize: l.fontSize,
-    fontFamily: l.fontFamily,
-  });
+
 
   const result = await db.execute(
     `INSERT INTO layouts (
@@ -223,7 +206,6 @@ export async function insertLayout(
   );
 
   const insertedId = Number(result.lastInsertId);
-  console.log("✅ Layout criado com ID:", insertedId);
 
   const inserted = await db.select<Layout[]>(
     "SELECT * FROM layouts WHERE id = $1",
@@ -266,7 +248,6 @@ export async function updateLayout(
     ]
   );
 
-  console.log(`✏️ Layout ${id} atualizado`);
 }
 
 export async function getAllLayouts(): Promise<Layout[]> {
@@ -274,14 +255,12 @@ export async function getAllLayouts(): Promise<Layout[]> {
   const rows = await db.select<Layout[]>(
     "SELECT * FROM layouts ORDER BY created_at DESC"
   );
-  console.log("📐 Layouts carregados:", rows.length);
   return rows;
 }
 
 export async function deleteLayout(id: number): Promise<void> {
   const db = await getDatabase();
   await db.execute("DELETE FROM layouts WHERE id = $1", [id]);
-  console.log(`🗑️ Layout ${id} removido`);
 }
 
 // ==================== Utilitários ====================
@@ -307,5 +286,4 @@ export async function clearDatabase() {
   const db = await getDatabase();
   await db.execute("DELETE FROM questions");
   await db.execute("DELETE FROM layouts");
-  console.log("🧹 Banco limpo");
 }

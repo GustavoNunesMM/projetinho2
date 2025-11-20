@@ -1,10 +1,37 @@
 import { useState } from "react";
 import { Button } from "@heroui/react";
 import { getDatabase, clearDatabase } from "../../database/database";
+import { useHeaderFromWord } from "@/hooks/useDocumentGenerator/importHeader";
+import { HeaderData } from "@/types/documentGeneration";
+const { importHeaderFromDocx } = useHeaderFromWord();
+interface props {
+  closeModal: () => void;
+}
+function TestDocxImport({ closeModal }: props) {
+  const [header, setHeader] = useState<HeaderData[] | null>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.[0]) return;
+    const result = await importHeaderFromDocx(e.target.files[0]);
+    setHeader(result);
+    console.log("HEADER RESULT:", result);
+  };
+
+  return (
+    <div className="bg-gray-200 rounded w-[90%] fixed p-2 m-2  h-full top-0 left-0 z-10 overflow-scroll">
+      <button className="absolute top-4 right-4" onClick={() => closeModal}>
+        X
+      </button>
+      <input type="file" accept=".docx" onChange={handleUpload} />
+
+      {header && <pre>{JSON.stringify(header, null, 2)}</pre>}
+    </div>
+  );
+}
 
 export default function DevTools() {
   const [isOpen, setIsOpen] = useState(false);
-
+  const [isTestXslxImport, setisTestXslxImport] = useState<boolean>(false);
   const handleTestConnection = async () => {
     try {
       const db = await getDatabase();
@@ -90,6 +117,15 @@ export default function DevTools() {
         >
           🔄 Recriar Schema
         </Button>
+        <Button
+          color="warning"
+          size="sm"
+          className="w-full"
+          onPress={() => setisTestXslxImport(!isTestXslxImport)}
+        ></Button>
+        {isTestXslxImport && (
+          <TestDocxImport closeModal={() => setisTestXslxImport(false)} />
+        )}
 
         <Button
           color="danger"

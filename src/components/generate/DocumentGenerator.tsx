@@ -45,11 +45,11 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     try {
       Toast({ message: "Importando cabeçalho..." });
       const headerContent = await importHeaderFromDocx(file);
+      console.log(headerContent);
       setImportedHeader(headerContent);
       setHeaderFileName(file.name);
       Toast({ message: "Cabeçalho importado com sucesso!" });
     } catch (error: any) {
-      console.error("Erro ao importar cabeçalho:", error);
       Toast({ message: `Erro ao importar cabeçalho: ${error.message}` });
     }
   };
@@ -83,7 +83,11 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         );
         fileName = `prova_${Date.now()}.docx`;
       } else {
-        blob = await generatePdf(selectedQuestionsData, selectedLayout);
+        blob = await generatePdf(
+          selectedQuestionsData,
+          selectedLayout,
+          importedHeader || undefined
+        );
         fileName = `prova_${Date.now()}.pdf`;
       }
 
@@ -151,10 +155,10 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           <div className="flex items-center gap-3">
             <label
               htmlFor="header-upload"
-              className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
             >
               <Upload className="w-5 h-5" />
-              Importar Cabeçalho (.docx)
+              Importar Cabeçalho (.xlsx)
             </label>
             <input
               id="header-upload"
@@ -197,7 +201,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           )}
         </Button>
 
-        <Button
+        {/* <Button
           variant="primary"
           onClick={() => handleGenerateDocument("pdf")}
           disabled={!selectedLayout || selectedCount === 0 || generating}
@@ -208,7 +212,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
             generating,
             Download
           )}
-        </Button>
+        </Button> */}
       </div>
 
       {/* Informações sobre configurações aplicadas */}

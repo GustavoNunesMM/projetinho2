@@ -1,5 +1,3 @@
-// ==================== Question Types ====================
-
 export interface Question {
   id: number;
   title: string;
@@ -9,8 +7,8 @@ export interface Question {
   subject: string;
   category: string;
   type: "multipla" | "aberta";
-  options: string[]; // Array no frontend
-  optionImages: (string | null)[]; // Array no frontend
+  options: string[]; 
+  optionImages: (string | null)[];
   correctAnswer: string;
   explanation: string;
   importedFrom: string | null;
@@ -19,13 +17,10 @@ export interface Question {
 
 export interface QuestionFormData extends Omit<Question, "id" | "created_at"> {}
 
-// Interface para o banco de dados (com arrays serializados)
 export interface QuestionDB extends Omit<Question, "options" | "optionImages"> {
-  options: string; // JSON string no banco
-  optionImages: string | null; // JSON string no banco
+  options: string;
+  optionImages: string | null; 
 }
-
-// ==================== Layout Types ====================
 
 export interface Layout {
   id: number;
@@ -48,8 +43,6 @@ export interface Layout {
 
 export interface LayoutFormData extends Omit<Layout, "id" | "created_at"> {}
 
-// ==================== Category Types ====================
-
 export interface Category {
   id: number;
   nome: string;
@@ -58,8 +51,6 @@ export interface Category {
 }
 
 export interface CategoryFormData extends Omit<Category, "id" | "created_at"> {}
-
-// ==================== Utility Types ====================
 
 export interface Statistics {
   questions: number;
@@ -73,11 +64,6 @@ export interface ImportResult {
   errors?: string[];
 }
 
-// ==================== Helper Functions ====================
-
-/**
- * Converte Question do frontend para o formato do banco de dados
- */
 export function questionToDB(
   question: Omit<Question, "id" | "created_at">
 ): Omit<QuestionDB, "id" | "created_at"> {
@@ -88,9 +74,6 @@ export function questionToDB(
   };
 }
 
-/**
- * Converte Question do banco de dados para o formato do frontend
- */
 export function questionFromDB(questionDB: QuestionDB): Question {
   return {
     ...questionDB,

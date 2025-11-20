@@ -34,12 +34,14 @@ const App = () => {
     questions,
     loading: questionsLoading,
     error: questionsError,
+    refreshQuestions,
   } = useQuestions();
 
   const { importLayout } = useImportHandlers();
 
   useEffect(() => {
     loadStats();
+    refreshQuestions();
   }, [activeTab, questions.length, layouts.length]);
 
   const loadStats = async () => {
@@ -84,7 +86,6 @@ const App = () => {
     }
   };
 
-  // Loading state
   if (layoutsLoading || questionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -100,7 +101,6 @@ const App = () => {
     <div className="min-h-screen">
       <Header />
       <DevTools />
-      {/* Estatísticas */}
       <div className="bg-blue-50 border-b border-blue-200 py-3">
         <Container>
           <div className="flex gap-6 text-sm">
