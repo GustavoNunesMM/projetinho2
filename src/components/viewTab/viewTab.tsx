@@ -29,7 +29,7 @@ interface ViewTabProps {
 }
 
 export default function ViewTab({ selectedQuestions, layout }: ViewTabProps) {
-  const [documentType, setDocumentType] = useState<"pdf" | "docx">("pdf");
+  const [documentType, setDocumentType] = useState<"pdf" | "docx">("docx");
   const [isGenerating, setIsGenerating] = useState(false);
   const [documentBlob, setDocumentBlob] = useState<Blob | null>(null);
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
@@ -41,7 +41,6 @@ export default function ViewTab({ selectedQuestions, layout }: ViewTabProps) {
 
   const { generateDocx, generatePdf, saveFile } = useDocumentGenerator();
 
-  // Limpa URLs anteriores ao desmontar
   useEffect(() => {
     return () => {
       if (documentUrl) {
@@ -50,7 +49,6 @@ export default function ViewTab({ selectedQuestions, layout }: ViewTabProps) {
     };
   }, [documentUrl]);
 
-  // Gera o documento quando o tipo muda ou quando solicitado
   const generatePreview = async () => {
     if (selectedQuestions.length === 0) {
       setError("Selecione pelo menos uma questão para visualizar");
@@ -71,7 +69,6 @@ export default function ViewTab({ selectedQuestions, layout }: ViewTabProps) {
 
       setDocumentBlob(blob);
 
-      // Revoga URL anterior se existir
       if (documentUrl) {
         URL.revokeObjectURL(documentUrl);
       }
@@ -79,7 +76,6 @@ export default function ViewTab({ selectedQuestions, layout }: ViewTabProps) {
       const url = URL.createObjectURL(blob);
       setDocumentUrl(url);
 
-      // Renderiza DOCX se for o caso
       if (documentType === "docx" && docxContainerRef.current) {
         docxContainerRef.current.innerHTML = "";
         await renderAsync(blob, docxContainerRef.current, undefined, {
@@ -105,7 +101,6 @@ export default function ViewTab({ selectedQuestions, layout }: ViewTabProps) {
     }
   };
 
-  // Gera preview automaticamente quando questões, layout ou tipo mudam
   useEffect(() => {
     if (selectedQuestions.length > 0) {
       generatePreview();
@@ -139,7 +134,6 @@ export default function ViewTab({ selectedQuestions, layout }: ViewTabProps) {
 
   return (
     <div className="h-full flex flex-col gap-4 p-6">
-      {/* Header com controles */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -155,7 +149,7 @@ export default function ViewTab({ selectedQuestions, layout }: ViewTabProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Tabs
             selectedKey={documentType}
             onSelectionChange={(key) => setDocumentType(key as "pdf" | "docx")}
@@ -165,12 +159,11 @@ export default function ViewTab({ selectedQuestions, layout }: ViewTabProps) {
             <Tab key="pdf" title="PDF" />
             <Tab key="docx" title="DOCX" />
           </Tabs>
-        </div>
+        </div> */}
       </motion.div>
 
       <Divider />
 
-      {/* Barra de ferramentas */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

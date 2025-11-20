@@ -1,11 +1,11 @@
 import { useRef } from "react";
 import { Image, X } from "lucide-react";
-import Input from "../common/Input";
-import Button from "../common/Button";
-import Textarea from "../common/Textarea";
+import Input from "@/components/common/Input";
+import Button from "@/components/common/Button";
+import Textarea from "@/components/common/Textarea";
 import { Select, SelectItem, Selection } from "@heroui/react";
-import ImageUpload from "../common/ImageUpload";
-import { QuestionFormData } from "../../types/question";
+import ImageUpload from "@/components/common/ImageUpload";
+import { QuestionFormData } from "@/types/question";
 
 interface QuestionFormProps {
   formData: QuestionFormData;

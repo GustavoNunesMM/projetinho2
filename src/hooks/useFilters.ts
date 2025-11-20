@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Question } from "../types/question";
+import { Question } from "@/types/question";
 
 interface Filters {
   type: Question["type"] | "";

@@ -1,8 +1,8 @@
 import { Edit2, Trash2, Save } from "lucide-react";
 import { Chip, Button } from "@heroui/react";
-import { useDocumentGenerator } from "../../hooks/useDocumentGenerator";
-import { Question } from "../../types/question";
-
+import { useDocumentGenerator } from "@/hooks/useDocumentGenerator";
+import { Question } from "@/types/question";
+import { Toast } from "@/components/common/Toast.tsx";
 interface QuestionCardProps {
   question: Question;
   onEdit: () => void;
@@ -38,8 +38,15 @@ const QuestionCard = ({ question, onEdit, onDelete }: QuestionCardProps) => {
       const blob = await generateQuestionDocx(question);
       const fileName = `${question.title || "questao"}.docx`;
       saveFile(blob, fileName);
+      Toast({
+        message: `Documento ${fileName.toUpperCase()} gerado com sucesso!`,
+      });
     } catch (error) {
       console.error("Erro ao salvar questão:", error);
+      Toast({
+        message: `Falha ao gerar o documento`,
+        color: "danger",
+      });
     }
   };
 

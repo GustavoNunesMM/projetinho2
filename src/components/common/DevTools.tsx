@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@heroui/react";
-import { getDatabase, clearDatabase } from "../../database/database";
+import { getDatabase, clearDatabase } from "@/database/database";
 import { useHeaderFromWord } from "@/hooks/useDocumentGenerator/importHeader";
 import { HeaderData } from "@/types/documentGeneration";
 const { importHeaderFromDocx } = useHeaderFromWord();

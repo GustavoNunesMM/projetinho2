@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Question, QuestionFormData } from "../types/question";
+import { Question, QuestionFormData } from "@/types/question";
 import {
   getAllQuestions,
   insertQuestion,

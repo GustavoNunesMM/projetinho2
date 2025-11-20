@@ -1,5 +1,3 @@
-// Select.tsx
-import React from "react";
 import { Select as HSelect, SelectItem, Selection } from "@heroui/react";
 
 interface SelectOption {

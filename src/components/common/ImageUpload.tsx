@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Image, X, Maximize2 } from "lucide-react";
-import Button from "../common/Button";
+import Button from "@/components/common/Button";
 
 interface ImageUploadProps {
   label?: string;

@@ -1,4 +1,4 @@
-import Button from "../common/Button.tsx";
+import Button from "@/components/common/Button.tsx";
 import { Trash2, X } from "lucide-react";
 
 interface props {

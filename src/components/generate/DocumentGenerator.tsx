@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Download, Loader, Upload, X } from "lucide-react";
-import Button from "../common/Button.tsx";
-import { useDocumentGenerator } from "../../hooks/useDocumentGenerator.ts";
-import { useDriveClient } from "../../hooks/useDriveClient.ts";
-import { Layout } from "../../types/layout";
-import { Question } from "../../types/question";
-import { Toast } from "../common/Toast.tsx";
+import Button from "@/components/common/Button.tsx";
+import { useDocumentGenerator } from "@/hooks/useDocumentGenerator.ts";
+import { useDriveClient } from "@/hooks/useDriveClient.ts";
+import { Layout } from "@/types/layout";
+import { Question } from "@/types/question";
+import { Toast } from "@/components/common/Toast.tsx";
 
 interface DocumentGeneratorProps {
   selectedLayout: Layout | null;
@@ -50,7 +50,10 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       setHeaderFileName(file.name);
       Toast({ message: "Cabeçalho importado com sucesso!" });
     } catch (error: any) {
-      Toast({ message: `Erro ao importar cabeçalho: ${error.message}` });
+      Toast({
+        message: `Erro ao importar cabeçalho: ${error.message}`,
+        color: "danger",
+      });
     }
   };
 
@@ -66,7 +69,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       return;
     }
     if (selectedCount === 0) {
-      Toast({ message: "Selecione pelo menos uma questão!" });
+      Toast({ message: "Selecione pelo menos uma questão!", color: "warning" });
       return;
     }
 
@@ -108,7 +111,10 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       }
     } catch (error: any) {
       console.error("Erro ao gerar documento:", error);
-      Toast({ message: `Erro ao gerar documento: ${error.message}` });
+      Toast({
+        message: `Erro ao gerar documento: ${error.message}`,
+        color: "danger",
+      });
     } finally {
       setGenerating(false);
     }

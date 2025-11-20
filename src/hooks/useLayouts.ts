@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Layout, LayoutFormData } from "../types/layout";
+import { Layout, LayoutFormData } from "@/types/layout";
 import {
   getAllLayouts,
   insertLayout,

@@ -1,6 +1,6 @@
 // LayoutCard.tsx
 import { Edit2, Trash2, Lock } from "lucide-react";
-import { Layout } from "../../types/layout";
+import { Layout } from "@/types/layout";
 
 interface LayoutCardProps {
   layout: Layout;

@@ -62,7 +62,6 @@ export const generateDocx = async (
   const fontSize = fontSizeToHalfPoints(layout.fontSize || "12");
   const lineSpacing = lineSpacingToValue(layout.lineSpacing || "1.15");
 
-  // Adiciona o header importado se existir
   if (importedHeader?.length) {
     importedHeader.forEach((headerData) => {
       sections.push(headerData.docxTable);
@@ -217,6 +216,26 @@ export const generateDocx = async (
     ],
   });
   return Packer.toBlob(doc);
+};
+
+export const generateQuestionDocx = async (
+  question: Question
+): Promise<Blob> => {
+  return generateDocx([question], {
+    id: 0,
+    name: "Default",
+    headerText: "",
+    footerText: "",
+    headerLocked: false,
+    importedFrom: null,
+    marginTop: "2.54cm",
+    marginBottom: "2.54cm",
+    marginLeft: "2.54cm",
+    marginRight: "2.54cm",
+    fontSize: "12",
+    lineSpacing: "1.15",
+    fontFamily: "Arial",
+  });
 };
 
 export const readDocx = async (blob: Blob): Promise<string> => {

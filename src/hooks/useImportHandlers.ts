@@ -1,7 +1,7 @@
 import { useDocumentGenerator } from "./useDocumentGenerator";
 import { useDriveClient } from "./useDriveClient";
-import { LayoutFormData } from "../types/layout";
-import { QuestionFormData } from "../types/question";
+import { LayoutFormData } from "@/types/layout";
+import { QuestionFormData } from "@/types/question";
 
 export function useImportHandlers() {
   const { readDocx, parseQuestionsFromText } = useDocumentGenerator();

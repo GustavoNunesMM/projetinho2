@@ -16,7 +16,7 @@ import {
   FolderPlus,
   Cloud,
 } from "lucide-react";
-import { useDriveClient } from "../../hooks/useDriveClient.ts";
+import { useDriveClient } from "@/hooks/useDriveClient.ts";
 
 function CallDrive() {
   const {

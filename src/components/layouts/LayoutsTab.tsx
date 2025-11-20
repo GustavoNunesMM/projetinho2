@@ -1,10 +1,10 @@
 import React, { useState, useRef } from "react";
 import { Plus, Upload } from "lucide-react";
-import Button from "../common/Button.tsx";
+import Button from "@/components/common/Button.tsx";
 import LayoutCard from "./LayoutCard.tsx";
 import LayoutModal from "./LayoutModal.tsx";
 import LayoutCloseModal from "./LayoutCloseModal.tsx";
-import { Layout, LayoutFormData } from "../../types/layout.ts";
+import { Layout, LayoutFormData } from "@/types/layout.ts";
 
 interface LayoutsTabProps {
   layouts: Layout[];

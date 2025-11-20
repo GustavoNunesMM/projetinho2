@@ -2,12 +2,12 @@ import React, { useState, useRef } from "react";
 import { Plus, FileUp, Cloud, Loader } from "lucide-react";
 import QuestionCard from "./QuestionCard";
 import QuestionModal from "./QuestionModal";
-import { useImportHandlers } from "../../hooks/useImportHandlers.ts";
-import Button from "../common/Button";
-import useDocumentGenerator from "../../hooks/useDocumentGenerator.ts";
-import { Toast } from "../common/Toast.tsx";
-import { Question, QuestionFormData } from "../../types/index";
-import { useQuestions } from "../../hooks/useQuestions";
+import { useImportHandlers } from "@/hooks/useImportHandlers.ts";
+import Button from "@/components/common/Button";
+import useDocumentGenerator from "@/hooks/useDocumentGenerator.ts";
+import { Toast } from "@/components/common/Toast.tsx";
+import { Question, QuestionFormData } from "@/types/index";
+import { useQuestions } from "@/hooks/useQuestions";
 
 const QuestionsTab = () => {
   const {

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
-import Button from "../common/Button.tsx";
+import Button from "@/components/common/Button.tsx";
 import LayoutForm from "./LayoutForm.tsx";
-import { Layout, LayoutFormData } from "../../types/layout.ts";
-import { Toast } from "../common/Toast.tsx";
+import { Layout, LayoutFormData } from "@/types/layout.ts";
+import { Toast } from "@/components/common/Toast.tsx";
 interface LayoutModalProps {
   layout: Layout | null;
   onSave: (layout: LayoutFormData) => void;

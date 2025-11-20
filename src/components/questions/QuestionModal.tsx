@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
-import Button from "../common/Button";
+import Button from "@/components/common/Button";
 import QuestionForm from "./QuestionForm";
-import { Toast } from "../common/Toast";
-import { Question, QuestionFormData } from "../../types/question";
+import { Toast } from "@/components/common/Toast";
+import { Question, QuestionFormData } from "@/types/question";
 
 interface QuestionModalProps {
   question: Question | null;

@@ -1,6 +1,6 @@
 import React from "react";
 import { Lock } from "lucide-react";
-import { Layout } from "../../types/layout";
+import { Layout } from "@/types/layout";
 
 interface LayoutSelectorProps {
   layouts: Layout[];

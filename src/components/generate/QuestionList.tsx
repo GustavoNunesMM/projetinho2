@@ -1,7 +1,7 @@
 import React from "react";
 import { Badge, Checkbox } from "@heroui/react";
-import Button from "../common/Button";
-import { Question } from "../../types/question";
+import Button from "@/components/common/Button";
+import { Question } from "@/types/question";
 
 interface QuestionListProps {
   questions: Question[];

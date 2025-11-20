@@ -1,8 +1,8 @@
 import { Lock } from "lucide-react";
 import { Switch } from "@heroui/react";
-import Select from "../common/Select.tsx";
-import Input from "../common/Input.tsx";
-import { LayoutFormData } from "../../types/layout.ts";
+import Select from "@/components/common/Select.tsx";
+import Input from "@/components/common/Input.tsx";
+import { LayoutFormData } from "@/types/layout.ts";
 
 interface LayoutFormProps {
   formData: LayoutFormData;

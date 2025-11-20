@@ -1,6 +1,6 @@
 import React from "react";
-import Select from "../common/Select";
-import Input from "../common/Input";
+import Select from "@/components/common/Select";
+import Input from "@/components/common/Input";
 
 interface QuestionFiltersProps {
   filters: {
