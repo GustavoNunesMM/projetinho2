@@ -38,7 +38,6 @@ export interface Layout {
 
 let db: Database | null = null;
 
-
 export async function getDatabase(): Promise<Database> {
   if (db) return db;
 
@@ -95,7 +94,6 @@ async function initializeDatabase(db: Database) {
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
     );
   `);
-
 }
 // ==================== CRUD: Questões ====================
 
@@ -167,7 +165,6 @@ export async function updateQuestion(
       id,
     ]
   );
-
 }
 
 export async function getAllQuestions(): Promise<Question[]> {
@@ -189,8 +186,6 @@ export async function insertLayout(
   l: Omit<Layout, "id" | "created_at">
 ): Promise<Layout> {
   const db = await getDatabase();
-
-
 
   const result = await db.execute(
     `INSERT INTO layouts (
@@ -256,7 +251,6 @@ export async function updateLayout(
       id,
     ]
   );
-
 }
 
 export async function getAllLayouts(): Promise<Layout[]> {
@@ -282,9 +276,16 @@ export async function insertMessage(message: any): Promise<any> {
   const result = await db.execute(
     `INSERT INTO messages (title, items, isList, isOrdered, createdAt, updatedAt) 
      VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
-    [message.title, message.items, message.isList ? 1 : 0, message.isOrdered ? 1 : 0]
+    [
+      message.title,
+      message.items,
+      message.isList ? 1 : 0,
+      message.isOrdered ? 1 : 0,
+    ]
   );
-  return await db.select("SELECT * FROM messages WHERE id = ?", [result.lastInsertId]);
+  return await db.select("SELECT * FROM messages WHERE id = ?", [
+    result.lastInsertId,
+  ]);
 }
 
 export async function updateMessage(id: number, message: any): Promise<void> {
@@ -293,7 +294,13 @@ export async function updateMessage(id: number, message: any): Promise<void> {
     `UPDATE messages 
      SET title = ?, items = ?, isList = ?, isOrdered = ?, updatedAt = datetime('now')
      WHERE id = ?`,
-    [message.title, message.items, message.isList ? 1 : 0, message.isOrdered ? 1 : 0, id]
+    [
+      message.title,
+      message.items,
+      message.isList ? 1 : 0,
+      message.isOrdered ? 1 : 0,
+      id,
+    ]
   );
 }
 
@@ -312,11 +319,15 @@ export async function getStatistics() {
   const l = await db.select<{ count: number }[]>(
     "SELECT COUNT(*) as count FROM layouts"
   );
+  const m = await db.select<{ count: number }[]>(
+    "SELECT COUNT(*) as count FROM messages"
+  );
 
   return {
     questions: q[0]?.count || 0,
     categories: 0,
     layouts: l[0]?.count || 0,
+    message: m[0]?.count || 0,
   };
 }
 

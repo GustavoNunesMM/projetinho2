@@ -2,10 +2,11 @@ import React, { useState, useRef } from "react";
 import { Plus, FileUp, Cloud, Loader } from "lucide-react";
 import QuestionCard from "./QuestionCard";
 import QuestionModal from "./QuestionModal";
-import { useImportHandlers } from "@/hooks/useImportHandlers.ts";
+import QuestionFilters from "@/components/Tabs/generate/QuestionFilters";
+import { useImportHandlers } from "@/hooks/useImportHandlers";
 import Button from "@/components/common/Button";
-import useDocumentGenerator from "@/hooks/useDocumentGenerator.ts";
-import { Toast } from "@/components/common/Toast.tsx";
+import useDocumentGenerator from "@/hooks/useDocumentGenerator";
+import { Toast } from "@/components/common/Toast";
 import {
   Question,
   QuestionFormData,
@@ -13,6 +14,7 @@ import {
   DriveFileSelectorProps,
 } from "@/types/question";
 import { useQuestions } from "@/hooks/useQuestions";
+import { useFilters } from "@/hooks/useFilters";
 
 const QuestionsTab = () => {
   const {
@@ -25,14 +27,18 @@ const QuestionsTab = () => {
     importMultipleQuestions,
   } = useQuestions();
 
+  const { filters, updateFilter, filteredItems } = useFilters(questions);
+
+  const [format, setFormat] = useState<"block" | "list" | "detail">("block");
+
   const [showModal, setShowModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [importing, setImporting] = useState(false);
   const [showDriveModal, setShowDriveModal] = useState(false);
-  const { generateQuestionDocx } = useDocumentGenerator();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { importQuestions, driveClient } = useImportHandlers();
+  const { generateQuestionDocx } = useDocumentGenerator();
 
   const handleEdit = (question: Question) => {
     setEditingQuestion(question);
@@ -47,13 +53,9 @@ const QuestionsTab = () => {
       } else {
         const question = await addQuestion(questionData);
         Toast({ message: "Questão criada com sucesso!" });
-
         try {
           await generateQuestionDocx(question);
-        } catch (docError) {
-          console.error("Erro ao gerar documento:", docError);
-          // Não bloqueia o salvamento se falhar a geração do documento
-        }
+        } catch {}
       }
       setShowModal(false);
       setEditingQuestion(null);
@@ -63,10 +65,7 @@ const QuestionsTab = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Deseja realmente excluir esta questão?")) {
-      return;
-    }
-
+    if (!confirm("Deseja realmente excluir esta questão?")) return;
     try {
       await deleteQuestion(id);
       Toast({ message: "Questão excluída com sucesso!" });
@@ -75,64 +74,46 @@ const QuestionsTab = () => {
     }
   };
 
-  const handleLocalImport = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+  const handleLocalImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
     setImporting(true);
     try {
-      const importedQuestions = await importMultipleQuestions(file);
-      Toast({
-        message: `${importedQuestions.length} questão(ões) importada(s) com sucesso!`,
-      });
+      const list = await importMultipleQuestions(file);
+      Toast({ message: `${list.length} questão(ões) importada(s)!` });
     } catch (error) {
       Toast({ message: `Erro ao importar: ${(error as Error).message}` });
     } finally {
       setImporting(false);
-      event.target.value = "";
+      e.target.value = "";
     }
   };
 
   const handleDriveImport = async (fileId: string) => {
     setImporting(true);
     try {
-      const importedQuestions = await importQuestions(
-        fileId,
-        async (questions: any) => {
-          const imported: Question[] = [];
-          for (const q of questions) {
-            const newQ = await addQuestion(q);
-            imported.push(newQ);
-          }
-          return imported;
-        }
-      );
-
-      Toast({
-        message: `${importedQuestions.length} questão(ões) importada(s) do Drive!`,
+      const list = await importQuestions(fileId, async (qs) => {
+        const out: Question[] = [];
+        for (const q of qs) out.push(await addQuestion(q));
+        return out;
       });
+      Toast({ message: `${list.length} do Drive!` });
       setShowDriveModal(false);
     } catch (error) {
-      Toast({
-        message: `Erro ao importar do Drive: ${(error as Error).message}`,
-      });
+      Toast({ message: `Drive: ${(error as Error).message}` });
     } finally {
       setImporting(false);
     }
   };
 
-  if (loading) {
+  if (loading)
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader className="animate-spin mr-2" />
-        <span>Carregando questões...</span>
+        <Loader className="animate-spin mr-2" /> Carregando questões...
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
       <div className="text-center py-12">
         <p className="text-red-600 mb-4">{error}</p>
@@ -141,7 +122,6 @@ const QuestionsTab = () => {
         </Button>
       </div>
     );
-  }
 
   return (
     <div className="space-y-6">
@@ -156,7 +136,6 @@ const QuestionsTab = () => {
             className="hidden"
             disabled={importing}
           />
-
           <Button
             variant="success"
             icon={importing ? Loader : FileUp}
@@ -190,27 +169,31 @@ const QuestionsTab = () => {
         </div>
       </div>
 
-      {questions.length === 0 ? (
+      <QuestionFilters
+        filters={filters}
+        onUpdateFilter={updateFilter}
+        format={format}
+        onUpdateFormat={(newFormat) => setFormat(newFormat)}
+      />
+
+      {filteredItems.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-gray-500 mb-4">
-            Nenhuma questão cadastrada ainda.
+            Nenhuma questão encontrada com os filtros aplicados.
           </p>
-          <Button
-            variant="primary"
-            icon={Plus}
-            onClick={() => setShowModal(true)}
-          >
+          <Button variant="primary" onClick={() => setShowModal(true)}>
             Criar Primeira Questão
           </Button>
         </div>
       ) : (
         <div className="space-y-4">
-          {questions.map((question) => (
+          {filteredItems.map((question) => (
             <QuestionCard
               key={question.id}
               question={question}
               onEdit={() => handleEdit(question)}
               onDelete={() => handleDelete(question.id)}
+              format={format}
             />
           ))}
         </div>
@@ -247,20 +230,13 @@ const DriveFileSelector = ({
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
-    const loadFiles = async () => {
-      try {
-        const driveFiles = await driveClient.listDocxFiles();
-        setFiles(driveFiles);
-      } catch (error) {
-        Toast({
-          message:
-            "Erro ao listar arquivos do Drive: " + (error as Error).message,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadFiles();
+    driveClient
+      .listDocxFiles()
+      .then(setFiles)
+      .catch((err) =>
+        Toast({ message: "Erro ao listar Drive: " + err.message })
+      )
+      .finally(() => setLoading(false));
   }, [driveClient]);
 
   return (

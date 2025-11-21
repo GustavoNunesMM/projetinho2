@@ -1,30 +1,35 @@
-import { useState } from "react";
-import CallDrive from "./calldrive";
-import Button from "@/components/common/Button";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@heroui/react";
+import { LogOut } from "lucide-react";
 
 const Header = () => {
-  const [showDrive, setShowDrive] = useState(false);
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
 
   return (
-    <header className="bg-blue-600 text-white p-6 shadow-lg relative">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Sistema de Banco de Questões</h1>
-          <p className="text-blue-100 mt-1">
-            Gerencie seus layouts e questões de forma profissional
-          </p>
+    <header className="bg-blue-600 text-white p-4 shadow-lg">
+      <div className="container mx-auto flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Sistema de Questões</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-sm">Olá, {user?.username}</span>
+          <Button
+            size="sm"
+            color="danger"
+            variant="flat"
+            onClick={handleLogout}
+            startContent={<LogOut className="w-4 h-4" />}
+          >
+            Sair
+          </Button>
         </div>
-
-        <Button onClick={() => setShowDrive(!showDrive)}>
-          {showDrive ? "Fechar Drive" : "Integração Drive"}
-        </Button>
       </div>
-
-      {showDrive && (
-        <div className="mt-6 bg-white text-black rounded-lg p-4 shadow-md">
-          <CallDrive />
-        </div>
-      )}
     </header>
   );
 };

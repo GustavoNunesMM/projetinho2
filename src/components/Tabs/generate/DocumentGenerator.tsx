@@ -1,13 +1,26 @@
-import React, { useState } from "react";
-import { Download, Loader, Upload, X, MessageSquareText, Check } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import {
+  Download,
+  Loader,
+  Upload,
+  X,
+  MessageSquareText,
+  Check,
+  Eye,
+} from "lucide-react";
 import Button from "@/components/common/Button.tsx";
 import { useDocumentGenerator } from "@/hooks/useDocumentGenerator.ts";
 import { useDriveClient } from "@/hooks/useDriveClient.ts";
 import { useMessages } from "@/hooks/useMessages.ts";
 import { Layout } from "@/types/layout";
 import { Question } from "@/types/question";
-import { Message } from "@/types/message";
+import { Message } from "@/types/messages";
 import { Toast } from "@/components/common/Toast.tsx";
+import MessagesModal from "./modal/MessagesModal";
+import PreviewModal from "./modal/PreviewModal";
+import { useGabarito } from "@/hooks/useGabarito";
+import { GabaritoModal } from "./modal/GabaritoModal";
+import { GabaritoData } from "@/types";
 
 interface DocumentGeneratorProps {
   selectedLayout: Layout | null;
@@ -25,7 +38,13 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   const [headerFileName, setHeaderFileName] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isModalMessagesOpen, openModalMessages] = useState(false);
-
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [gabaritoData, setGabaritoData] = useState<GabaritoData | null>(null);
+  const [isGabaritoModalOpen, setIsGabaritoModalOpen] = useState(false);
+  const [haveValidQuestion, sethaveValidQuestion] = useState(false);
+  const { gerarGabarito } = useGabarito();
   const { generateDocx, generatePdf, importHeaderFromDocx, saveFile } =
     useDocumentGenerator();
   const { messages, loading: loadingMessages } = useMessages();
@@ -35,6 +54,11 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     selectedQuestions.includes(q.id)
   );
   const selectedCount = selectedQuestionsData.length;
+
+  useEffect(() => {
+    const valid = selectedQuestionsData.some((q) => q.type === "multipla");
+    sethaveValidQuestion(valid);
+  }, [selectedQuestionsData]);
 
   const handleImportHeader = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -99,15 +123,15 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           selectedQuestionsData,
           selectedLayout,
           importedHeader || undefined,
-          selectedMessage || undefined
+          selectedMessage || undefined,
+          gabaritoData || undefined
         );
         fileName = `prova_${Date.now()}.docx`;
       } else {
         blob = await generatePdf(
           selectedQuestionsData,
           selectedLayout,
-          importedHeader || undefined,
-          selectedMessage || undefined
+          importedHeader || undefined
         );
         fileName = `prova_${Date.now()}.pdf`;
       }
@@ -137,7 +161,30 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       setGenerating(false);
     }
   };
-
+  const handlePreview = async () => {
+    if (!selectedLayout || selectedCount === 0) return;
+    setGenerating(true);
+    try {
+      const blob = await generateDocx(
+        selectedQuestionsData,
+        selectedLayout,
+        importedHeader || undefined,
+        selectedMessage || undefined
+      );
+      setPreviewBlob(blob);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      setIsPreviewOpen(true);
+    } catch (err: any) {
+      Toast({
+        message: `Erro ao gerar preview: ${err.message}`,
+        color: "danger",
+      });
+    } finally {
+      setGenerating(false);
+    }
+  };
   const renderButtonContent = (
     label: string,
     isLoading: boolean,
@@ -211,8 +258,8 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         )}
       </div>
 
-      <div className="mb-6 bg-gray-50 border border-gray-200 rounded p-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="mb-2 bg-gray-50 border border-gray-200 rounded p-4">
+        <div className="flex items-center  justify-between">
           <h3 className="text-lg font-semibold">
             Mensagens Adicionais (Opcional)
           </h3>
@@ -251,7 +298,9 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
                       <li key={idx}>{item}</li>
                     ))}
                     {selectedMessage.items.length > 3 && (
-                      <li>... e mais {selectedMessage.items.length - 3} itens</li>
+                      <li>
+                        ... e mais {selectedMessage.items.length - 3} itens
+                      </li>
                     )}
                   </ol>
                 ) : (
@@ -260,7 +309,9 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
                       <li key={idx}>{item}</li>
                     ))}
                     {selectedMessage.items.length > 3 && (
-                      <li>... e mais {selectedMessage.items.length - 3} itens</li>
+                      <li>
+                        ... e mais {selectedMessage.items.length - 3} itens
+                      </li>
                     )}
                   </ul>
                 )
@@ -278,112 +329,72 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           </div>
         )}
       </div>
+      <div className="mb-2 bg-gray-50 border border-gray-200 rounded p-4">
+        <div className="flex items-center justify-between ">
+          <h3 className="text-lg font-semibold">
+            Gabarito / Cartão de Respostas
+          </h3>
+          <Button
+            variant="primary"
+            onClick={() => {
+              const data = gerarGabarito(selectedQuestionsData, 5);
+              setGabaritoData(data);
+              setIsGabaritoModalOpen(true);
+            }}
+            disabled={
+              !selectedLayout || selectedCount === 0 || !haveValidQuestion
+            }
+          >
+            <MessageSquareText size={16} />
+            Adicionar Gabarito
+          </Button>
+        </div>
 
-      {isModalMessagesOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="p-6 border-b flex items-center justify-between">
-              <h3 className="text-xl font-bold">Selecionar Mensagem</h3>
+        {gabaritoData && (
+          <div className=" p-3 bg-green-50 border border-green-200 rounded">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Check className="w-5 h-5 text-green-600" />
+                <span className="text-sm font-medium text-green-800">
+                  Gabarito gerado ({gabaritoData.questoes.length} questões)
+                </span>
+              </div>
               <button
-                onClick={() => openModalMessages(false)}
-                className="text-gray-500 hover:text-gray-700 transition"
+                onClick={() => setGabaritoData(null)}
+                className="text-red-500 hover:text-red-700 transition"
+                title="Remover gabarito"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              {loadingMessages ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader className="animate-spin mr-2" />
-                  <span>Carregando mensagens...</span>
-                </div>
-              ) : messages.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 mb-4">
-                    Nenhuma mensagem cadastrada ainda.
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    Vá para a aba "Mensagens" para criar uma nova mensagem.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      onClick={() => handleSelectMessage(message)}
-                      className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                        selectedMessage?.id === message.id
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-blue-300"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 mb-2">
-                            {message.title}
-                          </h4>
-                          <div className="text-sm text-gray-600">
-                            {message.isList ? (
-                              message.isOrdered ? (
-                                <ol className="list-decimal list-inside space-y-1">
-                                  {message.items.slice(0, 3).map((item, idx) => (
-                                    <li key={idx}>{item}</li>
-                                  ))}
-                                  {message.items.length > 3 && (
-                                    <li className="text-gray-400">
-                                      ... e mais {message.items.length - 3} itens
-                                    </li>
-                                  )}
-                                </ol>
-                              ) : (
-                                <ul className="list-disc list-inside space-y-1">
-                                  {message.items.slice(0, 3).map((item, idx) => (
-                                    <li key={idx}>{item}</li>
-                                  ))}
-                                  {message.items.length > 3 && (
-                                    <li className="text-gray-400">
-                                      ... e mais {message.items.length - 3} itens
-                                    </li>
-                                  )}
-                                </ul>
-                              )
-                            ) : (
-                              <div className="space-y-1">
-                                {message.items.slice(0, 2).map((item, idx) => (
-                                  <p key={idx}>{item}</p>
-                                ))}
-                                {message.items.length > 2 && (
-                                  <p className="text-gray-400">
-                                    ... e mais {message.items.length - 2} itens
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        {selectedMessage?.id === message.id && (
-                          <Check className="w-6 h-6 text-blue-600 flex-shrink-0 ml-3" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 border-t bg-gray-50">
-              <Button
-                variant="outline"
-                onClick={() => openModalMessages(false)}
-                className="w-full"
-              >
-                Fechar
-              </Button>
-            </div>
           </div>
-        </div>
+        )}
+      </div>
+
+      <MessagesModal
+        isModalMessagesOpen={isModalMessagesOpen}
+        openModalMessages={() => openModalMessages(false)}
+        messages={messages}
+        loadingMessages={loadingMessages}
+        selectedMessage={selectedMessage}
+        handleSelectMessage={handleSelectMessage}
+      />
+      <PreviewModal
+        isPreviewOpen={isPreviewOpen}
+        setIsPreviewOpen={setIsPreviewOpen}
+        previewBlob={previewBlob}
+        setPreviewUrl={setPreviewUrl}
+        saveFile={saveFile}
+      />
+      {gabaritoData && (
+        <GabaritoModal
+          isOpen={isGabaritoModalOpen}
+          onClose={() => setIsGabaritoModalOpen(false)}
+          gabarito={gabaritoData}
+          onConfirm={(cols) => {
+            setGabaritoData({ ...gabaritoData, colunasPorLinha: cols });
+          }}
+        />
       )}
 
       <div className="flex gap-4">
@@ -399,6 +410,14 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
             Download
           )}
         </Button>
+        <Button
+          variant="outline"
+          onClick={handlePreview}
+          disabled={!selectedLayout || selectedCount === 0 || generating}
+          className="flex-1"
+        >
+          {renderButtonContent("Visualizar", generating, Eye)}
+        </Button>
       </div>
 
       {selectedLayout && (
@@ -408,7 +427,9 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           </h3>
           <ul className="text-sm text-blue-800 space-y-1">
             <li>• Layout: {selectedLayout.name}</li>
-            <li>• Fonte: {selectedLayout.fontFamily} ({selectedLayout.fontSize})</li>
+            <li>
+              • Fonte: {selectedLayout.fontFamily} ({selectedLayout.fontSize})
+            </li>
             <li>• Espaçamento: {selectedLayout.lineSpacing}</li>
             {importedHeader && <li>• Cabeçalho customizado incluído</li>}
             {selectedMessage && <li>• Mensagem adicional incluída</li>}

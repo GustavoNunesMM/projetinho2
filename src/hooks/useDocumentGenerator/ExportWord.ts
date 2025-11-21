@@ -9,13 +9,20 @@ import {
   HeadingLevel,
   ISectionOptions,
   convertInchesToTwip,
+  TableRow,
+  TableCell,
+  WidthType,
+  VerticalAlign,
 } from "docx";
 import { getImageDimensions } from "@/utils/imageImport";
 import { Message } from "@/types/messages";
+import JSZip from "jszip";
+import { WordLayoutInfo } from "@/types/layout";
 import mammoth from "mammoth";
 import { Layout } from "@/types/layout";
 import { Question } from "@/types/question";
 import { HeaderData, ParsedQuestion } from "@/types/documentGeneration";
+import { GabaritoData } from "@/types";
 
 const base64ToUint8Array = (base64: string): Uint8Array => {
   const base64Data = base64.includes(",") ? base64.split(",")[1] : base64;
@@ -50,7 +57,8 @@ export const generateDocx = async (
   questions: Question[],
   layout: Layout,
   importedHeader?: HeaderData[],
-  message?: Message
+  message?: Message,
+  gabaritoData?: GabaritoData
 ): Promise<Blob> => {
   const sections: (Paragraph | Table)[] = [];
 
@@ -126,6 +134,107 @@ export const generateDocx = async (
         );
       });
     }
+  }
+  if (gabaritoData && gabaritoData.questoes.length > 0) {
+    const cols = gabaritoData.questoes[0].alternativas.length;
+    const cellWidth = convertInchesToTwip(1.5 / 2.54); // 1,5 cm
+    const cellHeight = convertInchesToTwip(0.75 / 2.54); // 0,75 cm
+    const tableWidth = cellWidth * (cols + 1);
+
+    const headerRow = new TableRow({
+      height: { value: cellHeight, rule: "exact" }, // ← altura fixa na LINHA
+      children: [
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [new TextRun({ text: "Nº", bold: true })],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+          verticalAlign: VerticalAlign.CENTER,
+          width: { size: cellWidth, type: WidthType.DXA },
+          margins: { top: 60, bottom: 60, left: 60, right: 60 },
+        }),
+        ...Array.from({ length: cols }).map(
+          (_, i) =>
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: String.fromCharCode(65 + i),
+                      bold: true,
+                    }),
+                  ],
+                  alignment: AlignmentType.CENTER,
+                }),
+              ],
+              verticalAlign: VerticalAlign.CENTER,
+              width: { size: cellWidth, type: WidthType.DXA },
+              margins: { top: 60, bottom: 60, left: 60, right: 60 },
+            })
+        ),
+      ],
+    });
+
+    const bodyRows = gabaritoData.questoes.map(
+      (q) =>
+        new TableRow({
+          height: { value: cellHeight, rule: "exact" },
+          children: [
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: String(q.numero), bold: true }),
+                  ],
+                  alignment: AlignmentType.CENTER,
+                }),
+              ],
+              verticalAlign: VerticalAlign.CENTER,
+              width: { size: cellWidth, type: WidthType.DXA },
+              margins: { top: 60, bottom: 60, left: 60, right: 60 },
+            }),
+            ...q.alternativas.map(
+              (letra) =>
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      text: letra,
+                      alignment: AlignmentType.CENTER,
+                    }),
+                  ],
+                  verticalAlign: VerticalAlign.CENTER,
+                  width: { size: cellWidth, type: WidthType.DXA },
+                  margins: { top: 60, bottom: 60, left: 60, right: 60 },
+                })
+            ),
+          ],
+        })
+    );
+
+    sections.push(
+      new Paragraph({
+        text: "Gabarito / Cartão de Respostas",
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 400, after: 200 },
+      })
+    );
+
+    sections.push(
+      new Table({
+        rows: [headerRow, ...bodyRows],
+        width: { size: tableWidth, type: WidthType.DXA },
+        borders: {
+          top: { style: "single", size: 1, color: "000000" },
+          bottom: { style: "single", size: 1, color: "000000" },
+          left: { style: "single", size: 1, color: "000000" },
+          right: { style: "single", size: 1, color: "000000" },
+          insideHorizontal: { style: "single", size: 1, color: "000000" },
+          insideVertical: { style: "single", size: 1, color: "000000" },
+        },
+      })
+    );
   }
 
   for (let i = 0; i < questions.length; i++) {
@@ -349,3 +458,64 @@ export const parseQuestionsFromText = (text: string) => {
     tags: [],
   }));
 };
+
+export const extractWordLayoutInfo = async (
+  file: File
+): Promise<WordLayoutInfo> => {
+  const zip = await JSZip.loadAsync(file);
+  const docXml = await zip.file("word/document.xml")?.async("text");
+  const stylesXml = await zip.file("word/styles.xml")?.async("text");
+  if (!docXml || !stylesXml)
+    throw new Error("Arquivo Word inválido ou sem informações de layout");
+
+  const doc = new DOMParser().parseFromString(docXml, "text/xml");
+  const styles = new DOMParser().parseFromString(stylesXml, "text/xml");
+
+  const sectPr = doc.querySelector("w\\:sectPr, sectPr");
+  const pgMar = sectPr?.querySelector("w\\:pgMar, pgMar");
+  const marginTop = pgMar ? pxToCm(pgMar.getAttribute("w:top") || "720") : 2.5;
+  const marginBottom = pgMar
+    ? pxToCm(pgMar.getAttribute("w:bottom") || "720")
+    : 2.5;
+  const marginLeft = pgMar
+    ? pxToCm(pgMar.getAttribute("w:left") || "720")
+    : 2.5;
+  const marginRight = pgMar
+    ? pxToCm(pgMar.getAttribute("w:right") || "720")
+    : 2.5;
+
+  const docDefaults = styles.querySelector(
+    "w\\:docDefaults w\\:rPrDefault rPr, docDefaults rPrDefault rPr"
+  );
+  const fontEl = docDefaults?.querySelector("w\\:rFonts, rFonts");
+  const szEl = docDefaults?.querySelector("w\\:sz, sz");
+  const fontFamily =
+    fontEl?.getAttribute("w:ascii") ||
+    fontEl?.getAttribute("w:hAnsi") ||
+    "Arial";
+  const fontSize = szEl
+    ? (parseInt(szEl.getAttribute("w:val") || "24") / 2).toString()
+    : "12";
+
+  const spacingEl = docDefaults?.querySelector("w\\:spacing, spacing");
+  const lineSpacing = spacingEl
+    ? (parseInt(spacingEl.getAttribute("w:line") || "360") / 240).toFixed(1) // 240 = 1 linha
+    : "1.5";
+
+  const pgSz = sectPr?.querySelector("w\\:pgSz, pgSz");
+
+  return {
+    fontSize,
+    fontFamily,
+    lineSpacing,
+    marginTop: marginTop.toFixed(1),
+    marginBottom: marginBottom.toFixed(1),
+    marginLeft: marginLeft.toFixed(1),
+    marginRight: marginRight.toFixed(1),
+  };
+};
+
+function pxToCm(twips: string): number {
+  const dxa = parseInt(twips) || 0;
+  return dxa / 567; // 567 twips = 1 cm
+}

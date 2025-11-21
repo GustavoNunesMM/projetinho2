@@ -1,4 +1,3 @@
-import React from "react";
 import Select from "@/components/common/Select";
 import Input from "@/components/common/Input";
 
@@ -9,13 +8,17 @@ interface QuestionFiltersProps {
     content: string;
     category: string;
   };
+  format?: string;
   onUpdateFilter: (key: string, value: string) => void;
+  onUpdateFormat?: (arg: any) => void;
 }
 
-const QuestionFilters: React.FC<QuestionFiltersProps> = ({
+const QuestionFilters = ({
   filters,
   onUpdateFilter,
-}) => {
+  format,
+  onUpdateFormat,
+}: QuestionFiltersProps) => {
   const typeOptions = [
     { value: "", label: "Todos" },
     { value: "multipla", label: "Múltipla Escolha" },
@@ -28,11 +31,16 @@ const QuestionFilters: React.FC<QuestionFiltersProps> = ({
     { value: "media", label: "Média" },
     { value: "dificil", label: "Difícil" },
   ];
+  const formatoptions = [
+    { value: "block", label: "Bloco" },
+    { value: "list", label: "Lista" },
+    { value: "detail", label: "Detalhe" },
+  ];
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold mb-4">Filtros</h2>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Select
           label="Tipo"
           value={filters.type}
@@ -45,6 +53,14 @@ const QuestionFilters: React.FC<QuestionFiltersProps> = ({
           onChange={(e) => onUpdateFilter("difficulty", e.target.value)}
           options={difficultyOptions}
         />
+        {format && onUpdateFormat && (
+          <Select
+            label="Exibição"
+            value={format}
+            onChange={(e) => onUpdateFormat(e.target.value)}
+            options={formatoptions}
+          />
+        )}
         <Input
           label="Conteúdo"
           value={filters.content}

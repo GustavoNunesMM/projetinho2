@@ -1,166 +1,53 @@
-import { useState, useEffect } from "react";
-import Header from "./components/layout/Header.tsx";
-import Container from "./components/layout/Container.tsx";
-import LayoutsTab from "./components/Tabs/layouts/LayoutsTab.tsx";
-import QuestionsTab from "./components/Tabs/questions/QuestionsTab.tsx";
-import GenerateTab from "./components/Tabs/generate/GenerateTab.tsx";
-import MessageTab from "./components/Tabs/MessageTab/MessageTab.tsx";
-import DevTools from "./components/common/DevTools.tsx";
-import { useLayouts } from "./hooks/useLayouts.ts";
-import { useQuestions } from "./hooks/useQuestions.ts";
-import { useImportHandlers } from "./hooks/useImportHandlers.ts";
-import { Tabs, Tab, Spinner } from "@heroui/react";
-import { Toast } from "./components/common/Toast.tsx";
-import { LayoutFormData } from "./types/index";
-import { getStatistics } from "./database/database.ts";
-import ViewTab from "./components/Tabs/view/viewTab.tsx";
+import { useState } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { Login } from "./Pages/Login";
+import { Register } from "./Pages/Register";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { Spinner } from "@heroui/react";
 
-const App = () => {
-  const [activeTab, setActiveTab] = useState("generate");
-  const [stats, setStats] = useState({
-    questions: 0,
-    categories: 0,
-    layouts: 0,
-  });
+const AuthScreen = () => {
+  const [showLogin, setShowLogin] = useState(true);
 
-  const {
-    layouts,
-    addLayout,
-    updateLayout,
-    deleteLayout,
-    loading: layoutsLoading,
-    error: layoutsError,
-  } = useLayouts();
+  return showLogin ? (
+    <Login onSwitchToRegister={() => setShowLogin(false)} />
+  ) : (
+    <Register onSwitchToLogin={() => setShowLogin(true)} />
+  );
+};
 
-  const {
-    questions,
-    loading: questionsLoading,
-    error: questionsError,
-    refreshQuestions,
-  } = useQuestions();
+const MainApp = () => {
+  return (
+    <div className="min-h-screen">
+      <h1>Aplicação Principal</h1>
+    </div>
+  );
+};
 
-  const { importLayout } = useImportHandlers();
+const AppContent = () => {
+  const { isAuthenticated, loading } = useAuth();
 
-  useEffect(() => {
-    loadStats();
-    refreshQuestions();
-  }, [activeTab, questions.length, layouts.length]);
-
-  const loadStats = async () => {
-    try {
-      const statistics = await getStatistics();
-      setStats(statistics);
-    } catch (error) {
-      console.error("Erro ao carregar estatísticas:", error);
-    }
-  };
-
-  const handleImportLayout = async (file: File) => {
-    try {
-      await importLayout(file, async (importedLayout) => {
-        const layoutForm: LayoutFormData = {
-          name: importedLayout.name,
-          fontSize: "12",
-          fontFamily: "Arial",
-          lineSpacing: "1.5",
-          marginTop: "2.5",
-          marginBottom: "2.5",
-          marginLeft: "2.5",
-          marginRight: "2.5",
-          headerText: importedLayout.name,
-          headerLocked: false,
-          footerText: "",
-          importedFrom: file.name,
-        };
-        await addLayout(layoutForm);
-      });
-      Toast({
-        message: "Layout importado com sucesso!",
-        color: "success",
-      });
-      return true;
-    } catch (error) {
-      Toast({
-        message: `Erro ao importar layout: ${(error as Error).message}`,
-        color: "danger",
-      });
-      return false;
-    }
-  };
-
-  if (layoutsLoading || questionsLoading) {
+  if (!loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" color="primary" />
-          <p className="mt-4 text-gray-600">Carregando dados do banco...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Spinner size="lg" color="primary" />
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen">
-      <Header />
-      <DevTools />
-      <div className="bg-blue-50 border-b border-blue-200 py-3">
-        <Container>
-          <div className="flex gap-6 text-sm">
-            <span className="font-medium">
-              📐 Layouts: <span className="text-blue-600">{stats.layouts}</span>
-            </span>
-            <span className="font-medium">
-              📝 Questões:{" "}
-              <span className="text-blue-600">{stats.questions}</span>
-            </span>
-            <span className="font-medium">
-              🏷️ Categorias:{" "}
-              <span className="text-blue-600">{stats.categories}</span>
-            </span>
-          </div>
-        </Container>
-      </div>
+  return isAuthenticated ? (
+    <ProtectedRoute>
+      <MainApp />
+    </ProtectedRoute>
+  ) : (
+    <AuthScreen />
+  );
+};
 
-      <Tabs
-        variant="underlined"
-        selectedKey={activeTab}
-        onSelectionChange={(key) => setActiveTab(String(key))}
-        aria-label="App Navigation"
-        className="px-6"
-      >
-        <Tab key="generate" title="Gerar">
-          <Container>
-            <GenerateTab layouts={layouts} questions={questions} />
-          </Container>
-        </Tab>
-        <Tab key="layouts" title="Layouts">
-          <Container>
-            <LayoutsTab
-              layouts={layouts}
-              onAdd={addLayout}
-              onDelete={deleteLayout}
-              onImport={handleImportLayout}
-              onUpdate={updateLayout}
-            />
-          </Container>
-        </Tab>
-        <Tab key="questions" title="Questões">
-          <Container>
-            <QuestionsTab />
-          </Container>
-        </Tab>
-        <Tab key="messages" title="Mensagens">
-          <Container>
-            <MessageTab />
-          </Container>
-        </Tab>
-        <Tab key="view" title="Visualização">
-          <Container>
-            <ViewTab selectedQuestions={questions} layout={layouts[0]} />
-          </Container>
-        </Tab>
-      </Tabs>
-    </div>
+const App = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

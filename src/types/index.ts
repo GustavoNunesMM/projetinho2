@@ -88,3 +88,11 @@ export function questionFromDB(questionDB: QuestionDB): Question {
       : [],
   };
 }
+
+export interface GabaritoData {
+  questoes: {
+    numero: number;
+    alternativas: string[]; 
+  }[];
+  colunasPorLinha: number; 
+}

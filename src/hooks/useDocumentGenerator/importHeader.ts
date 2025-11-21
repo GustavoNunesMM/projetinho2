@@ -181,6 +181,12 @@ export function useHeaderFromWord() {
       height: number;
     }[] = [];
     const rows: TableRow[] = [];
+    const gridColEls = Array.from(
+      tableEl.querySelectorAll("w\\:tblGrid w\\:gridCol, tblGrid gridCol")
+    );
+    const colWidthsDXA: number[] = gridColEls.map((col) =>
+      parseInt(col.getAttribute("w:w") || "2500")
+    );
 
     for (let r = 0; r < grid.length; r++) {
       const rowData: string[] = [];
@@ -212,27 +218,23 @@ export function useHeaderFromWord() {
             colspan: cell.gridSpan,
           });
 
-        /* ---------- imagem ---------- */
-        /* ---------- imagem ---------- */
         let imgData: { base64: string; width: number; height: number } | null =
           null;
         if (cell.hasImage && cell.imageId) {
           const target = relationshipMap.get(cell.imageId);
           if (target) {
             const filename = target.replace("media/", "");
-            imgData = imageMap.get(filename) ?? null; // tamanho real do arquivo
-            console.log(imgData)
+            imgData = imageMap.get(filename) ?? null; 
             const tcEl = tcElements[r]?.[originalCellIndex];
-
 
             if (tcEl) {
               const drawing = tcEl.querySelector("w\\:drawing, drawing");
               const extent = drawing?.querySelector("wp\\:extent, extent");
               if (extent) {
-                const cx = extent.getAttribute("cx"); // EMUs
+                const cx = extent.getAttribute("cx"); 
                 const cy = extent.getAttribute("cy");
                 if (cx && cy) {
-                  const width = Math.round(parseInt(cx) / 9525); // EMUs → pt → px
+                  const width = Math.round(parseInt(cx) / 9525);
                   const height = Math.round(parseInt(cy) / 9525);
                   if (imgData) imgData = { ...imgData, width, height };
                 }
@@ -241,7 +243,6 @@ export function useHeaderFromWord() {
           }
         }
         const cellChildren: any[] = [];
-        console.log(imgData)
         if (imgData) {
           images.push({
             row: r,
@@ -263,7 +264,7 @@ export function useHeaderFromWord() {
                 }),
               ],
               alignment: AlignmentType.CENTER,
-              spacing: cell.spacing,
+              spacing: { line: 360 },
             })
           );
         }
@@ -298,7 +299,7 @@ export function useHeaderFromWord() {
         tableCells.push(
           new TableCell({
             children: cellChildren,
-            width: { size: 2500, type: WidthType.DXA },
+            width: { size: colWidthsDXA[c] || 2500, type: WidthType.DXA },
             columnSpan: cell.gridSpan > 1 ? cell.gridSpan : undefined,
             rowSpan: cell.rowspan > 1 ? cell.rowspan : undefined,
             verticalAlign:
@@ -307,6 +308,7 @@ export function useHeaderFromWord() {
                 : cell.verticalAlignment === "bottom"
                   ? VerticalAlign.BOTTOM
                   : VerticalAlign.CENTER,
+            margins: { top: 120, bottom: 120, left: 120, right: 120 }, 
             shading: cell.backgroundColor
               ? { fill: cell.backgroundColor, color: cell.backgroundColor }
               : undefined,
@@ -330,6 +332,7 @@ export function useHeaderFromWord() {
     const table = new Table({
       rows,
       width: { size: 100, type: WidthType.PERCENTAGE },
+      columnWidths: colWidthsDXA,
     });
 
     return [
@@ -379,7 +382,6 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
 
   const borders = getCellBordersFromXml(tcPr);
 
-  console.log("Bordas capturadas:", borders);
 
   const paragraphs = tcEl.querySelectorAll("w\\:p, p");
   let text = "";
