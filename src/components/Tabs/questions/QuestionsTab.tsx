@@ -6,7 +6,12 @@ import { useImportHandlers } from "@/hooks/useImportHandlers.ts";
 import Button from "@/components/common/Button";
 import useDocumentGenerator from "@/hooks/useDocumentGenerator.ts";
 import { Toast } from "@/components/common/Toast.tsx";
-import { Question, QuestionFormData } from "@/types/index";
+import {
+  Question,
+  QuestionFormData,
+  DriveFile,
+  DriveFileSelectorProps,
+} from "@/types/question";
 import { useQuestions } from "@/hooks/useQuestions";
 
 const QuestionsTab = () => {
@@ -232,23 +237,6 @@ const QuestionsTab = () => {
     </div>
   );
 };
-
-interface DriveFile {
-  id: string;
-  name: string;
-}
-
-interface DriveClient {
-  ready: boolean;
-  authorized: boolean;
-  listDocxFiles: () => Promise<DriveFile[]>;
-}
-
-interface DriveFileSelectorProps {
-  onSelect: (fileId: string) => void;
-  onClose: () => void;
-  driveClient: DriveClient;
-}
 
 const DriveFileSelector = ({
   onSelect,

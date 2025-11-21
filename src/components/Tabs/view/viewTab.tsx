@@ -19,9 +19,9 @@ import {
 } from "lucide-react";
 import { renderAsync } from "docx-preview";
 import { motion } from "framer-motion";
-import { useDocumentGenerator } from "../../hooks/useDocumentGenerator";
-import { Question } from "../../types/question";
-import { Layout } from "../../types/layout";
+import { useDocumentGenerator } from "../../../hooks/useDocumentGenerator";
+import { Question } from "../../../types/question";
+import { Layout } from "../../../types/layout";
 
 interface ViewTabProps {
   selectedQuestions: Question[];

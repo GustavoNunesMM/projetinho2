@@ -44,11 +44,9 @@ export function useHeaderFromWord() {
     const arrayBuffer = await file.arrayBuffer();
     const zip = await JSZip.loadAsync(arrayBuffer);
 
-    // Ler documento XML principal
     const docXml = await zip.file("word/document.xml")?.async("text");
     if (!docXml) throw new Error("Documento Word inválido");
 
-    // Ler relacionamentos para mapear imagens
     const relsXml = await zip
       .file("word/_rels/document.xml.rels")
       ?.async("text");
@@ -59,15 +57,12 @@ export function useHeaderFromWord() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(docXml, "text/xml");
 
-    // Encontrar primeira tabela
     const tableEl = doc.querySelector("w\\:tbl, tbl");
     if (!tableEl) throw new Error("Nenhuma tabela encontrada no Word");
 
-    // Processar imagens
     const imageMap = await extractImages(zip);
     console.log("Images found:", imageMap.size);
 
-    // Processar linhas da tabela
     const rawData: string[][] = [];
     const styles: CellStyle[][] = [];
     const mergedCells: {
@@ -85,10 +80,9 @@ export function useHeaderFromWord() {
     }[] = [];
     const rows: TableRow[] = [];
 
-    // Primeira passada: coletar todas as células
     const tableRows = tableEl.querySelectorAll("w\\:tr, tr");
     const parsedTable: ParsedCell[][] = [];
-    const tcElements: Element[][] = []; // Guardar referência aos elementos originais
+    const tcElements: Element[][] = []; 
 
     tableRows.forEach((trEl) => {
       const cells = trEl.querySelectorAll("w\\:tc, tc");
@@ -106,7 +100,6 @@ export function useHeaderFromWord() {
 
     console.log("Parsed table structure:", parsedTable);
 
-    // Processar mesclagens e criar grid real
     const grid: (ParsedCell | null)[][] = [];
 
     for (let r = 0; r < parsedTable.length; r++) {
@@ -116,40 +109,32 @@ export function useHeaderFromWord() {
       let gridCol = 0;
 
       while (cellIndex < parsedTable[r].length) {
-        // Encontrar próxima coluna vazia no grid
         while (grid[r][gridCol] !== undefined) {
           gridCol++;
         }
 
         const cell = parsedTable[r][cellIndex];
 
-        // Se a célula é continuação de vMerge, não incluir no grid como célula visível
         if (cell.vMerge === "continue") {
           cellIndex++;
           continue;
         }
 
-        // Colocar célula no grid
         grid[r][gridCol] = cell;
 
-        // Preencher colspan
         for (let c = 1; c < cell.gridSpan; c++) {
-          grid[r][gridCol + c] = null; // Célula mesclada horizontalmente
+          grid[r][gridCol + c] = null; 
         }
 
-        // Preencher rowspan
         if (cell.vMerge === "restart") {
-          // Contar quantas linhas seguem com vMerge="continue" na mesma posição
           let rowspanCount = 1;
 
           for (let nextR = r + 1; nextR < parsedTable.length; nextR++) {
-            // Verificar se há continuação de merge nesta posição
             let foundContinue = false;
             let tempCellIndex = 0;
             let tempGridCol = 0;
 
             for (const nextCell of parsedTable[nextR]) {
-              // Pular posições já ocupadas no grid
               while (grid[nextR] && grid[nextR][tempGridCol] !== undefined) {
                 tempGridCol++;
               }
@@ -158,7 +143,6 @@ export function useHeaderFromWord() {
                 foundContinue = true;
                 rowspanCount++;
 
-                // Marcar células como null no grid (espaço ocupado por rowspan)
                 for (let c = 0; c < cell.gridSpan; c++) {
                   if (!grid[nextR]) grid[nextR] = [];
                   grid[nextR][gridCol + c] = null;
@@ -183,7 +167,6 @@ export function useHeaderFromWord() {
 
     console.log("Grid structure:", grid);
 
-    // Criar células do docx
     for (let r = 0; r < grid.length; r++) {
       const rowData: string[] = [];
       const rowStyles: CellStyle[] = [];

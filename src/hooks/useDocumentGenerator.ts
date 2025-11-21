@@ -4,6 +4,7 @@ import {
   generateDocx,
   readDocx,
   generateQuestionDocx,
+  parseQuestionsFromText,
 } from "./useDocumentGenerator/ExportWord";
 import { useHeaderFromWord } from "./useDocumentGenerator/importHeader";
 import { generatePdf } from "./useDocumentGenerator/exportPdf";
@@ -19,6 +20,7 @@ export function useDocumentGenerator() {
     generateDocx,
     generatePdf,
     readDocx,
+    parseQuestionsFromText,
     importHeaderFromDocx,
     saveFile,
   };

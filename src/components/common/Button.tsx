@@ -6,10 +6,13 @@ type variant =
   | "success"
   | "danger"
   | "outline"
-  | "default";
+  | "default"
+  | "light"
+  | "light-success"
+  | "light-danger";
 
 type colorVariant = "primary" | "secondary" | "success" | "danger" | "default";
-type Hvariant = "solid" | "bordered";
+type Hvariant = "solid" | "bordered" | "light";
 type typeProps = "button" | "submit" | "reset";
 
 interface props {
@@ -19,6 +22,7 @@ interface props {
   disabled?: boolean;
   icon?: any;
   className?: string;
+  isIconOnly?: boolean;
   type?: typeProps;
   isLoading?: boolean;
 }
@@ -30,6 +34,7 @@ const Button = ({
   disabled = false,
   icon: Icon,
   className = "",
+  isIconOnly = false,
   type = "button",
   isLoading = false,
 }: props) => {
@@ -47,6 +52,12 @@ const Button = ({
         return { color: "danger", variant: "solid" };
       case "outline":
         return { color: "default", variant: "bordered" };
+      case "light":
+        return { color: "primary", variant: "light" };
+      case "light-success":
+        return { color: "success", variant: "light" };
+      case "light-danger":
+        return { color: "danger", variant: "light" };
       default:
         return { color: "default", variant: "solid" };
     }
@@ -62,6 +73,7 @@ const Button = ({
       color={color}
       variant={hVariant}
       className={className}
+      isIconOnly={isIconOnly}
       startContent={Icon ? <Icon size={20} /> : undefined}
       isLoading={isLoading}
     >

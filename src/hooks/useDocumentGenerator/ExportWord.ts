@@ -10,12 +10,12 @@ import {
   ISectionOptions,
   convertInchesToTwip,
 } from "docx";
-import { getImageDimensions } from "../../utils/imageImport";
-
+import { getImageDimensions } from "@/utils/imageImport";
+import { Message } from "@/types/messages";
 import mammoth from "mammoth";
 import { Layout } from "@/types/layout";
 import { Question } from "@/types/question";
-import { HeaderData } from "@/types/documentGeneration";
+import { HeaderData, ParsedQuestion } from "@/types/documentGeneration";
 
 const base64ToUint8Array = (base64: string): Uint8Array => {
   const base64Data = base64.includes(",") ? base64.split(",")[1] : base64;
@@ -49,7 +49,8 @@ export const lineSpacingToValue = (spacing: string): number => {
 export const generateDocx = async (
   questions: Question[],
   layout: Layout,
-  importedHeader?: HeaderData[]
+  importedHeader?: HeaderData[],
+  message?: Message
 ): Promise<Blob> => {
   const sections: (Paragraph | Table)[] = [];
 
@@ -66,21 +67,65 @@ export const generateDocx = async (
     importedHeader.forEach((headerData) => {
       sections.push(headerData.docxTable);
     });
-    sections.push(
-      new Paragraph({
-        text: "_".repeat(80),
-        spacing: { before: 200, after: 400 },
-      })
-    );
   } else if (layout.header || layout.headerText) {
     sections.push(
       new Paragraph({
         text: layout.header || layout.headerText || "",
         heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
-        spacing: { after: 400 },
+        spacing: { after: 200 },
       })
     );
+  }
+
+  if (message) {
+    sections.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: message.title,
+            bold: true,
+            size: fontSize + 2,
+            font: layout.fontFamily || "Arial",
+          }),
+        ],
+        spacing: { before: 200, after: 200, line: lineSpacing },
+      })
+    );
+
+    if (message.isList) {
+      message.items.forEach((item, index) => {
+        const prefix = message.isOrdered ? `${index + 1}. ` : "• ";
+        sections.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `${prefix}${item}`,
+                size: fontSize,
+                font: layout.fontFamily || "Arial",
+              }),
+            ],
+            spacing: { after: 100, line: lineSpacing },
+            indent: { left: 360 },
+          })
+        );
+      });
+    } else {
+      message.items.forEach((item) => {
+        sections.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: item,
+                size: fontSize,
+                font: layout.fontFamily || "Arial",
+              }),
+            ],
+            spacing: { after: 100, line: lineSpacing },
+          })
+        );
+      });
+    }
   }
 
   for (let i = 0; i < questions.length; i++) {
@@ -247,4 +292,60 @@ export const readDocx = async (blob: Blob): Promise<string> => {
     console.error("Erro ao ler DOCX:", error);
     throw new Error("Falha ao ler documento Word: " + (error as Error).message);
   }
+};
+
+export const parseQuestionsFromText = (text: string) => {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+
+  const questions: ParsedQuestion[] = [];
+  let current: Partial<ParsedQuestion> = {};
+  let buffer: string[] = [];
+
+  const flush = () => {
+    if (buffer.length === 0) return;
+    const statement = buffer.join(" ").trim();
+    if (statement) {
+      if (!current.statement) current.statement = statement;
+      else current.statement += " " + statement;
+    }
+    buffer = [];
+  };
+
+  for (const line of lines) {
+    const numMatch = line.match(/^\s*(?:\d+[\.\)]|\d+\s*[-–—])\s*(.+)/i);
+    if (numMatch) {
+      flush();
+      if (current.statement) {
+        questions.push(current as ParsedQuestion);
+      }
+      current = { statement: numMatch[1].trim(), alternatives: [] };
+      continue;
+    }
+
+    const altMatch = line.match(/^([a-zA-Z])\s*[)\.\s]\s*(.+)/);
+    if (altMatch && current.alternatives) {
+      flush();
+      current.alternatives.push({
+        letter: altMatch[1].toUpperCase(),
+        text: altMatch[2].trim(),
+      });
+      continue;
+    }
+
+    buffer.push(line);
+  }
+
+  flush();
+  if (current.statement) questions.push(current as ParsedQuestion);
+
+  return questions.map((q, idx) => ({
+    ...q,
+    id: idx + 1,
+    subject: "Geral",
+    difficulty: "media",
+    tags: [],
+  }));
 };

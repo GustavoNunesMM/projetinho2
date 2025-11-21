@@ -1,8 +1,9 @@
 import { Edit2, Trash2, Save } from "lucide-react";
-import { Chip, Button } from "@heroui/react";
+import { Chip } from "@heroui/react";
 import { useDocumentGenerator } from "@/hooks/useDocumentGenerator";
 import { Question } from "@/types/question";
 import { Toast } from "@/components/common/Toast.tsx";
+import Button from "@/components/common/Button.tsx";
 interface QuestionCardProps {
   question: Question;
   onEdit: () => void;
@@ -58,26 +59,23 @@ const QuestionCard = ({ question, onEdit, onDelete }: QuestionCardProps) => {
           <Button
             isIconOnly
             variant="light"
-            color="primary"
-            onPress={onEdit}
+            onClick={onEdit}
             aria-label="Editar"
           >
             <Edit2 size={16} />
           </Button>
           <Button
             isIconOnly
-            variant="light"
-            color="danger"
-            onPress={onDelete}
+            variant="light-danger"
+            onClick={onDelete}
             aria-label="Excluir"
           >
             <Trash2 size={16} />
           </Button>
           <Button
             isIconOnly
-            variant="light"
-            color="success"
-            onPress={handleSaveFile}
+            variant="light-success"
+            onClick={handleSaveFile}
             aria-label="Salvar como word"
           >
             <Save size={16} />

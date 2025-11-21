@@ -1,0 +1,422 @@
+import React, { useState } from "react";
+import { Download, Loader, Upload, X, MessageSquareText, Check } from "lucide-react";
+import Button from "@/components/common/Button.tsx";
+import { useDocumentGenerator } from "@/hooks/useDocumentGenerator.ts";
+import { useDriveClient } from "@/hooks/useDriveClient.ts";
+import { useMessages } from "@/hooks/useMessages.ts";
+import { Layout } from "@/types/layout";
+import { Question } from "@/types/question";
+import { Message } from "@/types/message";
+import { Toast } from "@/components/common/Toast.tsx";
+
+interface DocumentGeneratorProps {
+  selectedLayout: Layout | null;
+  questions: Question[];
+  selectedQuestions?: number[];
+}
+
+const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
+  selectedLayout,
+  questions,
+  selectedQuestions = [],
+}) => {
+  const [generating, setGenerating] = useState(false);
+  const [importedHeader, setImportedHeader] = useState<any[] | null>(null);
+  const [headerFileName, setHeaderFileName] = useState<string | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [isModalMessagesOpen, openModalMessages] = useState(false);
+
+  const { generateDocx, generatePdf, importHeaderFromDocx, saveFile } =
+    useDocumentGenerator();
+  const { messages, loading: loadingMessages } = useMessages();
+  const driveClient = useDriveClient();
+
+  const selectedQuestionsData = questions.filter((q) =>
+    selectedQuestions.includes(q.id)
+  );
+  const selectedCount = selectedQuestionsData.length;
+
+  const handleImportHeader = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".docx")) {
+      Toast({ message: "Por favor, selecione um arquivo .docx" });
+      return;
+    }
+
+    try {
+      Toast({ message: "Importando cabeçalho..." });
+      const headerContent = await importHeaderFromDocx(file);
+      console.log(headerContent);
+      setImportedHeader(headerContent);
+      setHeaderFileName(file.name);
+      Toast({ message: "Cabeçalho importado com sucesso!" });
+    } catch (error: any) {
+      Toast({
+        message: `Erro ao importar cabeçalho: ${error.message}`,
+        color: "danger",
+      });
+    }
+  };
+
+  const handleRemoveHeader = () => {
+    setImportedHeader(null);
+    setHeaderFileName(null);
+    Toast({ message: "Cabeçalho removido" });
+  };
+
+  const handleSelectMessage = (message: Message) => {
+    setSelectedMessage(message);
+    openModalMessages(false);
+    Toast({ message: `Mensagem "${message.title}" selecionada!` });
+  };
+
+  const handleRemoveMessage = () => {
+    setSelectedMessage(null);
+    Toast({ message: "Mensagem removida" });
+  };
+
+  const handleGenerateDocument = async (format: "docx" | "pdf") => {
+    if (!selectedLayout) {
+      Toast({ message: "Selecione um layout primeiro!" });
+      return;
+    }
+    if (selectedCount === 0) {
+      Toast({ message: "Selecione pelo menos uma questão!", color: "warning" });
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      let blob: Blob;
+      let fileName: string;
+
+      if (format === "docx") {
+        blob = await generateDocx(
+          selectedQuestionsData,
+          selectedLayout,
+          importedHeader || undefined,
+          selectedMessage || undefined
+        );
+        fileName = `prova_${Date.now()}.docx`;
+      } else {
+        blob = await generatePdf(
+          selectedQuestionsData,
+          selectedLayout,
+          importedHeader || undefined,
+          selectedMessage || undefined
+        );
+        fileName = `prova_${Date.now()}.pdf`;
+      }
+
+      saveFile(blob, fileName);
+
+      if (format === "docx" && driveClient.authorized) {
+        const shouldSaveToDrive = confirm(
+          "Documento gerado! Deseja também salvá-lo no Google Drive?"
+        );
+        if (shouldSaveToDrive) {
+          await driveClient.createDocxFile(fileName, blob);
+          Toast({ message: "Documento salvo localmente e no Google Drive!" });
+        }
+      } else {
+        Toast({
+          message: `Documento ${format.toUpperCase()} gerado com sucesso!`,
+        });
+      }
+    } catch (error: any) {
+      console.error("Erro ao gerar documento:", error);
+      Toast({
+        message: `Erro ao gerar documento: ${error.message}`,
+        color: "danger",
+      });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const renderButtonContent = (
+    label: string,
+    isLoading: boolean,
+    Icon: React.FC<{ className?: string }>
+  ) => (
+    <span className="flex items-center justify-center gap-2">
+      {isLoading ? (
+        <Loader className="animate-spin w-5 h-5" />
+      ) : (
+        <Icon className="w-5 h-5" />
+      )}
+      {label}
+    </span>
+  );
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <h2 className="text-2xl font-bold mb-4">Gerar Documento</h2>
+
+      {!selectedLayout && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+          <p className="text-yellow-800">
+            ⚠️ Selecione um layout na aba "Layouts" antes de gerar o documento.
+          </p>
+        </div>
+      )}
+
+      <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded">
+        <h3 className="text-lg font-semibold mb-3">
+          Cabeçalho Customizado (Opcional)
+        </h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Importe um arquivo .docx contendo apenas o cabeçalho formatado
+          (tabelas, texto com formatação, etc.) que será adicionado ao início do
+          documento.
+        </p>
+
+        {!importedHeader ? (
+          <div className="flex items-center gap-3">
+            <label
+              htmlFor="header-upload"
+              className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+            >
+              <Upload className="w-5 h-5" />
+              Importar Cabeçalho (.docx)
+            </label>
+            <input
+              id="header-upload"
+              type="file"
+              accept=".docx"
+              onChange={handleImportHeader}
+              className="hidden"
+            />
+          </div>
+        ) : (
+          <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded">
+            <div className="flex items-center gap-2">
+              <span className="text-green-600">✓</span>
+              <span className="text-sm font-medium text-green-800">
+                {headerFileName}
+              </span>
+            </div>
+            <button
+              onClick={handleRemoveHeader}
+              className="text-red-500 hover:text-red-700 transition"
+              title="Remover cabeçalho"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-6 bg-gray-50 border border-gray-200 rounded p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold">
+            Mensagens Adicionais (Opcional)
+          </h3>
+          <Button
+            variant="primary"
+            onClick={() => openModalMessages(true)}
+            disabled={!selectedLayout || selectedCount === 0}
+          >
+            <MessageSquareText size={16} />
+            Selecionar Mensagem
+          </Button>
+        </div>
+
+        {selectedMessage && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Check className="w-5 h-5 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">
+                  {selectedMessage.title}
+                </span>
+              </div>
+              <button
+                onClick={handleRemoveMessage}
+                className="text-red-500 hover:text-red-700 transition"
+                title="Remover mensagem"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="text-xs text-gray-600 ml-7">
+              {selectedMessage.isList ? (
+                selectedMessage.isOrdered ? (
+                  <ol className="list-decimal list-inside">
+                    {selectedMessage.items.slice(0, 3).map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                    {selectedMessage.items.length > 3 && (
+                      <li>... e mais {selectedMessage.items.length - 3} itens</li>
+                    )}
+                  </ol>
+                ) : (
+                  <ul className="list-disc list-inside">
+                    {selectedMessage.items.slice(0, 3).map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                    {selectedMessage.items.length > 3 && (
+                      <li>... e mais {selectedMessage.items.length - 3} itens</li>
+                    )}
+                  </ul>
+                )
+              ) : (
+                <div>
+                  {selectedMessage.items.slice(0, 2).map((item, idx) => (
+                    <p key={idx}>{item}</p>
+                  ))}
+                  {selectedMessage.items.length > 2 && (
+                    <p>... e mais {selectedMessage.items.length - 2} itens</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {isModalMessagesOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h3 className="text-xl font-bold">Selecionar Mensagem</h3>
+              <button
+                onClick={() => openModalMessages(false)}
+                className="text-gray-500 hover:text-gray-700 transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {loadingMessages ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader className="animate-spin mr-2" />
+                  <span>Carregando mensagens...</span>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 mb-4">
+                    Nenhuma mensagem cadastrada ainda.
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Vá para a aba "Mensagens" para criar uma nova mensagem.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      onClick={() => handleSelectMessage(message)}
+                      className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                        selectedMessage?.id === message.id
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-blue-300"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 mb-2">
+                            {message.title}
+                          </h4>
+                          <div className="text-sm text-gray-600">
+                            {message.isList ? (
+                              message.isOrdered ? (
+                                <ol className="list-decimal list-inside space-y-1">
+                                  {message.items.slice(0, 3).map((item, idx) => (
+                                    <li key={idx}>{item}</li>
+                                  ))}
+                                  {message.items.length > 3 && (
+                                    <li className="text-gray-400">
+                                      ... e mais {message.items.length - 3} itens
+                                    </li>
+                                  )}
+                                </ol>
+                              ) : (
+                                <ul className="list-disc list-inside space-y-1">
+                                  {message.items.slice(0, 3).map((item, idx) => (
+                                    <li key={idx}>{item}</li>
+                                  ))}
+                                  {message.items.length > 3 && (
+                                    <li className="text-gray-400">
+                                      ... e mais {message.items.length - 3} itens
+                                    </li>
+                                  )}
+                                </ul>
+                              )
+                            ) : (
+                              <div className="space-y-1">
+                                {message.items.slice(0, 2).map((item, idx) => (
+                                  <p key={idx}>{item}</p>
+                                ))}
+                                {message.items.length > 2 && (
+                                  <p className="text-gray-400">
+                                    ... e mais {message.items.length - 2} itens
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {selectedMessage?.id === message.id && (
+                          <Check className="w-6 h-6 text-blue-600 flex-shrink-0 ml-3" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t bg-gray-50">
+              <Button
+                variant="outline"
+                onClick={() => openModalMessages(false)}
+                className="w-full"
+              >
+                Fechar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-4">
+        <Button
+          variant="primary"
+          onClick={() => handleGenerateDocument("docx")}
+          disabled={!selectedLayout || selectedCount === 0 || generating}
+          className="flex-1"
+        >
+          {renderButtonContent(
+            `Gerar DOCX (${selectedCount} questões)`,
+            generating,
+            Download
+          )}
+        </Button>
+      </div>
+
+      {selectedLayout && (
+        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">
+            Configurações Aplicadas:
+          </h3>
+          <ul className="text-sm text-blue-800 space-y-1">
+            <li>• Layout: {selectedLayout.name}</li>
+            <li>• Fonte: {selectedLayout.fontFamily} ({selectedLayout.fontSize})</li>
+            <li>• Espaçamento: {selectedLayout.lineSpacing}</li>
+            {importedHeader && <li>• Cabeçalho customizado incluído</li>}
+            {selectedMessage && <li>• Mensagem adicional incluída</li>}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DocumentGenerator;

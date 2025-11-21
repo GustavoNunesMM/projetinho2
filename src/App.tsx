@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import Header from "./components/layout/Header.tsx";
 import Container from "./components/layout/Container.tsx";
-import LayoutsTab from "./components/layouts/LayoutsTab.tsx";
-import QuestionsTab from "./components/questions/QuestionsTab.tsx";
-import GenerateTab from "./components/generate/GenerateTab.tsx";
+import LayoutsTab from "./components/Tabs/layouts/LayoutsTab.tsx";
+import QuestionsTab from "./components/Tabs/questions/QuestionsTab.tsx";
+import GenerateTab from "./components/Tabs/generate/GenerateTab.tsx";
+import MessageTab from "./components/Tabs/MessageTab/MessageTab.tsx";
 import DevTools from "./components/common/DevTools.tsx";
 import { useLayouts } from "./hooks/useLayouts.ts";
 import { useQuestions } from "./hooks/useQuestions.ts";
@@ -12,7 +13,8 @@ import { Tabs, Tab, Spinner } from "@heroui/react";
 import { Toast } from "./components/common/Toast.tsx";
 import { LayoutFormData } from "./types/index";
 import { getStatistics } from "./database/database.ts";
-import ViewTab from "./components/viewTab/viewTab.tsx";
+import ViewTab from "./components/Tabs/view/viewTab.tsx";
+
 const App = () => {
   const [activeTab, setActiveTab] = useState("generate");
   const [stats, setStats] = useState({
@@ -131,7 +133,6 @@ const App = () => {
             <GenerateTab layouts={layouts} questions={questions} />
           </Container>
         </Tab>
-
         <Tab key="layouts" title="Layouts">
           <Container>
             <LayoutsTab
@@ -143,10 +144,14 @@ const App = () => {
             />
           </Container>
         </Tab>
-
         <Tab key="questions" title="Questões">
           <Container>
             <QuestionsTab />
+          </Container>
+        </Tab>
+        <Tab key="messages" title="Mensagens">
+          <Container>
+            <MessageTab />
           </Container>
         </Tab>
         <Tab key="view" title="Visualização">

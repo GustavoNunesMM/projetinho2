@@ -85,6 +85,15 @@ async function initializeDatabase(db: Database) {
       importedFrom TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      items TEXT NOT NULL,
+      isList INTEGER DEFAULT 0,
+      isOrdered INTEGER DEFAULT 0,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
 }
@@ -262,7 +271,36 @@ export async function deleteLayout(id: number): Promise<void> {
   const db = await getDatabase();
   await db.execute("DELETE FROM layouts WHERE id = $1", [id]);
 }
+// ===================== CRUD: Messages ===================
+export async function getAllMessages(): Promise<any[]> {
+  const db = await getDatabase();
+  return await db.select("SELECT * FROM messages ORDER BY createdAt DESC");
+}
 
+export async function insertMessage(message: any): Promise<any> {
+  const db = await getDatabase();
+  const result = await db.execute(
+    `INSERT INTO messages (title, items, isList, isOrdered, createdAt, updatedAt) 
+     VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
+    [message.title, message.items, message.isList ? 1 : 0, message.isOrdered ? 1 : 0]
+  );
+  return await db.select("SELECT * FROM messages WHERE id = ?", [result.lastInsertId]);
+}
+
+export async function updateMessage(id: number, message: any): Promise<void> {
+  const db = await getDatabase();
+  await db.execute(
+    `UPDATE messages 
+     SET title = ?, items = ?, isList = ?, isOrdered = ?, updatedAt = datetime('now')
+     WHERE id = ?`,
+    [message.title, message.items, message.isList ? 1 : 0, message.isOrdered ? 1 : 0, id]
+  );
+}
+
+export async function deleteMessage(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.execute("DELETE FROM messages WHERE id = ?", [id]);
+}
 // ==================== Utilitários ====================
 
 export async function getStatistics() {
