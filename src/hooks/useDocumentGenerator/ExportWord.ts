@@ -502,8 +502,6 @@ export const extractWordLayoutInfo = async (
     ? (parseInt(spacingEl.getAttribute("w:line") || "360") / 240).toFixed(1) // 240 = 1 linha
     : "1.5";
 
-  const pgSz = sectPr?.querySelector("w\\:pgSz, pgSz");
-
   return {
     fontSize,
     fontFamily,

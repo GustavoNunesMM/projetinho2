@@ -125,7 +125,7 @@ export const useQuestions = () => {
               ? q.difficulty
               : "media",
           subject: q.subject || "Geral",
-          category: q.category || "Importada",
+          category: "Importada",
           type: q.alternatives?.length ? "multipla" : "aberta",
           options:
             q.alternatives?.map((a: any) => a.text || a.texto || "") || [],

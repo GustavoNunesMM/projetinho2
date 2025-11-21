@@ -1,5 +1,5 @@
 // components/modal/GabaritoModal.tsx
-import React, { useCallback, useState } from "react";
+import React, {  useState } from "react";
 import { X } from "lucide-react";
 import Button from "@/components/common/Button";
 import { GabaritoData } from "@/types";
@@ -20,7 +20,7 @@ export const GabaritoModal: React.FC<GabaritoModalProps> = ({
   if (!gabarito) return;
   if (!gabarito.questoes) return;
   const length = gabarito.questoes[0].alternativas.length;
-  const [cols, setCols] = useState(gabarito.questoes[0].alternativas.length);
+  const [cols] = useState(gabarito.questoes[0].alternativas.length);
 
   if (!isOpen) return null;
 

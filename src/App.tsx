@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./contexts/AuthContext";
 import { Login } from "./Pages/Login";
 import { Register } from "./Pages/Register";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Spinner } from "@heroui/react";
+import Home from "./Pages/home";
 
 const AuthScreen = () => {
   const [showLogin, setShowLogin] = useState(true);
@@ -15,15 +17,7 @@ const AuthScreen = () => {
   );
 };
 
-const MainApp = () => {
-  return (
-    <div className="min-h-screen">
-      <h1>Aplicação Principal</h1>
-    </div>
-  );
-};
-
-const AppContent = () => {
+const App = () => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -34,20 +28,19 @@ const AppContent = () => {
     );
   }
 
-  return isAuthenticated ? (
-    <ProtectedRoute>
-      <MainApp />
-    </ProtectedRoute>
-  ) : (
-    <AuthScreen />
-  );
-};
-
-const App = () => {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Routes>
+      <Route path="/auth" element={!isAuthenticated ? <AuthScreen /> : <Navigate to="/home" />} />
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/auth"} />} />
+    </Routes>
   );
 };
 

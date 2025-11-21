@@ -35,7 +35,7 @@ export default function DevTools() {
   const handleTestConnection = async () => {
     try {
       const db = await getDatabase();
-      console.log("✅ Conexão com banco OK");
+      console.log("✅ Conexão com banco OK", db);
       alert("✅ Banco de dados conectado!");
     } catch (error) {
       console.error("❌ Erro ao conectar:", error);

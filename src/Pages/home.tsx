@@ -5,7 +5,7 @@ import LayoutsTab from "@/components/Tabs/layouts/LayoutsTab.tsx";
 import QuestionsTab from "@/components/Tabs/questions/QuestionsTab.tsx";
 import GenerateTab from "@/components/Tabs/generate/GenerateTab.tsx";
 import MessageTab from "@/components/Tabs/MessageTab/MessageTab.tsx";
-import DevTools from "@/components/common/DevTools.tsx";
+//import DevTools from "@/components/common/DevTools.tsx";
 import { useLayouts } from "@/hooks/useLayouts.ts";
 import { useQuestions } from "@/hooks/useQuestions.ts";
 import { useImportHandlers } from "@/hooks/useImportHandlers.ts";
@@ -15,7 +15,7 @@ import { LayoutFormData } from "@/types/index";
 import { getStatistics } from "@/database/database.ts";
 import { extractWordLayoutInfo } from "@/hooks/useDocumentGenerator/ExportWord";
 
-const App = () => {
+const Home = () => {
   const [activeTab, setActiveTab] = useState("generate");
   const [stats, setStats] = useState({
     questions: 0,
@@ -30,13 +30,11 @@ const App = () => {
     updateLayout,
     deleteLayout,
     loading: layoutsLoading,
-    error: layoutsError,
   } = useLayouts();
 
   const {
     questions,
     loading: questionsLoading,
-    error: questionsError,
     refreshQuestions,
   } = useQuestions();
 
@@ -97,7 +95,7 @@ const App = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <DevTools />
+      {/*<DevTools />*/}
       <div className="bg-blue-50 border-b border-blue-200 py-3">
         <Container>
           <div className="flex gap-6 text-sm">
@@ -158,4 +156,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default Home;
