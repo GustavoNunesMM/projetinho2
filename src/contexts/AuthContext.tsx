@@ -19,12 +19,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("AuthProvider: Iniciando verificação de usuário");
     checkUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("AuthProvider: Auth state changed", event);
         if (session?.user) {
-          await loadUserProfile(session.user);
+          loadUserFromAuth(session.user);
         } else {
           setUser(null);
         }
@@ -38,107 +40,99 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkUser = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log("checkUser: Verificando sessão...");
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("checkUser: Erro ao obter sessão", error);
+        throw error;
+      }
+      
+      console.log("checkUser: Sessão obtida", !!session);
       
       if (session?.user) {
-        await loadUserProfile(session.user);
+        loadUserFromAuth(session.user);
       }
     } catch (error) {
-      console.error("Erro ao verificar usuário:", error);
+      console.error("checkUser: Erro ao verificar usuário:", error);
     } finally {
+      console.log("checkUser: Finalizando loading");
       setLoading(false);
     }
   };
 
-  const loadUserProfile = async (authUser: SupabaseUser) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", authUser.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (!data) {
-        const username = authUser.email?.split('@')[0] || 'user';
-        
-        const { data: newProfile, error: insertError } = await supabase
-          .from("profiles")
-          .insert([
-            {
-              id: authUser.id,
-              username: username,
-              email: authUser.email!,
-            },
-          ])
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-
-        setUser({
-          id: authUser.id,
-          email: authUser.email!,
-          username: newProfile.username,
-          created_at: newProfile.created_at,
-        });
-      } else {
-        setUser({
-          id: authUser.id,
-          email: authUser.email!,
-          username: data.username,
-          created_at: data.created_at,
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao carregar perfil:", error);
-    }
+  const loadUserFromAuth = (authUser: SupabaseUser) => {
+    console.log("loadUserFromAuth: Carregando usuário", authUser.id);
+    
+    const username = authUser.user_metadata?.username || 
+                     authUser.email?.split('@')[0] || 
+                     'user';
+    
+    setUser({
+      id: authUser.id,
+      email: authUser.email!,
+      username: username,
+    });
+    
+    console.log("loadUserFromAuth: Usuário carregado com sucesso");
   };
 
   const login = async (data: LoginFormData) => {
+    console.log("login: Tentando fazer login com", data.email);
+    
     const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error("login: Erro ao fazer login", error);
+      throw error;
+    }
+
+    console.log("login: Login bem-sucedido");
 
     if (authData.user) {
-      await loadUserProfile(authData.user);
+      loadUserFromAuth(authData.user);
     }
   };
 
   const register = async (data: UserFormData) => {
+    console.log("register: Tentando registrar", data.email);
+    
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
+      options: {
+        data: {
+          username: data.username,
+        }
+      }
     });
 
-    if (signUpError) throw signUpError;
+    if (signUpError) {
+      console.error("register: Erro ao registrar", signUpError);
+      throw signUpError;
+    }
+
+    console.log("register: Registro bem-sucedido");
 
     if (authData.user) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert([
-          {
-            id: authData.user.id,
-            username: data.username,
-            email: data.email,
-          },
-        ]);
-
-      if (profileError) throw profileError;
-
-      await loadUserProfile(authData.user);
+      loadUserFromAuth(authData.user);
     }
   };
 
   const logout = async () => {
+    console.log("logout: Fazendo logout");
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error) {
+      console.error("logout: Erro ao fazer logout", error);
+      throw error;
+    }
     setUser(null);
   };
+
+  console.log("AuthProvider: Render - loading:", loading, "isAuthenticated:", !!user);
 
   return (
     <AuthContext.Provider

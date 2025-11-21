@@ -26,7 +26,7 @@ const MainApp = () => {
 const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
 
-  if (!loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <Spinner size="lg" color="primary" />

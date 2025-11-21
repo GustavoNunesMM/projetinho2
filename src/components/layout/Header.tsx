@@ -16,7 +16,7 @@ const Header = () => {
   return (
     <header className="bg-blue-600 text-white p-4 shadow-lg">
       <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Sistema de Questões</h1>
+        <h1 className="text-2xl font-bold">Sistemade Questões</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm">Olá, {user?.username}</span>
           <Button
