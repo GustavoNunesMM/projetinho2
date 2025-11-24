@@ -26,12 +26,22 @@ interface DocumentGeneratorProps {
   selectedLayout: Layout | null;
   questions: Question[];
   selectedQuestions?: number[];
+  onHeaderChange?: (header: any[] | null) => void;
+  onMessageChange?: (message: Message | null) => void;
+  onGabaritoChange?: (gabarito: GabaritoData | null) => void;
+  setVisualize: (preVisualize: boolean) => void;
+  isBigLayout: boolean;
 }
 
 const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   selectedLayout,
   questions,
   selectedQuestions = [],
+  onHeaderChange,
+  onMessageChange,
+  onGabaritoChange,
+  setVisualize,
+  isBigLayout = true,
 }) => {
   const [generating, setGenerating] = useState(false);
   const [importedHeader, setImportedHeader] = useState<any[] | null>(null);
@@ -59,6 +69,19 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     const valid = selectedQuestionsData.some((q) => q.type === "multipla");
     sethaveValidQuestion(valid);
   }, [selectedQuestionsData]);
+
+  useEffect(() => {
+    if (onHeaderChange) onHeaderChange(importedHeader);
+  }, [importedHeader, onHeaderChange]);
+
+  useEffect(() => {
+    if (onMessageChange) onMessageChange(selectedMessage);
+  }, [selectedMessage, onMessageChange]);
+
+  useEffect(() => {
+    if (onGabaritoChange) onGabaritoChange(gabaritoData);
+    gerarGabarito(selectedQuestionsData)
+  }, [gabaritoData, onGabaritoChange]);
 
   const handleImportHeader = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -95,14 +118,19 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   const handleSelectMessage = (message: Message) => {
     setSelectedMessage(message);
     openModalMessages(false);
-    Toast({ message: `Mensagem "${message.title}" selecionada!` });
+    Toast({ message: `Texto "${message.title}" selecionada!` });
   };
 
   const handleRemoveMessage = () => {
     setSelectedMessage(null);
-    Toast({ message: "Mensagem removida" });
+    Toast({ message: "Texto removida" });
   };
-
+  const handlePreviewModal = (state: boolean): any => {
+    if (isBigLayout) {
+      return setVisualize(state);
+    }
+    return setIsPreviewOpen(state);
+  };
   const handleGenerateDocument = async (format: "docx" | "pdf") => {
     if (!selectedLayout) {
       Toast({ message: "Selecione um layout primeiro!" });
@@ -161,6 +189,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       setGenerating(false);
     }
   };
+
   const handlePreview = async () => {
     if (!selectedLayout || selectedCount === 0) return;
     setGenerating(true);
@@ -169,13 +198,14 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         selectedQuestionsData,
         selectedLayout,
         importedHeader || undefined,
-        selectedMessage || undefined
+        selectedMessage || undefined,
+        gabaritoData || undefined
       );
       setPreviewBlob(blob);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
-      setIsPreviewOpen(true);
+      handlePreviewModal(true);
     } catch (err: any) {
       Toast({
         message: `Erro ao gerar preview: ${err.message}`,
@@ -185,6 +215,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       setGenerating(false);
     }
   };
+
   const renderButtonContent = (
     label: string,
     isLoading: boolean,
@@ -258,92 +289,61 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         )}
       </div>
 
-      <div className="mb-2 bg-gray-50 border border-gray-200 rounded p-4">
-        <div className="flex items-center  justify-between">
-          <h3 className="text-lg font-semibold">
-            Mensagens Adicionais (Opcional)
-          </h3>
-          <Button
-            variant="primary"
-            onClick={() => openModalMessages(true)}
-            disabled={!selectedLayout || selectedCount === 0}
-          >
-            <MessageSquareText size={16} />
-            Selecionar Mensagem
-          </Button>
-        </div>
+      <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded">
+        <h3 className="text-lg font-semibold mb-3">
+          Texto Adicional (Opcional)
+        </h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Adicione um texto de instrução ou mensagem que será incluído no
+          documento.
+        </p>
 
-        {selectedMessage && (
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-            <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          {!selectedMessage ? (
+            <Button
+              variant="primary"
+              onClick={() => openModalMessages(true)}
+              disabled={loadingMessages}
+            >
+              <MessageSquareText size={16} />
+              Selecionar Texto
+            </Button>
+          ) : (
+            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded w-full">
               <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">
+                <Check className="w-5 h-5 text-green-600" />
+                <span className="text-sm font-medium text-green-800">
                   {selectedMessage.title}
                 </span>
               </div>
               <button
                 onClick={handleRemoveMessage}
                 className="text-red-500 hover:text-red-700 transition"
-                title="Remover mensagem"
+                title="Remover texto"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="text-xs text-gray-600 ml-7">
-              {selectedMessage.isList ? (
-                selectedMessage.isOrdered ? (
-                  <ol className="list-decimal list-inside">
-                    {selectedMessage.items.slice(0, 3).map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))}
-                    {selectedMessage.items.length > 3 && (
-                      <li>
-                        ... e mais {selectedMessage.items.length - 3} itens
-                      </li>
-                    )}
-                  </ol>
-                ) : (
-                  <ul className="list-disc list-inside">
-                    {selectedMessage.items.slice(0, 3).map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))}
-                    {selectedMessage.items.length > 3 && (
-                      <li>
-                        ... e mais {selectedMessage.items.length - 3} itens
-                      </li>
-                    )}
-                  </ul>
-                )
-              ) : (
-                <div>
-                  {selectedMessage.items.slice(0, 2).map((item, idx) => (
-                    <p key={idx}>{item}</p>
-                  ))}
-                  {selectedMessage.items.length > 2 && (
-                    <p>... e mais {selectedMessage.items.length - 2} itens</p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-      <div className="mb-2 bg-gray-50 border border-gray-200 rounded p-4">
-        <div className="flex items-center justify-between ">
-          <h3 className="text-lg font-semibold">
-            Gabarito / Cartão de Respostas
-          </h3>
+
+      <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded">
+        <h3 className="text-lg font-semibold mb-3">Gabarito (Opcional)</h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Gere um gabarito/cartão de respostas para as questões de múltipla
+          escolha.
+        </p>
+
+        <div className="flex items-center gap-3">
           <Button
             variant="primary"
             onClick={() => {
-              const data = gerarGabarito(selectedQuestionsData, 5);
-              setGabaritoData(data);
+              const gabarito = gerarGabarito(selectedQuestionsData);
+              setGabaritoData(gabarito);
               setIsGabaritoModalOpen(true);
             }}
-            disabled={
-              !selectedLayout || selectedCount === 0 || !haveValidQuestion
-            }
+            disabled={!haveValidQuestion}
           >
             <MessageSquareText size={16} />
             Adicionar Gabarito
@@ -381,10 +381,9 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       />
       <PreviewModal
         isPreviewOpen={isPreviewOpen}
-        setIsPreviewOpen={setIsPreviewOpen}
+        setIsPreviewOpen={handlePreviewModal}
         previewBlob={previewBlob}
         setPreviewUrl={setPreviewUrl}
-        saveFile={saveFile}
       />
       {gabaritoData && (
         <GabaritoModal
@@ -413,10 +412,10 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         <Button
           variant="outline"
           onClick={handlePreview}
-          disabled={!selectedLayout || selectedCount === 0 || generating}
-          className="flex-1"
+          disabled={generating || selectedCount === 0}
         >
-          {renderButtonContent("Visualizar", generating, Eye)}
+          <Eye className="w-4 h-4 mr-2" />
+          Pré-visualizar
         </Button>
       </div>
 
@@ -432,7 +431,8 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
             </li>
             <li>• Espaçamento: {selectedLayout.lineSpacing}</li>
             {importedHeader && <li>• Cabeçalho customizado incluído</li>}
-            {selectedMessage && <li>• Mensagem adicional incluída</li>}
+            {selectedMessage && <li>• Texto adicional incluída</li>}
+            {gabaritoData && <li>• Gabarito incluído</li>}
           </ul>
         </div>
       )}

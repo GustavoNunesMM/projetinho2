@@ -21,7 +21,7 @@ const MessageModal = ({ message, onSave, onClose }: MessageModalProps) => {
 
   const handleSubmit = () => {
     if (!formData.title.trim()) {
-      Toast({ message: "Mensagem precisa de título!" });
+      Toast({ message: "Texto precisa de título!" });
       return;
     }
 
@@ -40,7 +40,7 @@ const MessageModal = ({ message, onSave, onClose }: MessageModalProps) => {
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
-              {message ? "Editar Mensagem" : "Nova Mensagem"}
+              {message ? "Editar Texto" : "Nova Texto"}
             </h2>
             <Button
               variant="light"
@@ -61,7 +61,7 @@ const MessageModal = ({ message, onSave, onClose }: MessageModalProps) => {
               disabled={!formData.title.trim()}
               className="flex-1"
             >
-              Salvar Mensagem
+              Salvar Texto
             </Button>
             <Button variant="outline" onClick={onClose}>
               Cancelar

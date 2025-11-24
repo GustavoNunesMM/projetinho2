@@ -1,14 +1,13 @@
 import { useEffect, useRef } from "react";
 import { renderAsync } from "docx-preview";
 import Button from "@/components/common/Button";
-import { Download, X } from "lucide-react";
+import { X } from "lucide-react";
 
 interface props {
   isPreviewOpen: boolean;
   setIsPreviewOpen: (arg: any) => void;
   previewBlob: Blob | null;
   setPreviewUrl: (arg: any) => void;
-  saveFile: (arg: any, arg1: any) => void;
 }
 
 const PreviewModal = ({
@@ -16,7 +15,6 @@ const PreviewModal = ({
   setIsPreviewOpen,
   previewBlob,
   setPreviewUrl,
-  saveFile,
 }: props) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -79,16 +77,6 @@ const PreviewModal = ({
             }}
           >
             Fechar
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              if (previewBlob)
-                saveFile(previewBlob, `preview_${Date.now()}.docx`);
-            }}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Baixar este arquivo
           </Button>
         </div>
       </div>

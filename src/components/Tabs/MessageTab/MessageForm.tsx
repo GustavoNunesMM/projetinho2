@@ -52,7 +52,7 @@ const MessageForm = ({ formData, setFormData, message }: QuestionFormProps) => {
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Digite o título da mensagem"
+          placeholder="Digite o título da Texto"
         />
       </div>
 
@@ -122,7 +122,7 @@ const MessageForm = ({ formData, setFormData, message }: QuestionFormProps) => {
         <>
           <label className="block text-sm font-medium mb-2">Conteúdo</label>
           <Textarea
-            label="Mensagem"
+            label="Texto"
             value={formData.items.join()}
             onChange={(e) =>
               setFormData({ ...formData, items: [e.target.value] })

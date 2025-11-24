@@ -137,23 +137,23 @@ export const generateDocx = async (
   }
   if (gabaritoData && gabaritoData.questoes.length > 0) {
     const cols = gabaritoData.questoes[0].alternativas.length;
-    const cellWidth = convertInchesToTwip(1.5 / 2.54); // 1,5 cm
-    const cellHeight = convertInchesToTwip(0.75 / 2.54); // 0,75 cm
+    const cellWidth = convertInchesToTwip(1.0 / 2.54);
+    const cellHeight = convertInchesToTwip(0.5 / 2.54);
     const tableWidth = cellWidth * (cols + 1);
 
     const headerRow = new TableRow({
-      height: { value: cellHeight, rule: "exact" }, // ← altura fixa na LINHA
+      height: { value: cellHeight, rule: "exact" },
       children: [
         new TableCell({
           children: [
             new Paragraph({
-              children: [new TextRun({ text: "Nº", bold: true })],
+              children: [new TextRun({ text: "Nº", bold: true, size: 18 })],
               alignment: AlignmentType.CENTER,
             }),
           ],
           verticalAlign: VerticalAlign.CENTER,
           width: { size: cellWidth, type: WidthType.DXA },
-          margins: { top: 60, bottom: 60, left: 60, right: 60 },
+          margins: { top: 40, bottom: 40, left: 40, right: 40 },
         }),
         ...Array.from({ length: cols }).map(
           (_, i) =>
@@ -164,6 +164,7 @@ export const generateDocx = async (
                     new TextRun({
                       text: String.fromCharCode(65 + i),
                       bold: true,
+                      size: 18,
                     }),
                   ],
                   alignment: AlignmentType.CENTER,
@@ -171,7 +172,7 @@ export const generateDocx = async (
               ],
               verticalAlign: VerticalAlign.CENTER,
               width: { size: cellWidth, type: WidthType.DXA },
-              margins: { top: 60, bottom: 60, left: 60, right: 60 },
+              margins: { top: 40, bottom: 40, left: 40, right: 40 },
             })
         ),
       ],
@@ -186,39 +187,35 @@ export const generateDocx = async (
               children: [
                 new Paragraph({
                   children: [
-                    new TextRun({ text: String(q.numero), bold: true }),
+                    new TextRun({
+                      text: String(q.numero),
+                      bold: true,
+                      size: 18,
+                    }),
                   ],
                   alignment: AlignmentType.CENTER,
                 }),
               ],
               verticalAlign: VerticalAlign.CENTER,
               width: { size: cellWidth, type: WidthType.DXA },
-              margins: { top: 60, bottom: 60, left: 60, right: 60 },
+              margins: { top: 40, bottom: 40, left: 40, right: 40 },
             }),
             ...q.alternativas.map(
               (letra) =>
                 new TableCell({
                   children: [
                     new Paragraph({
-                      text: letra,
+                      children: [new TextRun({ text: letra, size: 18 })],
                       alignment: AlignmentType.CENTER,
                     }),
                   ],
                   verticalAlign: VerticalAlign.CENTER,
                   width: { size: cellWidth, type: WidthType.DXA },
-                  margins: { top: 60, bottom: 60, left: 60, right: 60 },
+                  margins: { top: 40, bottom: 40, left: 40, right: 40 },
                 })
             ),
           ],
         })
-    );
-
-    sections.push(
-      new Paragraph({
-        text: "Gabarito / Cartão de Respostas",
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 400, after: 200 },
-      })
     );
 
     sections.push(
@@ -243,35 +240,8 @@ export const generateDocx = async (
       new Paragraph({
         children: [
           new TextRun({
-            text: `${i + 1}. `,
+            text: `${i + 1}. ${q.content || ""}`,
             bold: true,
-            size: fontSize,
-            font: layout.fontFamily || "Arial",
-          }),
-        ],
-        spacing: { before: 300, after: 150, line: lineSpacing },
-      })
-    );
-    if (q.title) {
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: q.title,
-              bold: true,
-              size: fontSize,
-              font: layout.fontFamily || "Arial",
-            }),
-          ],
-          spacing: { after: 150, line: lineSpacing },
-        })
-      );
-    }
-    sections.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: q.content || "",
             size: fontSize,
             font: layout.fontFamily || "Arial",
           }),
@@ -279,6 +249,7 @@ export const generateDocx = async (
         spacing: { after: 200, line: lineSpacing },
       })
     );
+    
     if (q.contentImage) {
       try {
         const data = base64ToUint8Array(q.contentImage);

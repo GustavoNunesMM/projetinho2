@@ -1,4 +1,3 @@
-// hooks/useGabarito.ts
 import { Question } from "@/types/question";
 import { GabaritoData } from "@/types";
 
@@ -10,12 +9,15 @@ export function useGabarito() {
     const multipla = questions.filter((q) => q.type === "multipla");
     return {
       colunasPorLinha,
-      questoes: multipla.map((q, idx) => ({
-        numero: idx + 1, // ordem de aparição
-        alternativas: q.options
-          .filter((opt) => opt) // remove vazias
-          .map((_, i) => String.fromCharCode(65 + i)),
-      })),
+      questoes: multipla.map((q) => {
+        const numeroQuestao = questions.indexOf(q) + 1;
+        return {
+          numero: numeroQuestao,
+          alternativas: q.options
+            .filter((opt) => opt)
+            .map((_, i) => String.fromCharCode(65 + i)),
+        };
+      }),
     };
   }
   return { gerarGabarito };

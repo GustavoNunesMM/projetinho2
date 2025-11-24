@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { User, LoginFormData, UserFormData } from "@/types/user";
 import { supabase } from "@/lib/supabase";
+import { syncService } from "@/services/syncService";
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +11,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
+  syncData: () => Promise<void>;
+  isSyncing: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     console.log("AuthProvider: Iniciando verificação de usuário");
@@ -73,6 +77,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email: authUser.email!,
       username: username,
     });
+
+    syncService.setUserId(authUser.id);
+    
+    syncService.syncAll()
+      .then(() => {
+        console.log("loadUserFromAuth: Sincronização inicial concluída");
+      })
+      .catch((error) => {
+        console.error("loadUserFromAuth: Erro na sincronização inicial:", error);
+      });
     
     console.log("loadUserFromAuth: Usuário carregado com sucesso");
   };
@@ -132,6 +146,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const syncData = async () => {
+    if (!user) {
+      throw new Error("Usuário não autenticado");
+    }
+
+    setIsSyncing(true);
+    try {
+      const result = await syncService.syncAll();
+      if (!result.success) {
+        throw new Error(result.errors.join(", "));
+      }
+      console.log("Sincronização concluída:", result);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   console.log("AuthProvider: Render - loading:", loading, "isAuthenticated:", !!user);
 
   return (
@@ -143,6 +174,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         isAuthenticated: !!user,
         loading,
+        syncData,
+        isSyncing,
       }}
     >
       {children}

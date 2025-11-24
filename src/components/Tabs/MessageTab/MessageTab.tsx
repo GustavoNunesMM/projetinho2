@@ -33,10 +33,10 @@ const MessagesTab = () => {
     try {
       if (editingMessage) {
         await updateMessage(editingMessage.id, messageData);
-        Toast({ message: "Mensagem atualizada com sucesso!" });
+        Toast({ message: "Texto atualizada com sucesso!" });
       } else {
         await addMessage(messageData);
-        Toast({ message: "Mensagem criada com sucesso!" });
+        Toast({ message: "Texto criada com sucesso!" });
       }
       setShowModal(false);
       setEditingMessage(null);
@@ -46,13 +46,13 @@ const MessagesTab = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Deseja realmente excluir esta mensagem?")) {
+    if (!confirm("Deseja realmente excluir esta texto?")) {
       return;
     }
 
     try {
       await deleteMessage(id);
-      Toast({ message: "Mensagem excluída com sucesso!" });
+      Toast({ message: "Texto excluída com sucesso!" });
     } catch (err) {
       Toast({ message: `Erro ao excluir: ${err}` });
     }
@@ -68,7 +68,7 @@ const MessagesTab = () => {
     try {
       const importedMessages = await importMultipleMessages(file);
       Toast({
-        message: `${importedMessages.length} mensagem(ns) importada(s) com sucesso!`,
+        message: `${importedMessages.length} texto(s) importada(s) com sucesso!`,
       });
     } catch (error) {
       Toast({ message: `Erro ao importar: ${(error as Error).message}` });
@@ -101,7 +101,7 @@ const MessagesTab = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Gerenciar Mensagens</h2>
+        <h2 className="text-2xl font-bold">Gerenciar texto de instruções </h2>
         <div className="flex gap-3">
           <input
             type="file"
@@ -129,7 +129,7 @@ const MessagesTab = () => {
               setShowModal(true);
             }}
           >
-            Nova Mensagem
+            Nova Texto
           </Button>
         </div>
       </div>
@@ -137,14 +137,14 @@ const MessagesTab = () => {
       {messages.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-gray-500 mb-4">
-            Nenhuma mensagem cadastrada ainda.
+            Nenhuma texto cadastrada ainda.
           </p>
           <Button
             variant="primary"
             icon={Plus}
             onClick={() => setShowModal(true)}
           >
-            Criar Primeira Mensagem
+            Criar Primeira Texto
           </Button>
         </div>
       ) : (

@@ -55,7 +55,7 @@ export const useMessages = () => {
       await loadMessages();
       return deserialized;
     } catch (err) {
-      const message = `Erro ao adicionar mensagem: ${(err as Error).message}`;
+      const message = `Erro ao adicionar texto: ${(err as Error).message}`;
       setError(message);
       console.error(message, err);
       throw err;
@@ -73,7 +73,7 @@ export const useMessages = () => {
       const deserialized = data.map(deserializeMessage);
       setMessages(deserialized);
     } catch (err) {
-      const message = `Erro ao atualizar mensagem: ${(err as Error).message}`;
+      const message = `Erro ao atualizar texto: ${(err as Error).message}`;
       setError(message);
       console.error(message, err);
       throw err;
@@ -85,7 +85,7 @@ export const useMessages = () => {
       await deleteMessageDB(id);
       setMessages((prev) => prev.filter((m) => m.id !== id));
     } catch (err) {
-      const message = `Erro ao deletar mensagem: ${(err as Error).message}`;
+      const message = `Erro ao deletar texto: ${(err as Error).message}`;
       setError(message);
       console.error(message, err);
       throw err;
@@ -98,14 +98,14 @@ export const useMessages = () => {
       const lines = text.split('\n').filter(line => line.trim());
       
       if (lines.length === 0) {
-        throw new Error("Nenhuma mensagem encontrada no arquivo");
+        throw new Error("Nenhuma texto encontrada no arquivo");
       }
 
       const importedMessages: Message[] = [];
 
       for (const line of lines) {
         const messageData: MessageFormData = {
-          title: `Mensagem importada - ${new Date().toLocaleString()}`,
+          title: `Texto importada - ${new Date().toLocaleString()}`,
           items: [line.trim()],
           isList: false,
           isOrdered: false,

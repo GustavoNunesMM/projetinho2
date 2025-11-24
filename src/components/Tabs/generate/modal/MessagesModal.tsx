@@ -25,7 +25,7 @@ const MessagesModal: React.FC<MessagesModalProps> = ({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="p-6 border-b flex items-center justify-between">
-          <h3 className="text-xl font-bold">Selecionar Mensagem</h3>
+          <h3 className="text-xl font-bold">Selecionar Texto</h3>
           <button
             onClick={() => openModalMessages(false)}
             className="text-gray-500 hover:text-gray-700 transition"
@@ -43,10 +43,10 @@ const MessagesModal: React.FC<MessagesModalProps> = ({
           ) : messages.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
-                Nenhuma mensagem cadastrada ainda.
+                Nenhuma Texto cadastrada ainda.
               </p>
               <p className="text-sm text-gray-400">
-                Vá para a aba "Mensagens" para criar uma nova mensagem.
+                Vá para a aba "Mensagens" para criar uma nova texto.
               </p>
             </div>
           ) : (
