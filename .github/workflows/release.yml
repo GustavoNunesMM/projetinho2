@@ -30,13 +30,10 @@ jobs:
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
-        with:
-          workspaces: "./src-tauri -> target"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Build, empacotar, assinar e fazer upload dos instaladores
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -44,9 +41,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          # (opcional) pasta que contém tauri.conf.json
           projectPath: './src-tauri'
-          args: --target x86_64-pc-windows-msvc
           releaseName: "v__VERSION__"
           releaseBody: "See the assets to download the installer for your platform."
           releaseDraft: false

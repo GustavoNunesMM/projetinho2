@@ -30,7 +30,8 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY5NzU3QTk2MjQ1MUQyRDQKUldUVTBsRWtsbnAxYVJzRWUwM3BYbE53cGpMUEp0NXFkMDJFWDNHTzRHYnBUVER2VmdhSExKaDcK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJCMEY0MUIwOEYzRTdBMzAKUldRd2VqNlBzRUVQdStwd3h2WUpINVBkdFhUa3hmQjZ6bXRqSXdXTjJhZzcySGdyUlJuTzdybHMK",
+
       "endpoints": [
         "https://github.com/GustavoNunesMM/projetinho2/releases/latest/download/latest.json"
       ],
