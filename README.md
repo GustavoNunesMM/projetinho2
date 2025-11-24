@@ -12,6 +12,12 @@ This is a template for creating applications using Vite and HeroUI (v2).
 - [Tailwind Variants](https://tailwind-variants.org)
 - [TypeScript](https://www.typescriptlang.org)
 - [Framer Motion](https://www.framer.com/motion)
+- [Tauri](https://v2.tauri.app/)
+- [Docx]
+- [JsPdf]
+- [DocxPreview]
+- [Mammoth]
+- [Supabase]
 
 ## How to Use
 
@@ -23,16 +29,16 @@ git clone https://github.com/heroui-inc/vite-template.git
 
 ### Install dependencies
 
-You can use one of them `npm`, `yarn`, `pnpm`, `bun`, Example using `npm`:
+You can use  `pnpm`:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Run the development server
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ### Setup pnpm (optional)
