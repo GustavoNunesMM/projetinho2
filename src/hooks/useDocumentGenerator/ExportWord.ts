@@ -33,6 +33,65 @@ const base64ToUint8Array = (base64: string): Uint8Array => {
   }
   return bytes;
 };
+export function detectImageType(input: string | ArrayBuffer | Uint8Array): string {
+  if (typeof input === "string") {
+    if (input.startsWith("data:image/png")) return "png";
+    if (input.startsWith("data:image/jpeg")) return "jpeg";
+    if (input.startsWith("data:image/jpg")) return "jpeg";
+    if (input.startsWith("data:image/gif")) return "gif";
+    if (input.startsWith("data:image/webp")) return "webp";
+    if (input.startsWith("data:image/svg+xml")) return "svg";
+
+    try {
+      const bytes = base64ToUint8Array(input);
+      return detectFromBytes(bytes);
+    } catch {
+      return "unknown";
+    }
+  }
+
+  if (input instanceof ArrayBuffer) {
+    return detectFromBytes(new Uint8Array(input));
+  }
+
+  if (input instanceof Uint8Array) {
+    return detectFromBytes(input);
+  }
+
+  return "unknown";
+}
+
+function detectFromBytes(bytes: Uint8Array): string {
+  if (!bytes || bytes.length < 4) return "unknown";
+
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    return "png";
+  }
+
+  if (bytes[0] === 0xff && bytes[1] === 0xd8) {
+    return "jpeg";
+  }
+
+  if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
+    return "gif";
+  }
+
+  if (
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
+  ) {
+    return "webp";
+  }
+
+  // SVG (text)
+  const asText = new TextDecoder().decode(bytes.slice(0, 100)).trim();
+  if (asText.startsWith("<svg")) return "svg";
+
+  return "unknown";
+}
 const marginToTwips = (margin: string): number => {
   const value = parseFloat(margin);
   if (margin.includes("cm")) {
@@ -257,12 +316,16 @@ export const generateDocx = async (
     if (q.contentImage) {
       try {
         const { width, height } = await getImageDimensions(q.contentImage);
+        const bytes = base64ToUint8Array(q.contentImage);
+        const type = detectImageType(bytes);
         const scale = width > 400 ? 400 / width : 1;
         sections.push(
           new Paragraph({
             children: [
               new ImageRun({
-                data: `data:image/png;base64,${q.contentImage}`,
+                data: bytes,
+                type: type,
+                  fallback: 'Imagem não disponível',
                 transformation: {
                   width: width * scale,
                   height: height * scale,
@@ -300,12 +363,16 @@ export const generateDocx = async (
             const { width, height } = await getImageDimensions(
               q.optionImages[j]!
             );
+              const bytes = base64ToUint8Array(q.optionImages[j]!);
+        detectImageType
             const scale = width > 300 ? 300 / width : 1;
             sections.push(
               new Paragraph({
                 children: [
                   new ImageRun({
-                    data: base64ToUint8Array(q.optionImages[j]!),
+                    data: bytes,
+                    type:type,
+                  fallback: 'Imagem não disponível',
                     transformation: {
                       width: width * scale,
                       height: height * scale,

@@ -16,7 +16,7 @@ import {
   CellBorder,
   borderStyle,
 } from "@/types/documentGeneration";
-
+import { detectImageType} from './ExportWord'
 interface ParsedCell {
   text: string;
   bold: boolean;
@@ -251,12 +251,16 @@ export function useHeaderFromWord() {
             width: imgData.width,
             height: imgData.height,
           });
+          const bytes = base64ToUint8Array(imgData.base64);
+          const type = detectImageType(bytes);
 
           cellChildren.push(
             new Paragraph({
               children: [
                 new ImageRun({
-                  data: base64ToUint8Array(imgData.base64),
+                  data: bytes,
+                  type: type,
+                  fallback: 'Imagem não disponível',
                   transformation: {
                     width: imgData.width,
                     height: imgData.height,
