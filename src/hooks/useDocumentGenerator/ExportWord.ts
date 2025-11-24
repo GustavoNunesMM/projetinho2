@@ -323,14 +323,13 @@ export const generateDocx = async (
           new Paragraph({
             children: [
               new ImageRun({
-                data: bytes,
-                type: type,
-                  fallback: 'Imagem não disponível',
-                transformation: {
-                  width: width * scale,
-                  height: height * scale,
-                },
-              }),
+  data: bytes,
+  type: type, 
+  transformation: {
+    width: width * scale,
+    height: height * scale,
+  },
+}),
             ],
             spacing: { before: 100, after: 200 },
           })
@@ -370,14 +369,13 @@ export const generateDocx = async (
               new Paragraph({
                 children: [
                   new ImageRun({
-                    data: bytes,
-                    type:type,
-                  fallback: 'Imagem não disponível',
-                    transformation: {
-                      width: width * scale,
-                      height: height * scale,
-                    },
-                  }),
+  data: bytes,
+  type: type,
+  transformation: {
+    width: width * scale,
+    height: height * scale,
+  },
+}),
                 ],
                 spacing: { before: 50, after: 100 },
                 indent: { left: 720 },

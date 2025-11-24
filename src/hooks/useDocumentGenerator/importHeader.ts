@@ -161,10 +161,8 @@ export function useHeaderFromWord() {
       }
     }
 
-    /* ---------- propaga bordas entre células adjacentes (opcional) ---------- */
     applyAdjacentBorders(grid);
 
-    /* ---------- monta TableRows / TableCells ---------- */
     const rawData: string[][] = [];
     const styles: CellStyle[][] = [];
     const mergedCells: {
@@ -258,14 +256,13 @@ export function useHeaderFromWord() {
             new Paragraph({
               children: [
                 new ImageRun({
-                  data: bytes,
-                  type: type,
-                  fallback: 'Imagem não disponível',
-                  transformation: {
-                    width: imgData.width,
-                    height: imgData.height,
-                  },
-                }),
+  data: bytes,
+  type: type,
+  transformation: {
+    width: imgData.width,
+    height: imgData.height,
+  },
+}),
               ],
               alignment: AlignmentType.CENTER,
               spacing: { line: 360 },
