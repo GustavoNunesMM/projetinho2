@@ -263,7 +263,7 @@ export const generateDocx = async (
           new Paragraph({
             children: [
               new ImageRun({
-                data: q.contentImage,
+                data: `data:image/png;base64,${q.contentImage}`,
                 transformation: {
                   width: width * scale,
                   height: height * scale,
@@ -306,7 +306,7 @@ export const generateDocx = async (
               new Paragraph({
                 children: [
                   new ImageRun({
-                    data: q.optionImages[j]!,
+                    data: `data:image/png;base64,${q.optionImages[j]}`,
                     transformation: {
                       width: width * scale,
                       height: height * scale,
