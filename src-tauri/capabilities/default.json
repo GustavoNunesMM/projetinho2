@@ -1,26 +1,27 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissões completas para o Banco de Questões (SQLite e arquivos locais)",
+  "description": "Permissões para o Banco de Questões",
   "windows": ["main"],
   "permissions": [
     "core:default",
     "log:default",
+
     "fs:default",
-    "fs:allow-read",
-    "fs:allow-write",
-    "fs:allow-create",
-    "fs:allow-exists",
-    "fs:allow-mkdir",
-    "fs:allow-read-dir",
-    "fs:allow-remove",
-    "fs:scope-appdata",
-    "fs:scope-appdata-recursive",
+    "fs:read-file",
+    "fs:write-file",
+    "fs:read-dir",
+    "fs:exists",
+    "fs:mkdir",
+    "fs:remove",
+
     "sql:default",
     "sql:allow-load",
     "sql:allow-execute",
     "sql:allow-select",
-    "sql:allow-close"
+    "sql:allow-close",
+
+    "process:default"
   ],
   "scope": {
     "allow": [

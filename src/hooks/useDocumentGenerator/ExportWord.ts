@@ -236,19 +236,23 @@ export const generateDocx = async (
 
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
-    sections.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: `${i + 1}. ${q.content || ""}`,
-            bold: true,
-            size: fontSize,
-            font: layout.fontFamily || "Arial",
-          }),
-        ],
-        spacing: { after: 200, line: lineSpacing },
-      })
-    );
+    const contentLines = (q.content || "").split('\n');
+    
+    contentLines.forEach((line, lineIndex) => {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: lineIndex === 0 ? `${i + 1}. ${line}` : line,
+              bold: lineIndex === 0,
+              size: fontSize,
+              font: layout.fontFamily || "Arial",
+            }),
+          ],
+          spacing: { after: lineIndex === contentLines.length - 1 ? 200 : 100, line: lineSpacing },
+        })
+      );
+    });
     
     if (q.contentImage) {
       try {
@@ -274,19 +278,24 @@ export const generateDocx = async (
     if (q.type === "multipla" && q.options?.length) {
       for (let j = 0; j < q.options.length; j++) {
         const letter = String.fromCharCode(97 + j);
-        sections.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `${letter}) ${q.options[j]}`,
-                size: fontSize,
-                font: layout.fontFamily || "Arial",
-              }),
-            ],
-            spacing: { after: 100, line: lineSpacing },
-            indent: { left: 720 },
-          })
-        );
+        const optionLines = q.options[j].split('\n');
+        
+        optionLines.forEach((line, lineIndex) => {
+          sections.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: lineIndex === 0 ? `${letter}) ${line}` : line,
+                  size: fontSize,
+                  font: layout.fontFamily || "Arial",
+                }),
+              ],
+              spacing: { after: lineIndex === optionLines.length - 1 ? 100 : 50, line: lineSpacing },
+              indent: { left: 720 },
+            })
+          );
+        });
+        
         if (q.optionImages?.[j]) {
           try {
             const data = base64ToUint8Array(q.optionImages[j]!);
@@ -386,10 +395,10 @@ export const parseQuestionsFromText = (text: string) => {
 
   const flush = () => {
     if (buffer.length === 0) return;
-    const statement = buffer.join(" ").trim();
+    const statement = buffer.join("\n").trim();
     if (statement) {
       if (!current.statement) current.statement = statement;
-      else current.statement += " " + statement;
+      else current.statement += "\n" + statement;
     }
     buffer = [];
   };
@@ -470,7 +479,7 @@ export const extractWordLayoutInfo = async (
 
   const spacingEl = docDefaults?.querySelector("w\\:spacing, spacing");
   const lineSpacing = spacingEl
-    ? (parseInt(spacingEl.getAttribute("w:line") || "360") / 240).toFixed(1) // 240 = 1 linha
+    ? (parseInt(spacingEl.getAttribute("w:line") || "360") / 240).toFixed(1)
     : "1.5";
 
   return {
@@ -486,5 +495,5 @@ export const extractWordLayoutInfo = async (
 
 function pxToCm(twips: string): number {
   const dxa = parseInt(twips) || 0;
-  return dxa / 567; // 567 twips = 1 cm
+  return dxa / 567;
 }

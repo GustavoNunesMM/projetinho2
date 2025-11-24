@@ -1,16 +1,54 @@
+use tauri_plugin_dialog;
+use tauri_plugin_log::{Target, LoggerBuilder};
+use tauri_plugin_updater::UpdaterExt;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(
+            LoggerBuilder::default()
+                .targets([
+                    Target::LogDir,
+                    Target::Stdout,
+                    Target::Webview
+                ])
+                .build(),
+        )
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
+            // Verificar atualização em background após 5 segundos
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                
+                match handle.updater() {
+                    Ok(updater) => {
+                        match updater.check().await {
+                            Ok(Some(update)) => {
+                                log::info!(
+                                    "Nova atualização disponível: {} (atual: {})",
+                                    update.version,
+                                    update.current_version
+                                );
+                            }
+                            Ok(None) => {
+                                log::info!("Aplicação está atualizada");
+                            }
+                            Err(e) => {
+                                log::error!("Erro ao verificar atualizações: {}", e);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("Erro ao inicializar updater: {}", e);
+                    }
+                }
+            });
+            
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("erro ao executar aplicação tauri");
 }
