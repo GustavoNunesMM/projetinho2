@@ -6,30 +6,32 @@
   "permissions": [
     "core:default",
     "log:default",
+    "fs:allow-read",
+    "fs:allow-write",
+    "fs:allow-create",
+    "fs:allow-exists",
 
-    "fs:default",
-    "fs:read-file",
-    "fs:write-file",
-    "fs:read-dir",
-    "fs:exists",
-    "fs:mkdir",
-    "fs:remove",
+    "fs:allow-mkdir",
+    "fs:allow-read-dir",
+    "fs:allow-remove",
+    "fs:scope-appdata",
+    "fs:scope-appdata-recursive",
 
-    "sql:default",
-    "sql:allow-load",
     "sql:allow-execute",
-    "sql:allow-select",
     "sql:allow-close",
+    "sql:allow-load",
+    "sql:default",
 
+    "dialog:default",
     "process:default"
   ],
   "scope": {
     "allow": [
       "$APPDATA/**",
-      "$APPDATALOCAL/**",
-      "$APPCONFIG/**",
+      "$DOCUMENT/**",
       "$DESKTOP/**",
-      "$DOCUMENT/**"
+      "$DOWNLOAD/**",
+      "$APPCONFIG/**"
     ]
   }
 }

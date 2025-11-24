@@ -1,5 +1,5 @@
 use tauri_plugin_dialog;
-use tauri_plugin_log::{Target, LoggerBuilder};
+use tauri_plugin_log::{Target, TargetKind, TimezoneStrategy};
 use tauri_plugin_updater::UpdaterExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -8,14 +8,15 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(
-            LoggerBuilder::default()
-                .targets([
-                    Target::LogDir,
-                    Target::Stdout,
-                    Target::Webview
-                ])
-                .build(),
-        )
+    tauri_plugin_log::Builder::new()
+        .targets([
+            Target::new(TargetKind::LogDir { file_name: Some("app.log".into()) }),
+            Target::new(TargetKind::Stdout),
+            Target::new(TargetKind::Webview),
+        ])
+        .timezone_strategy(TimezoneStrategy::UseLocal)
+        .build(),
+)
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             // Verificar atualização em background após 5 segundos
