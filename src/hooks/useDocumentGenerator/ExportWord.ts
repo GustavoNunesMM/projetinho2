@@ -33,7 +33,7 @@ const base64ToUint8Array = (base64: string): Uint8Array => {
   }
   return bytes;
 };
-export function detectImageType(input: string | ArrayBuffer | Uint8Array): string {
+export function detectImageType(input: string | ArrayBuffer | Uint8Array): 'png'|'jpeg'|'gif'| 'webp'|'svg' {
   if (typeof input === "string") {
     if (input.startsWith("data:image/png")) return "png";
     if (input.startsWith("data:image/jpeg")) return "jpeg";
@@ -44,21 +44,21 @@ export function detectImageType(input: string | ArrayBuffer | Uint8Array): strin
 
     try {
       const bytes = base64ToUint8Array(input);
-      return detectFromBytes(bytes);
+      return detectFromBytes(bytes) as 'png';
     } catch {
-      return "unknown";
+      return "png";
     }
   }
 
   if (input instanceof ArrayBuffer) {
-    return detectFromBytes(new Uint8Array(input));
+    return detectFromBytes(new Uint8Array(input)) as 'png';
   }
 
   if (input instanceof Uint8Array) {
-    return detectFromBytes(input);
+    return detectFromBytes(input) as 'png';
   }
 
-  return "unknown";
+  return "png";
 }
 
 function detectFromBytes(bytes: Uint8Array): string {
