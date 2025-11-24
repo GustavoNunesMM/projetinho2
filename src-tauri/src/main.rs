@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri_plugin_dialog;
-use tauri_plugin_log::{Target, TargetKind, TimezoneStrategy};
+use tauri_plugin_log;
 use tauri_plugin_updater::UpdaterExt;
 use tauri_plugin_fs;
 use tauri_plugin_sql;
