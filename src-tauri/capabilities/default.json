@@ -23,7 +23,8 @@
     "sql:default",
 
     "dialog:default",
-    "process:default"
+    "process:default",
+    "updater:default"
   ],
   "scope": {
     "allow": [

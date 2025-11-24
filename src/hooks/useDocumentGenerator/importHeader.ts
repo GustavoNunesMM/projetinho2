@@ -262,7 +262,7 @@ export function useHeaderFromWord() {
           };
 
           if (type === "svg") {
-            imageRunOptions.fallback = "Imagem não encontrada"; // Replace with actual fallback
+            imageRunOptions.fallback = "Imagem não encontrada"; 
           }
 
           cellChildren.push(
