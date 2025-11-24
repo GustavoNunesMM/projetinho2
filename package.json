@@ -33,6 +33,8 @@
     "file-saver": "^2.0.5",
     "framer-motion": "11.18.2",
     "jspdf": "^3.0.3",
+    "docx-preview": "^0.3.7",
+
     "jspdf-autotable": "^5.0.2",
     "jszip": "^3.10.1",
     "lucide-react": "^0.548.0",
