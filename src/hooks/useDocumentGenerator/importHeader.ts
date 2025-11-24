@@ -16,7 +16,7 @@ import {
   CellBorder,
   borderStyle,
 } from "@/types/documentGeneration";
-import { detectImageType} from './ExportWord'
+import { detectImageType } from "./ExportWord";
 interface ParsedCell {
   text: string;
   bold: boolean;
@@ -222,14 +222,14 @@ export function useHeaderFromWord() {
           const target = relationshipMap.get(cell.imageId);
           if (target) {
             const filename = target.replace("media/", "");
-            imgData = imageMap.get(filename) ?? null; 
+            imgData = imageMap.get(filename) ?? null;
             const tcEl = tcElements[r]?.[originalCellIndex];
 
             if (tcEl) {
               const drawing = tcEl.querySelector("w\\:drawing, drawing");
               const extent = drawing?.querySelector("wp\\:extent, extent");
               if (extent) {
-                const cx = extent.getAttribute("cx"); 
+                const cx = extent.getAttribute("cx");
                 const cy = extent.getAttribute("cy");
                 if (cx && cy) {
                   const width = Math.round(parseInt(cx) / 9525);
@@ -252,18 +252,22 @@ export function useHeaderFromWord() {
           const bytes = base64ToUint8Array(imgData.base64);
           const type = detectImageType(bytes);
 
+          const imageRunOptions: any = {
+            data: bytes,
+            type: type === "jpeg" ? "jpg" : type, 
+            transformation: {
+              width: imgData.width,
+              height: imgData.height,
+            },
+          };
+
+          if (type === "svg") {
+            imageRunOptions.fallback = "Imagem não encontrada"; // Replace with actual fallback
+          }
+
           cellChildren.push(
             new Paragraph({
-              children: [
-                new ImageRun({
-  data: bytes,
-  type: type,
-  transformation: {
-    width: imgData.width,
-    height: imgData.height,
-  },
-}),
-              ],
+              children: [new ImageRun(imageRunOptions)],
               alignment: AlignmentType.CENTER,
               spacing: { line: 360 },
             })
@@ -309,7 +313,7 @@ export function useHeaderFromWord() {
                 : cell.verticalAlignment === "bottom"
                   ? VerticalAlign.BOTTOM
                   : VerticalAlign.CENTER,
-            margins: { top: 120, bottom: 120, left: 120, right: 120 }, 
+            margins: { top: 120, bottom: 120, left: 120, right: 120 },
             shading: cell.backgroundColor
               ? { fill: cell.backgroundColor, color: cell.backgroundColor }
               : undefined,
@@ -382,7 +386,6 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
     vAlignVal === "top" ? "top" : vAlignVal === "bottom" ? "bottom" : "center";
 
   const borders = getCellBordersFromXml(tcPr);
-
 
   const paragraphs = tcEl.querySelectorAll("w\\:p, p");
   let text = "";

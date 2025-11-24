@@ -33,29 +33,31 @@ const base64ToUint8Array = (base64: string): Uint8Array => {
   }
   return bytes;
 };
-export function detectImageType(input: string | ArrayBuffer | Uint8Array): 'png'|'jpeg'|'gif'| 'webp'|'svg' {
+export function detectImageType(
+  input: string | ArrayBuffer | Uint8Array
+): "png" | "jpg" | "jpeg" | "gif" | "svg" {
   if (typeof input === "string") {
     if (input.startsWith("data:image/png")) return "png";
     if (input.startsWith("data:image/jpeg")) return "jpeg";
-    if (input.startsWith("data:image/jpg")) return "jpeg";
+    if (input.startsWith("data:image/jpg")) return "jpg";
     if (input.startsWith("data:image/gif")) return "gif";
-    if (input.startsWith("data:image/webp")) return "webp";
+    if (input.startsWith("data:image/webp")) return "png";
     if (input.startsWith("data:image/svg+xml")) return "svg";
 
     try {
       const bytes = base64ToUint8Array(input);
-      return detectFromBytes(bytes) as 'png';
+      return detectFromBytes(bytes) as "png";
     } catch {
       return "png";
     }
   }
 
   if (input instanceof ArrayBuffer) {
-    return detectFromBytes(new Uint8Array(input)) as 'png';
+    return detectFromBytes(new Uint8Array(input)) as "png";
   }
 
   if (input instanceof Uint8Array) {
-    return detectFromBytes(input) as 'png';
+    return detectFromBytes(input) as "png";
   }
 
   return "png";
@@ -64,7 +66,12 @@ export function detectImageType(input: string | ArrayBuffer | Uint8Array): 'png'
 function detectFromBytes(bytes: Uint8Array): string {
   if (!bytes || bytes.length < 4) return "unknown";
 
-  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+  if (
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  ) {
     return "png";
   }
 
@@ -83,7 +90,7 @@ function detectFromBytes(bytes: Uint8Array): string {
     bytes[3] === 0x46 &&
     String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
   ) {
-    return "webp";
+    return "png";
   }
 
   // SVG (text)
@@ -92,6 +99,7 @@ function detectFromBytes(bytes: Uint8Array): string {
 
   return "unknown";
 }
+
 const marginToTwips = (margin: string): number => {
   const value = parseFloat(margin);
   if (margin.includes("cm")) {
@@ -295,8 +303,8 @@ export const generateDocx = async (
 
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
-    const contentLines = (q.content || "").split('\n');
-    
+    const contentLines = (q.content || "").split("\n");
+
     contentLines.forEach((line, lineIndex) => {
       sections.push(
         new Paragraph({
@@ -308,39 +316,49 @@ export const generateDocx = async (
               font: layout.fontFamily || "Arial",
             }),
           ],
-          spacing: { after: lineIndex === contentLines.length - 1 ? 200 : 100, line: lineSpacing },
+          spacing: {
+            after: lineIndex === contentLines.length - 1 ? 200 : 100,
+            line: lineSpacing,
+          },
         })
       );
     });
-    
+
     if (q.contentImage) {
       try {
         const { width, height } = await getImageDimensions(q.contentImage);
         const bytes = base64ToUint8Array(q.contentImage);
         const type = detectImageType(bytes);
         const scale = width > 400 ? 400 / width : 1;
+
+        const imageRunOptions: any = {
+          data: bytes,
+          type: type === "jpeg" ? "jpg" : type,
+          transformation: {
+            width: width * scale,
+            height: height * scale,
+          },
+        };
+
+        if (type === "svg") {
+          imageRunOptions.fallback = "Imagem não encontrada";
+        }
+
         sections.push(
           new Paragraph({
-            children: [
-              new ImageRun({
-  data: bytes,
-  type: type, 
-  transformation: {
-    width: width * scale,
-    height: height * scale,
-  },
-}),
-            ],
+            children: [new ImageRun(imageRunOptions)],
             spacing: { before: 100, after: 200 },
           })
         );
-      } catch {}
+      } catch (error) {
+        console.error("Error processing image:", error);
+      }
     }
     if (q.type === "multipla" && q.options?.length) {
       for (let j = 0; j < q.options.length; j++) {
         const letter = String.fromCharCode(97 + j);
-        const optionLines = q.options[j].split('\n');
-        
+        const optionLines = q.options[j].split("\n");
+
         optionLines.forEach((line, lineIndex) => {
           sections.push(
             new Paragraph({
@@ -351,37 +369,47 @@ export const generateDocx = async (
                   font: layout.fontFamily || "Arial",
                 }),
               ],
-              spacing: { after: lineIndex === optionLines.length - 1 ? 100 : 50, line: lineSpacing },
+              spacing: {
+                after: lineIndex === optionLines.length - 1 ? 100 : 50,
+                line: lineSpacing,
+              },
               indent: { left: 720 },
             })
           );
         });
-        
+
         if (q.optionImages?.[j]) {
           try {
             const { width, height } = await getImageDimensions(
               q.optionImages[j]!
             );
-              const bytes = base64ToUint8Array(q.optionImages[j]!);
-        detectImageType
+            const bytes = base64ToUint8Array(q.optionImages[j]!);
+            const type = detectImageType(bytes);
             const scale = width > 300 ? 300 / width : 1;
+
+            const imageRunOptions: any = {
+              data: bytes,
+              type: type === "jpeg" ? "jpg" : type, 
+              transformation: {
+                width: width * scale,
+                height: height * scale,
+              },
+            };
+
+            if (type === "svg") {
+              imageRunOptions.fallback = 'Imagem não encontrada';
+            }
+
             sections.push(
               new Paragraph({
-                children: [
-                  new ImageRun({
-  data: bytes,
-  type: type,
-  transformation: {
-    width: width * scale,
-    height: height * scale,
-  },
-}),
-                ],
+                children: [new ImageRun(imageRunOptions)],
                 spacing: { before: 50, after: 100 },
                 indent: { left: 720 },
               })
             );
-          } catch {}
+          } catch (error) {
+            console.error("Error processing option image:", error);
+          }
         }
       }
     }
