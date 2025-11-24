@@ -32,7 +32,7 @@ jobs:
         uses: swatinem/rust-cache@v2
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
