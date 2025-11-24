@@ -256,7 +256,6 @@ export const generateDocx = async (
     
     if (q.contentImage) {
       try {
-        const data = base64ToUint8Array(q.contentImage);
         const { width, height } = await getImageDimensions(q.contentImage);
         const scale = width > 400 ? 400 / width : 1;
         sections.push(
@@ -306,7 +305,7 @@ export const generateDocx = async (
               new Paragraph({
                 children: [
                   new ImageRun({
-                    data: `data:image/png;base64,${q.optionImages[j]}`,
+                    data: base64ToUint8Array(q.optionImages[j]!),
                     transformation: {
                       width: width * scale,
                       height: height * scale,

@@ -256,7 +256,7 @@ export function useHeaderFromWord() {
             new Paragraph({
               children: [
                 new ImageRun({
-                  data: imgData.base64,
+                  data: base64ToUint8Array(imgData.base64),
                   transformation: {
                     width: imgData.width,
                     height: imgData.height,
