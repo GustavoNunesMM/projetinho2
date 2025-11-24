@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Card, CardBody } from '@heroui/react';
-import { Download, X } from 'lucide-react';
-import { useUpdater } from '@/hooks/useUpdater';
-import UpdateModal from './UpdateModal';
+import React, { useEffect, useState } from "react";
+import { Card, CardBody } from "@heroui/react";
+import Button from "./Button";
+import { Download, X } from "lucide-react";
+import { useUpdater } from "@/hooks/useUpdater";
+import UpdateModal from "./UpdateModal";
 
 export const UpdateNotification: React.FC = () => {
-  const { isUpdateAvailable, updateInfo, downloadAndInstallUpdate } = useUpdater();
+  const { isUpdateAvailable, updateInfo, downloadAndInstallUpdate } =
+    useUpdater();
   const [showNotification, setShowNotification] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -37,20 +39,14 @@ export const UpdateNotification: React.FC = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              color="primary"
-              variant="flat"
-              onPress={handleUpdateClick}
-              startContent={<Download size={16} />}
-            >
+            <Button variant="primary" onClick={handleUpdateClick}>
+              <Download size={16} />
               Atualizar
             </Button>
             <Button
-              size="sm"
               isIconOnly
               variant="light"
-              onPress={() => setShowNotification(false)}
+              onClick={() => setShowNotification(false)}
             >
               <X size={16} />
             </Button>

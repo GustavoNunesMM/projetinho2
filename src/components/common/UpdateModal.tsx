@@ -1,6 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Progress } from '@heroui/react';
-import { RefreshCw, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Progress,
+} from "@heroui/react";
+import Button from "./Button";
+import { RefreshCw, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 interface UpdateModalProps {
   isOpen: boolean;
@@ -25,13 +33,15 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   onUpdate,
 }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
-  const [status, setStatus] = useState<'idle' | 'downloading' | 'installing' | 'completed' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    "idle" | "downloading" | "installing" | "completed" | "error"
+  >("idle");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
-        setStatus('idle');
+        setStatus("idle");
         setDownloadProgress(0);
         setError(null);
       }, 300);
@@ -40,23 +50,23 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
 
   const handleUpdate = async () => {
     try {
-      setStatus('downloading');
+      setStatus("downloading");
       setError(null);
       await onUpdate();
     } catch (err) {
-      setStatus('error');
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar');
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Erro ao atualizar");
     }
   };
 
   const getStatusIcon = () => {
     switch (status) {
-      case 'downloading':
-      case 'installing':
+      case "downloading":
+      case "installing":
         return <RefreshCw className="w-6 h-6 animate-spin text-blue-500" />;
-      case 'completed':
+      case "completed":
         return <CheckCircle className="w-6 h-6 text-green-500" />;
-      case 'error':
+      case "error":
         return <XCircle className="w-6 h-6 text-red-500" />;
       default:
         return <AlertCircle className="w-6 h-6 text-yellow-500" />;
@@ -65,16 +75,16 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
 
   const getStatusMessage = () => {
     switch (status) {
-      case 'downloading':
-        return 'Baixando atualização...';
-      case 'installing':
-        return 'Instalando atualização...';
-      case 'completed':
-        return 'Atualização concluída com sucesso!';
-      case 'error':
-        return 'Erro na atualização';
+      case "downloading":
+        return "Baixando atualização...";
+      case "installing":
+        return "Instalando atualização...";
+      case "completed":
+        return "Atualização concluída com sucesso!";
+      case "error":
+        return "Erro na atualização";
       default:
-        return 'Atualização disponível';
+        return "Atualização disponível";
     }
   };
 
@@ -90,50 +100,54 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
               </div>
             </ModalHeader>
             <ModalBody>
-              {status === 'idle' && updateInfo && (
+              {status === "idle" && updateInfo && (
                 <div className="space-y-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h3 className="font-semibold text-blue-900 mb-2">
                       Versão {updateInfo.version}
                     </h3>
                     <p className="text-sm text-blue-700 mb-2">
-                      Data de lançamento: {new Date(updateInfo.releaseDate).toLocaleDateString('pt-BR')}
+                      Data de lançamento:{" "}
+                      {new Date(updateInfo.releaseDate).toLocaleDateString(
+                        "pt-BR"
+                      )}
                     </p>
                     <p className="text-sm text-blue-700">
                       Tamanho: {(updateInfo.size / 1024 / 1024).toFixed(1)} MB
                     </p>
                   </div>
-                  
+
                   {updateInfo.releaseNotes && (
                     <div>
                       <h4 className="font-semibold mb-2">Novidades:</h4>
                       <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-32 overflow-y-auto">
-                        <pre className="text-sm whitespace-pre-wrap">{updateInfo.releaseNotes}</pre>
+                        <pre className="text-sm whitespace-pre-wrap">
+                          {updateInfo.releaseNotes}
+                        </pre>
                       </div>
                     </div>
                   )}
                 </div>
               )}
 
-              {(status === 'downloading' || status === 'installing') && (
+              {(status === "downloading" || status === "installing") && (
                 <div className="space-y-4">
                   <div className="text-center">
-                    {getStatusIcon()}
                     <p className="mt-2 text-gray-600">{getStatusMessage()}</p>
                   </div>
-                  {status === 'downloading' && (
+                  {status === "downloading" && (
                     <Progress
                       value={downloadProgress}
                       className="w-full"
                       color="primary"
                       showValueLabel={true}
-                      formatOptions={{ style: 'percent' }}
+                      formatOptions={{ style: "percent" }}
                     />
                   )}
                 </div>
               )}
 
-              {status === 'completed' && (
+              {status === "completed" && (
                 <div className="text-center space-y-4">
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
                   <p className="text-lg font-semibold text-green-700">
@@ -145,7 +159,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                 </div>
               )}
 
-              {status === 'error' && (
+              {status === "error" && (
                 <div className="text-center space-y-4">
                   <XCircle className="w-16 h-16 text-red-500 mx-auto" />
                   <p className="text-lg font-semibold text-red-700">
@@ -160,35 +174,33 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
               )}
             </ModalBody>
             <ModalFooter>
-              {status === 'idle' && (
+              {status === "idle" && (
                 <>
-                  <Button color="default" variant="light" onPress={onClose}>
+                  <Button variant="danger" onClick={onClose}>
                     Agora não
                   </Button>
-                  <Button color="primary" onPress={handleUpdate}>
+                  <Button variant="primary" onClick={handleUpdate}>
                     Atualizar agora
                   </Button>
                 </>
               )}
-              {status === 'error' && (
+              {status === "error" && (
                 <>
-                  <Button color="default" variant="light" onPress={onClose}>
+                  <Button variant="light" onClick={onClose}>
                     Fechar
                   </Button>
-                  <Button color="primary" onPress={handleUpdate}>
+                  <Button variant="light-success" onClick={handleUpdate}>
                     Tentar novamente
                   </Button>
                 </>
               )}
-              {status === 'completed' && (
-                <Button color="success" onPress={onClose}>
+              {status === "completed" && (
+                <Button variant="success" onClick={onClose}>
                   Fechar
                 </Button>
               )}
-              {(status === 'downloading' || status === 'installing') && (
-                <Button color="default" variant="light" disabled>
-                  Aguarde...
-                </Button>
+              {(status === "downloading" || status === "installing") && (
+                <div>Aguarde...</div>
               )}
             </ModalFooter>
           </>

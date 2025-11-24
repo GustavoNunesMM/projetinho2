@@ -308,6 +308,7 @@ export const generateDocx = async (
                 children: [
                   new ImageRun({
                     data,
+                    type: 'png',
                     transformation: {
                       width: width * scale,
                       height: height * scale,
