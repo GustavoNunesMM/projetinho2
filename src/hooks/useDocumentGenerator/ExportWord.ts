@@ -263,7 +263,7 @@ export const generateDocx = async (
           new Paragraph({
             children: [
               new ImageRun({
-                data,
+                data: Buffer.from(data),
                 transformation: {
                   width: width * scale,
                   height: height * scale,
@@ -307,8 +307,7 @@ export const generateDocx = async (
               new Paragraph({
                 children: [
                   new ImageRun({
-                    data,
-                    type: 'png',
+                    data: Buffer.from(data),
                     transformation: {
                       width: width * scale,
                       height: height * scale,
