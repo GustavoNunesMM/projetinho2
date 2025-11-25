@@ -9,7 +9,8 @@ type variant =
   | "default"
   | "light"
   | "light-success"
-  | "light-danger";
+  | "light-danger"
+  | "custom";
 
 type colorVariant = "primary" | "secondary" | "success" | "danger" | "default";
 type Hvariant = "solid" | "bordered" | "light";

@@ -1,12 +1,25 @@
 import React from "react";
-import { Badge, Checkbox } from "@heroui/react";
+import { Chip, Checkbox } from "@heroui/react";
 import Button from "@/components/common/Button";
 import { Question } from "@/types/question";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { GripVertical, BarChart3 } from "lucide-react";
 
 interface QuestionListProps {
   questions: Question[];
@@ -66,11 +79,8 @@ const SortableQuestionItem: React.FC<SortableQuestionItemProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`border rounded-lg p-4 transition ${
-        isSelected
-          ? "border-blue-600 bg-blue-50"
-          : "border-gray-200 hover:border-blue-300"
-      }`}
+      className={`relative rounded-2xl border p-4 transition-all duration-300
+        ${isSelected ? "border-purple-500 bg-purple-50 shadow-md" : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-lg"}`}
     >
       <div className="flex items-start gap-2">
         <div
@@ -78,13 +88,16 @@ const SortableQuestionItem: React.FC<SortableQuestionItemProps> = ({
           {...listeners}
           className="cursor-grab self-center flex  active:cursor-grabbing text-gray-400 hover:text-gray-600"
         >
-          <GripVertical size={20} />
+          <GripVertical size={18} />
         </div>
-        <Checkbox
-          isSelected={isSelected}
-          onChange={() => onToggle(question.id)}
-          className="mt-1"
-        />
+        <div className="absolute top-3 right-3">
+          <Checkbox
+            isSelected={isSelected}
+            onChange={() => onToggle(question.id)}
+            color="primary"
+            size="sm"
+          />
+        </div>
         <div className="flex-1" onClick={() => onToggle(question.id)}>
           <h3 className="font-bold">{question.title}</h3>
           <p className="text-sm text-gray-600 mt-1">
@@ -92,21 +105,23 @@ const SortableQuestionItem: React.FC<SortableQuestionItemProps> = ({
           </p>
           {question.contentImage && (
             <div className="mt-2">
-              <Badge variant="solid">Com imagem</Badge>
+              <Chip variant="solid">Com imagem</Chip>
             </div>
           )}
           <div className="flex gap-2 mt-2 flex-wrap">
-            <Badge color={getTypeVariant(question.type)}>
+            <Chip color={getTypeVariant(question.type)}>
               {question.type === "multipla" ? "Múltipla" : "Aberta"}
-            </Badge>
-            <Badge color={getDifficultyVariant(question.difficulty)}>
+            </Chip>
+            <Chip color={getDifficultyVariant(question.difficulty)}>
               {question.difficulty}
-            </Badge>
-            <Badge color="default">{question.subject}</Badge>
-            <Badge color="primary">{question.category}</Badge>
-            {question.importedFrom && (
-              <Badge color="primary">Importada</Badge>
+            </Chip>
+            {question.subject && (
+              <Chip color="default">{question.subject}</Chip>
             )}
+            {question.category && (
+              <Chip color="primary">{question.category}</Chip>
+            )}
+            {question.importedFrom && <Chip color="primary">Importada</Chip>}
           </div>
         </div>
       </div>
@@ -142,42 +157,48 @@ const QuestionList: React.FC<QuestionListProps> = ({
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
         const newOrder = arrayMove(items, oldIndex, newIndex);
-        
+
         if (onReorder) {
           onReorder(newOrder);
         }
-        
+
         return newOrder;
       });
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">
-          Selecionar Questões ({selectedIds.length} selecionadas)
-        </h2>
-        <Button variant="primary" onClick={onSelectAll}>
-          Selecionar Todas
+    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg transition-all duration-300 overflow-y">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-semibold ">
+            Banco de Questões
+          </h3>
+          <p className="text-xs text-gray-500 mt-1">
+            {selectedIds.length} de {questions.length} selecionadas
+          </p>
+        </div>
+        <Button variant="primary" onClick={onSelectAll} className="bg-purple text-white rounded hover:bg-purple-dark">
+          Selecionar todas
         </Button>
       </div>
 
       {orderedQuestions.length === 0 ? (
-        <p className="text-gray-500">
+        <div className="text-center py-10 text-gray-500">
+          <BarChart3 size={40} className="mx-auto mb-2 text-gray-300" />
           Nenhuma questão encontrada com os filtros aplicados.
-        </p>
+        </div>
       ) : (
-        <div className="space-y-3 max-h-96 overflow-y-auto">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={orderedQuestions.map((q) => q.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <SortableContext
-              items={orderedQuestions.map((q) => q.id)}
-              strategy={verticalListSortingStrategy}
-            >
+            <div className="space-y-3 max-h-[28rem] overflow-y-auto pr-2">
               {orderedQuestions.map((question) => (
                 <SortableQuestionItem
                   key={question.id}
@@ -186,9 +207,9 @@ const QuestionList: React.FC<QuestionListProps> = ({
                   onToggle={onToggleSelection}
                 />
               ))}
-            </SortableContext>
-          </DndContext>
-        </div>
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );

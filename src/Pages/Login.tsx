@@ -104,3 +104,4 @@ export const Login = ({ onSwitchToRegister }: LoginProps) => {
     </div>
   );
 };
+

@@ -5,9 +5,9 @@ import { Login } from "./Pages/Login";
 import { Register } from "./Pages/Register";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Spinner } from "@heroui/react";
-import UpdateNotification from '@/components/common/UpdateNotification';
-import { useUpdater } from '@/hooks/useUpdater';
-
+import UpdateNotification from "@/components/common/UpdateNotification";
+import { useUpdater } from "@/hooks/useUpdater";
+import DefaultLayout from "@/layouts/default";
 import Home from "./Pages/home";
 
 const AuthScreen = () => {
@@ -22,18 +22,20 @@ const AuthScreen = () => {
 
 const App = () => {
   const { isAuthenticated, loading } = useAuth();
-   const { checkForUpdates } = useUpdater();
+  const { checkForUpdates } = useUpdater();
 
   useEffect(() => {
     checkForUpdates();
-    
-    const interval = setInterval(() => {
-      checkForUpdates();
-    }, 60 * 60 * 1000); 
+
+    const interval = setInterval(
+      () => {
+        checkForUpdates();
+      },
+      60 * 60 * 1000
+    );
 
     return () => clearInterval(interval);
   }, [checkForUpdates]);
-
 
   if (loading) {
     return (
@@ -46,16 +48,24 @@ const App = () => {
   return (
     <>
       <Routes>
-        <Route path="/auth" element={!isAuthenticated ? <AuthScreen /> : <Navigate to="/home" />} />
+        <Route
+          path="/auth"
+          element={!isAuthenticated ? <AuthScreen /> : <Navigate to="/home" />}
+        />
         <Route
           path="/home"
           element={
             <ProtectedRoute>
-              <Home />
+              <DefaultLayout>
+                <Home />
+              </DefaultLayout>
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/auth"} />} />
+        <Route
+          path="*"
+          element={<Navigate to={isAuthenticated ? "/home" : "/auth"} />}
+        />
       </Routes>
       <UpdateNotification />
     </>

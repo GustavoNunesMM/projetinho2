@@ -31,34 +31,44 @@ const QuestionFilters = ({
     { value: "media", label: "Média" },
     { value: "dificil", label: "Difícil" },
   ];
-  const formatoptions = [
+
+  const formatOptions = [
     { value: "block", label: "Bloco" },
     { value: "list", label: "Lista" },
     { value: "detail", label: "Detalhe" },
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold mb-4">Filtros</h2>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg hover:border-purple-200 transition-all duration-300">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">
+          Filtros
+        </h3>
+
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Select
           label="Tipo"
           value={filters.type}
           onChange={(e) => onUpdateFilter("type", e.target.value)}
           options={typeOptions}
+          className="focus:ring-2 focus:ring-purple-400 rounded-xl"
         />
         <Select
           label="Dificuldade"
           value={filters.difficulty}
           onChange={(e) => onUpdateFilter("difficulty", e.target.value)}
           options={difficultyOptions}
+          className="focus:ring-2 focus:ring-purple-400 rounded-xl"
         />
         {format && onUpdateFormat && (
           <Select
             label="Exibição"
             value={format}
             onChange={(e) => onUpdateFormat(e.target.value)}
-            options={formatoptions}
+            options={formatOptions}
+            className="focus:ring-2 focus:ring-purple-400 rounded-xl"
           />
         )}
         <Input
@@ -66,13 +76,24 @@ const QuestionFilters = ({
           value={filters.content}
           onChange={(e) => onUpdateFilter("content", e.target.value)}
           placeholder="Ex: Matemática"
+          className="focus:ring-2 focus:ring-purple-400 rounded-xl"
         />
         <Input
           label="Categoria"
           value={filters.category}
           onChange={(e) => onUpdateFilter("category", e.target.value)}
           placeholder="Ex: Álgebra"
+          className="focus:ring-2 focus:ring-purple-400 rounded-xl"
         />
+      </div>
+
+      <div className="mt-4 text-right">
+        <span className="text-xs text-gray-500">
+          Filtros ativos:{" "}
+          <span className="font-semibold text-purple-600">
+            {Object.values(filters).filter(Boolean).length}
+          </span>
+        </span>
       </div>
     </div>
   );

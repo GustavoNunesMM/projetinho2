@@ -25,17 +25,17 @@ const LayoutSelector: React.FC<LayoutSelectorProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold mb-4">Selecionar Layout</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="bg-white rounded-lg shadow p-4 pb-6">
+      <h2 className="text-2xl font-bold mb-2">Selecionar Layout</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 scroll-auto overflow-x ">
         {layouts.map((layout) => (
           <div
             key={layout.id}
             onClick={() => onSelectLayout(layout)}
-            className={`border-2 rounded-lg p-4 cursor-pointer transition ${
+            className={`border-2 rounded-lg p-2 cursor-pointer transition ${
               selectedLayout?.id === layout.id
-                ? "border-blue-600 bg-blue-50"
-                : "border-gray-200 hover:border-blue-300"
+                ? "border-purple bg-purple-50"
+                : "border-gray-200 hover:border-purple/50"
             }`}
           >
             <div className="flex items-start justify-between mb-2">
@@ -51,7 +51,7 @@ const LayoutSelector: React.FC<LayoutSelectorProps> = ({
               Espaçamento: {layout.lineSpacing}
             </p>
             {layout.importedFrom && (
-              <p className="text-xs text-blue-600 mt-2">
+              <p className="text-xs text-purple mt-2">
                 Importado: {layout.importedFrom}
               </p>
             )}

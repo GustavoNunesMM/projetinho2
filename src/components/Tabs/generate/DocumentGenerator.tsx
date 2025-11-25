@@ -80,7 +80,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
 
   useEffect(() => {
     if (onGabaritoChange) onGabaritoChange(gabaritoData);
-    gerarGabarito(selectedQuestionsData)
+    gerarGabarito(selectedQuestionsData);
   }, [gabaritoData, onGabaritoChange]);
 
   const handleImportHeader = async (
@@ -232,7 +232,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   );
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-2xl shadow-2xl p-6">
       <h2 className="text-2xl font-bold mb-4">Gerar Documento</h2>
 
       {!selectedLayout && (
@@ -243,7 +243,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         </div>
       )}
 
-      <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded">
+      <div className="mb-6 p-4 bg-purple/10 border border-purple/50 rounded-2xl">
         <h3 className="text-lg font-semibold mb-3">
           Cabeçalho Customizado (Opcional)
         </h3>
@@ -257,7 +257,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           <div className="flex items-center gap-3">
             <label
               htmlFor="header-upload"
-              className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-purple text-white rounded hover:bg-purple-dark transition"
             >
               <Upload className="w-5 h-5" />
               Importar Cabeçalho (.docx)
@@ -271,25 +271,23 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
             />
           </div>
         ) : (
-          <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded">
+          <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-2xl">
             <div className="flex items-center gap-2">
-              <span className="text-green-600">✓</span>
-              <span className="text-sm font-medium text-green-800">
-                {headerFileName}
-              </span>
+              <span>✓</span>
+              <span className="text-sm font-medium">{headerFileName}</span>
             </div>
             <button
               onClick={handleRemoveHeader}
               className="text-red-500 hover:text-red-700 transition"
               title="Remover cabeçalho"
             >
-              <X className="w-5 h-5" />
+              <X size={20} />
             </button>
           </div>
         )}
       </div>
 
-      <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded">
+      <div className="mb-6 p-4 bg-purple/10 border border-purple/50 rounded-2xl flex flex-col gap-2">
         <h3 className="text-lg font-semibold mb-3">
           Texto Adicional (Opcional)
         </h3>
@@ -304,15 +302,16 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
               variant="primary"
               onClick={() => openModalMessages(true)}
               disabled={loadingMessages}
+              className="bg-purple text-white rounded hover:bg-purple-dark"
             >
               <MessageSquareText size={16} />
               Selecionar Texto
             </Button>
           ) : (
-            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded w-full">
+            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-2xl w-full">
               <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-green-800">
+                <Check className="w-5 h-5 " />
+                <span className="text-sm font-medium">
                   {selectedMessage.title}
                 </span>
               </div>
@@ -328,16 +327,16 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         </div>
       </div>
 
-      <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded">
+      <div className="mb-6 p-4 bg-purple/10 border border-purple/50 rounded-2xl">
         <h3 className="text-lg font-semibold mb-3">Gabarito (Opcional)</h3>
         <p className="text-sm text-gray-600 mb-3">
           Gere um gabarito/cartão de respostas para as questões de múltipla
           escolha.
         </p>
-
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-4">
           <Button
             variant="primary"
+            className="bg-purple text-white rounded hover:bg-purple-dark"
             onClick={() => {
               const gabarito = gerarGabarito(selectedQuestionsData);
               setGabaritoData(gabarito);
@@ -351,22 +350,20 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         </div>
 
         {gabaritoData && (
-          <div className=" p-3 bg-green-50 border border-green-200 rounded">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-green-800">
-                  Gabarito gerado ({gabaritoData.questoes.length} questões)
-                </span>
-              </div>
-              <button
-                onClick={() => setGabaritoData(null)}
-                className="text-red-500 hover:text-red-700 transition"
-                title="Remover gabarito"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-2xl w-full">
+            <div className="flex items-center gap-2">
+              <Check className="w-5 h-5 " />
+              <span className="text-sm font-medium">
+                Gabarito gerado ({gabaritoData.questoes.length} questões)
+              </span>
             </div>
+            <button
+              onClick={handleRemoveMessage}
+              className="text-red-500 hover:text-red-700 transition"
+              title="Remover texto"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         )}
       </div>
