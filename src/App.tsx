@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { Login } from "./Pages/Login";
-import { Register } from "./Pages/Register";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Spinner } from "@heroui/react";
 import UpdateNotification from "@/components/common/UpdateNotification";
@@ -10,15 +9,6 @@ import { useUpdater } from "@/hooks/useUpdater";
 import DefaultLayout from "@/layouts/default";
 import Home from "./Pages/home";
 
-const AuthScreen = () => {
-  const [showLogin, setShowLogin] = useState(true);
-
-  return showLogin ? (
-    <Login onSwitchToRegister={() => setShowLogin(false)} />
-  ) : (
-    <Register onSwitchToLogin={() => setShowLogin(true)} />
-  );
-};
 
 const App = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -50,7 +40,7 @@ const App = () => {
       <Routes>
         <Route
           path="/auth"
-          element={!isAuthenticated ? <AuthScreen /> : <Navigate to="/home" />}
+          element={!isAuthenticated ? <Login/>: <Navigate to="/home" />}
         />
         <Route
           path="/home"

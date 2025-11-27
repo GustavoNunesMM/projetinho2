@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Plus, Upload, Layout, Layers, FileText } from "lucide-react";
+import { Plus, Upload, Layout, Layers } from "lucide-react";
 import Button from "@/components/common/Button.tsx";
 import LayoutCard from "./LayoutCard.tsx";
 import LayoutModal from "./LayoutModal.tsx";

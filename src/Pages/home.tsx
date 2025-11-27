@@ -15,7 +15,7 @@ import { extractWordLayoutInfo } from "@/hooks/useDocumentGenerator/ExportWord";
 import { useTab } from "@/contexts/TabContext";
 
 const Home = () => {
-  const { activeTab, setActiveTab } = useTab();
+  const { activeTab } = useTab();
 
   const {
     layouts,
@@ -33,7 +33,7 @@ const Home = () => {
 
   useEffect(() => {
     refreshQuestions();
-  }, [activeTab, questions.length, layouts.length]);
+  }, [ questions.length, layouts.length]);
 
   const handleImportLayout = async (file: File) => {
     try {

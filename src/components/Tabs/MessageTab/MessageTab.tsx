@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Plus, FileUp, Loader, MessageSquare, FileText, Sparkles } from "lucide-react";
+import { Plus, FileUp, Loader, MessageSquare, FileText } from "lucide-react";
 import MessageCard from "./MessageCard";
 import MessageModal from "./MessageModal";
 import Button from "@/components/common/Button";

@@ -79,10 +79,13 @@ const Header = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
-                QuestPro
+                QuestPro By Gustavo
               </h1>
               <p className="text-xs text-gray-500 font-medium">
                 Gerenciamento Inteligente de Questões
+              </p>
+              <p className="text-[10px] text-gray-500 font-medium">
+                Feito por mim para pessoas em sofrimento pedagogico
               </p>
             </div>
           </div>
