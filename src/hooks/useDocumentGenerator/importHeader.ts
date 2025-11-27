@@ -62,7 +62,6 @@ export function useHeaderFromWord() {
     const tableEl = doc.querySelector("w\\:tbl, tbl");
     if (!tableEl) throw new Error("Nenhuma tabela encontrada no Word");
 
-    /* ---------- bordas DEFAULT da tabela (quando célula não tem própria) ---------- */
     const tblBorders = tableEl.querySelector(
       "w\\:tblPr w\\:tblBorders, tblPr tblBorders"
     );
@@ -80,7 +79,6 @@ export function useHeaderFromWord() {
 
     const imageMap = await extractImages(zip);
 
-    /* ---------- parse das linhas / células ---------- */
     const tableRows = tableEl.querySelectorAll("w\\:tr, tr");
     const parsedTable: ParsedCell[][] = [];
     const tcElements: Element[][] = [];
@@ -99,7 +97,6 @@ export function useHeaderFromWord() {
       tcElements.push(tcRow);
     });
 
-    /* ---------- cria grid respeitando span/merge ---------- */
     const grid: (ParsedCell | null)[][] = [];
 
     for (let r = 0; r < parsedTable.length; r++) {
@@ -149,7 +146,6 @@ export function useHeaderFromWord() {
       }
     }
 
-    /* ---------- aplica bordas DEFAULT da tabela apenas onde célula NÃO tem própria ---------- */
     for (let r = 0; r < grid.length; r++) {
       for (let c = 0; c < grid[r].length; c++) {
         const cell = grid[r][c];
@@ -356,9 +352,6 @@ export function useHeaderFromWord() {
   return { importHeaderFromDocx };
 }
 
-/* ------------------------------------------------------------------ */
-/* ---------------------- FUNÇÕES AUXILIARES ------------------------ */
-/* ------------------------------------------------------------------ */
 
 function parseCellFromXml(tcEl: Element): ParsedCell {
   const tcPr = tcEl.querySelector("w\\:tcPr, tcPr");

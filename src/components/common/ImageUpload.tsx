@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Image, X, Maximize2 } from "lucide-react";
 import Button from "@/components/common/Button";
+import { Checkbox } from "@heroui/react";
 
 interface ImageUploadProps {
   label?: string;
@@ -91,21 +92,21 @@ const ImageUpload = ({
     let newHeight = startSize.height;
 
     switch (resizeHandle) {
-      case "se": 
+      case "se":
         newWidth = startSize.width + deltaX;
         newHeight =
           lockAspectRatio && aspectRatio
             ? newWidth / aspectRatio
             : startSize.height + deltaY;
         break;
-      case "sw": 
+      case "sw":
         newWidth = startSize.width - deltaX;
         newHeight =
           lockAspectRatio && aspectRatio
             ? newWidth / aspectRatio
             : startSize.height + deltaY;
         break;
-      case "ne": 
+      case "ne":
         newWidth = startSize.width + deltaX;
         newHeight =
           lockAspectRatio && aspectRatio
@@ -125,19 +126,19 @@ const ImageUpload = ({
           newHeight = newWidth / aspectRatio;
         }
         break;
-      case "w": 
+      case "w":
         newWidth = startSize.width - deltaX;
         if (lockAspectRatio && aspectRatio) {
           newHeight = newWidth / aspectRatio;
         }
         break;
-      case "s": 
+      case "s":
         newHeight = startSize.height + deltaY;
         if (lockAspectRatio && aspectRatio) {
           newWidth = newHeight * aspectRatio;
         }
         break;
-      case "n": 
+      case "n":
         newHeight = startSize.height - deltaY;
         if (lockAspectRatio && aspectRatio) {
           newWidth = newHeight * aspectRatio;
@@ -243,6 +244,7 @@ const ImageUpload = ({
 
               <Button
                 variant="danger"
+                isIconOnly={true}
                 className="absolute -top-2 -right-2 rounded-full w-6 h-6 min-w-[24px] p-0 shadow-lg z-20"
                 onClick={onImageRemove}
                 aria-label="Remover imagem"
@@ -321,7 +323,7 @@ const ImageUpload = ({
             <div className="flex flex-col gap-2 items-center">
               <div className="flex items-center gap-2">
                 <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                  <input
+                  <Checkbox
                     type="checkbox"
                     checked={lockAspectRatio}
                     onChange={(e) => setLockAspectRatio(e.target.checked)}

@@ -8,7 +8,7 @@ import MessageTab from "@/components/Tabs/MessageTab/MessageTab.tsx";
 import { useLayouts } from "@/hooks/useLayouts.ts";
 import { useQuestions } from "@/hooks/useQuestions.ts";
 import { useImportHandlers } from "@/hooks/useImportHandlers.ts";
-import { Spinner } from "@heroui/react";
+import { Loader } from "lucide-react";
 import { Toast } from "@/components/common/Toast.tsx";
 import { LayoutFormData } from "@/types/index";
 import { extractWordLayoutInfo } from "@/hooks/useDocumentGenerator/ExportWord";
@@ -64,14 +64,20 @@ const Home = () => {
 
   if (layoutsLoading || questionsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="lg" color="primary" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-white">
+        <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center shadow-xl animate-pulseGlow">
+          <Loader className="w-10 h-10 text-white animate-spin" />
+        </div>
+        <p className="mt-6 text-xl font-semibold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
+          QuestPro
+        </p>
+        <p className="text-gray-500 mt-2">Carregando dados...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full">
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-white to-primary-50/30">
       <Container>
         <div className={activeTab === "generate" ? "animate-fadeIn" : "hidden"}>
           <GenerateTab layouts={layouts} questions={questions} />

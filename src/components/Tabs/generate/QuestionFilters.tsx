@@ -39,9 +39,9 @@ const QuestionFilters = ({
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg hover:border-purple-200 transition-all duration-300">
+    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg hover:border-primary-200 transition-all duration-300">
       <div className="flex items-center justify-between mb-5">
-        <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">
+        <h3 className="text-lg font-semibold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
           Filtros
         </h3>
 
@@ -53,14 +53,14 @@ const QuestionFilters = ({
           value={filters.type}
           onChange={(e) => onUpdateFilter("type", e.target.value)}
           options={typeOptions}
-          className="focus:ring-2 focus:ring-purple-400 rounded-xl"
+          className="focus:ring-2 focus:ring-primary-400 rounded-xl"
         />
         <Select
           label="Dificuldade"
           value={filters.difficulty}
           onChange={(e) => onUpdateFilter("difficulty", e.target.value)}
           options={difficultyOptions}
-          className="focus:ring-2 focus:ring-purple-400 rounded-xl"
+          className="focus:ring-2 focus:ring-primary-400 rounded-xl"
         />
         {format && onUpdateFormat && (
           <Select
@@ -68,7 +68,7 @@ const QuestionFilters = ({
             value={format}
             onChange={(e) => onUpdateFormat(e.target.value)}
             options={formatOptions}
-            className="focus:ring-2 focus:ring-purple-400 rounded-xl"
+            className="focus:ring-2 focus:ring-primary-400 rounded-xl"
           />
         )}
         <Input
@@ -76,21 +76,21 @@ const QuestionFilters = ({
           value={filters.content}
           onChange={(e) => onUpdateFilter("content", e.target.value)}
           placeholder="Ex: Matemática"
-          className="focus:ring-2 focus:ring-purple-400 rounded-xl"
+          className="focus:ring-2 focus:ring-primary-400 rounded-xl"
         />
         <Input
           label="Categoria"
           value={filters.category}
           onChange={(e) => onUpdateFilter("category", e.target.value)}
           placeholder="Ex: Álgebra"
-          className="focus:ring-2 focus:ring-purple-400 rounded-xl"
+          className="focus:ring-2 focus:ring-primary-400 rounded-xl"
         />
       </div>
 
       <div className="mt-4 text-right">
         <span className="text-xs text-gray-500">
           Filtros ativos:{" "}
-          <span className="font-semibold text-purple-600">
+          <span className="font-semibold text-primary-600">
             {Object.values(filters).filter(Boolean).length}
           </span>
         </span>

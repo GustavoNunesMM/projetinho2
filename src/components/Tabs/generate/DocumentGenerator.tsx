@@ -7,6 +7,10 @@ import {
   MessageSquareText,
   Check,
   Eye,
+  FileText,
+  Settings,
+  ClipboardList,
+  Sparkles,
 } from "lucide-react";
 import Button from "@/components/common/Button.tsx";
 import { useDocumentGenerator } from "@/hooks/useDocumentGenerator.ts";
@@ -26,22 +30,12 @@ interface DocumentGeneratorProps {
   selectedLayout: Layout | null;
   questions: Question[];
   selectedQuestions?: number[];
-  onHeaderChange?: (header: any[] | null) => void;
-  onMessageChange?: (message: Message | null) => void;
-  onGabaritoChange?: (gabarito: GabaritoData | null) => void;
-  setVisualize: (preVisualize: boolean) => void;
-  isBigLayout: boolean;
 }
 
 const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   selectedLayout,
   questions,
   selectedQuestions = [],
-  onHeaderChange,
-  onMessageChange,
-  onGabaritoChange,
-  setVisualize,
-  isBigLayout = true,
 }) => {
   const [generating, setGenerating] = useState(false);
   const [importedHeader, setImportedHeader] = useState<any[] | null>(null);
@@ -69,19 +63,6 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     const valid = selectedQuestionsData.some((q) => q.type === "multipla");
     sethaveValidQuestion(valid);
   }, [selectedQuestionsData]);
-
-  useEffect(() => {
-    if (onHeaderChange) onHeaderChange(importedHeader);
-  }, [importedHeader, onHeaderChange]);
-
-  useEffect(() => {
-    if (onMessageChange) onMessageChange(selectedMessage);
-  }, [selectedMessage, onMessageChange]);
-
-  useEffect(() => {
-    if (onGabaritoChange) onGabaritoChange(gabaritoData);
-    gerarGabarito(selectedQuestionsData);
-  }, [gabaritoData, onGabaritoChange]);
 
   const handleImportHeader = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -118,19 +99,19 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   const handleSelectMessage = (message: Message) => {
     setSelectedMessage(message);
     openModalMessages(false);
-    Toast({ message: `Texto "${message.title}" selecionada!` });
+    Toast({ message: `Texto "${message.title}" selecionado!` });
   };
 
   const handleRemoveMessage = () => {
     setSelectedMessage(null);
-    Toast({ message: "Texto removida" });
+    Toast({ message: "Texto removido" });
   };
-  const handlePreviewModal = (state: boolean): any => {
-    if (isBigLayout) {
-      return setVisualize(state);
-    }
-    return setIsPreviewOpen(state);
+
+  const handleRemoveGabarito = () => {
+    setGabaritoData(null);
+    Toast({ message: "Gabarito removido" });
   };
+
   const handleGenerateDocument = async (format: "docx" | "pdf") => {
     if (!selectedLayout) {
       Toast({ message: "Selecione um layout primeiro!" });
@@ -205,7 +186,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
-      handlePreviewModal(true);
+      setIsPreviewOpen(true);
     } catch (err: any) {
       Toast({
         message: `Erro ao gerar preview: ${err.message}`,
@@ -216,156 +197,194 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     }
   };
 
-  const renderButtonContent = (
-    label: string,
-    isLoading: boolean,
-    Icon: React.FC<{ className?: string }>
-  ) => (
-    <span className="flex items-center justify-center gap-2">
-      {isLoading ? (
-        <Loader className="animate-spin w-5 h-5" />
-      ) : (
-        <Icon className="w-5 h-5" />
-      )}
-      {label}
-    </span>
-  );
-
   return (
-    <div className="bg-white rounded-2xl shadow-2xl p-6">
-      <h2 className="text-2xl font-bold mb-4">Gerar Documento</h2>
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-slideUp hover:shadow-xl transition-all duration-300">
+      <div className="flex items-center gap-4 mb-6">
+        <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+          <Sparkles className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
+            Gerar Documento
+          </h2>
+          <p className="text-xs text-gray-500">
+            Configure e exporte sua prova
+          </p>
+        </div>
+      </div>
 
       {!selectedLayout && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-yellow-800">
-            ⚠️ Selecione um layout na aba "Layouts" antes de gerar o documento.
-          </p>
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 animate-fadeIn">
+          <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Settings className="w-4 h-4 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-amber-800 font-medium text-sm">
+              Selecione um layout primeiro
+            </p>
+            <p className="text-amber-600 text-xs mt-0.5">
+              Escolha um layout acima antes de gerar o documento.
+            </p>
+          </div>
         </div>
       )}
 
-      <div className="mb-6 p-4 bg-purple/10 border border-purple/50 rounded-2xl">
-        <h3 className="text-lg font-semibold mb-3">
-          Cabeçalho Customizado (Opcional)
-        </h3>
-        <p className="text-sm text-gray-600 mb-3">
-          Importe um arquivo .docx contendo apenas o cabeçalho formatado
-          (tabelas, texto com formatação, etc.) que será adicionado ao início do
-          documento.
-        </p>
-
-        {!importedHeader ? (
-          <div className="flex items-center gap-3">
-            <label
-              htmlFor="header-upload"
-              className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-purple text-white rounded hover:bg-purple-dark transition"
-            >
-              <Upload className="w-5 h-5" />
-              Importar Cabeçalho (.docx)
-            </label>
-            <input
-              id="header-upload"
-              type="file"
-              accept=".docx"
-              onChange={handleImportHeader}
-              className="hidden"
-            />
-          </div>
-        ) : (
-          <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-2xl">
-            <div className="flex items-center gap-2">
-              <span>✓</span>
-              <span className="text-sm font-medium">{headerFileName}</span>
+      <div className="space-y-4 mb-6">
+        <div className="p-4 bg-gradient-to-r from-primary-50 to-white border border-primary-100 rounded-xl transition-all duration-300 hover:shadow-md">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+              <FileText className="w-4 h-4 text-primary-600" />
             </div>
-            <button
-              onClick={handleRemoveHeader}
-              className="text-red-500 hover:text-red-700 transition"
-              title="Remover cabeçalho"
-            >
-              <X size={20} />
-            </button>
+            <div>
+              <h3 className="font-semibold text-gray-800">
+                Cabeçalho Customizado
+              </h3>
+              <p className="text-xs text-gray-500">Opcional</p>
+            </div>
           </div>
-        )}
-      </div>
+          <p className="text-sm text-gray-600 mb-3 pl-11">
+            Importe um arquivo .docx contendo o cabeçalho formatado.
+          </p>
 
-      <div className="mb-6 p-4 bg-purple/10 border border-purple/50 rounded-2xl flex flex-col gap-2">
-        <h3 className="text-lg font-semibold mb-3">
-          Texto Adicional (Opcional)
-        </h3>
-        <p className="text-sm text-gray-600 mb-3">
-          Adicione um texto de instrução ou mensagem que será incluído no
-          documento.
-        </p>
-
-        <div className="flex items-center gap-3">
-          {!selectedMessage ? (
-            <Button
-              variant="primary"
-              onClick={() => openModalMessages(true)}
-              disabled={loadingMessages}
-              className="bg-purple text-white rounded hover:bg-purple-dark"
-            >
-              <MessageSquareText size={16} />
-              Selecionar Texto
-            </Button>
+          {!importedHeader ? (
+            <div className="pl-11">
+              <label
+                htmlFor="header-upload"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl cursor-pointer hover:from-primary-700 hover:to-primary-800 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm font-medium"
+              >
+                <Upload className="w-4 h-4" />
+                Importar Cabeçalho (.docx)
+              </label>
+              <input
+                id="header-upload"
+                type="file"
+                accept=".docx"
+                onChange={handleImportHeader}
+                className="hidden"
+              />
+            </div>
           ) : (
-            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-2xl w-full">
+            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl ml-11">
               <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 " />
-                <span className="text-sm font-medium">
-                  {selectedMessage.title}
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span className="text-sm font-medium text-green-800">
+                  {headerFileName}
                 </span>
               </div>
               <button
-                onClick={handleRemoveMessage}
-                className="text-red-500 hover:text-red-700 transition"
-                title="Remover texto"
+                onClick={handleRemoveHeader}
+                className="w-7 h-7 bg-red-100 hover:bg-red-200 text-red-500 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+                title="Remover cabeçalho"
               >
-                <X className="w-5 h-5" />
+                <X size={16} />
               </button>
             </div>
           )}
         </div>
-      </div>
 
-      <div className="mb-6 p-4 bg-purple/10 border border-purple/50 rounded-2xl">
-        <h3 className="text-lg font-semibold mb-3">Gabarito (Opcional)</h3>
-        <p className="text-sm text-gray-600 mb-3">
-          Gere um gabarito/cartão de respostas para as questões de múltipla
-          escolha.
-        </p>
-        <div className="flex items-center gap-3 mb-4">
-          <Button
-            variant="primary"
-            className="bg-purple text-white rounded hover:bg-purple-dark"
-            onClick={() => {
-              const gabarito = gerarGabarito(selectedQuestionsData);
-              setGabaritoData(gabarito);
-              setIsGabaritoModalOpen(true);
-            }}
-            disabled={!haveValidQuestion}
-          >
-            <MessageSquareText size={16} />
-            Adicionar Gabarito
-          </Button>
+        <div className="p-4 bg-gradient-to-r from-primary-50 to-white border border-primary-100 rounded-xl transition-all duration-300 hover:shadow-md">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+              <MessageSquareText className="w-4 h-4 text-primary-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800">Texto Adicional</h3>
+              <p className="text-xs text-gray-500">Opcional</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-3 pl-11">
+            Adicione um texto de instrução que será incluído no documento.
+          </p>
+
+          <div className="pl-11">
+            {!selectedMessage ? (
+              <Button
+                variant="custom"
+                onClick={() => openModalMessages(true)}
+                disabled={loadingMessages}
+                className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm font-medium"
+              >
+                <MessageSquareText size={16} className="mr-2" />
+                Selecionar Texto
+              </Button>
+            ) : (
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <Check className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-green-800">
+                    {selectedMessage.title}
+                  </span>
+                </div>
+                <button
+                  onClick={handleRemoveMessage}
+                  className="w-7 h-7 bg-red-100 hover:bg-red-200 text-red-500 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+                  title="Remover texto"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {gabaritoData && (
-          <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-2xl w-full">
-            <div className="flex items-center gap-2">
-              <Check className="w-5 h-5 " />
-              <span className="text-sm font-medium">
-                Gabarito gerado ({gabaritoData.questoes.length} questões)
-              </span>
+        <div className="p-4 bg-gradient-to-r from-primary-50 to-white border border-primary-100 rounded-xl transition-all duration-300 hover:shadow-md">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+              <ClipboardList className="w-4 h-4 text-primary-600" />
             </div>
-            <button
-              onClick={handleRemoveMessage}
-              className="text-red-500 hover:text-red-700 transition"
-              title="Remover texto"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div>
+              <h3 className="font-semibold text-gray-800">Gabarito</h3>
+              <p className="text-xs text-gray-500">Opcional</p>
+            </div>
           </div>
-        )}
+          <p className="text-sm text-gray-600 mb-3 pl-11">
+            Gere um gabarito para as questões de múltipla escolha.
+          </p>
+
+          <div className="pl-11">
+            {!gabaritoData ? (
+              <Button
+                variant="custom"
+                className={`px-4 py-2.5 rounded-xl shadow-md text-sm font-medium transition-all duration-300 ${
+                  haveValidQuestion
+                    ? "bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white hover:shadow-lg transform hover:scale-105"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
+                onClick={() => {
+                  const gabarito = gerarGabarito(selectedQuestionsData);
+                  setGabaritoData(gabarito);
+                  setIsGabaritoModalOpen(true);
+                }}
+                disabled={!haveValidQuestion}
+              >
+                <ClipboardList size={16} className="mr-2" />
+                Adicionar Gabarito
+              </Button>
+            ) : (
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <Check className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-green-800">
+                    Gabarito gerado ({gabaritoData.questoes.length} questões)
+                  </span>
+                </div>
+                <button
+                  onClick={handleRemoveGabarito}
+                  className="w-7 h-7 bg-red-100 hover:bg-red-200 text-red-500 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+                  title="Remover gabarito"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <MessagesModal
@@ -378,7 +397,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       />
       <PreviewModal
         isPreviewOpen={isPreviewOpen}
-        setIsPreviewOpen={handlePreviewModal}
+        setIsPreviewOpen={setIsPreviewOpen}
         previewBlob={previewBlob}
         setPreviewUrl={setPreviewUrl}
       />
@@ -393,44 +412,79 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         />
       )}
 
-      <div className="flex gap-4">
+      <div className="flex gap-3">
         <Button
-          variant="primary"
+          variant="custom"
           onClick={() => handleGenerateDocument("docx")}
           disabled={!selectedLayout || selectedCount === 0 || generating}
-          className="flex-1"
+          className={`flex-1 py-3 rounded-xl font-semibold transition-all duration-300 ${
+            !selectedLayout || selectedCount === 0 || generating
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+          }`}
         >
-          {renderButtonContent(
-            `Gerar DOCX (${selectedCount} questões)`,
-            generating,
-            Download
-          )}
+          <span className="flex items-center justify-center gap-2">
+            {generating ? (
+              <Loader className="animate-spin w-5 h-5" />
+            ) : (
+              <Download className="w-5 h-5" />
+            )}
+            Gerar DOCX ({selectedCount} questões)
+          </span>
         </Button>
         <Button
-          variant="outline"
+          variant="custom"
           onClick={handlePreview}
           disabled={generating || selectedCount === 0}
+          className={`px-5 py-3 rounded-xl font-medium transition-all duration-300 ${
+            generating || selectedCount === 0
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-white border-2 border-primary-300 text-primary-700 hover:bg-primary-50 hover:border-primary-400 shadow-md hover:shadow-lg"
+          }`}
         >
           <Eye className="w-4 h-4 mr-2" />
-          Pré-visualizar
+          Visualizar
         </Button>
       </div>
 
       {selectedLayout && (
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">
-            Configurações Aplicadas:
-          </h3>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Layout: {selectedLayout.name}</li>
-            <li>
-              • Fonte: {selectedLayout.fontFamily} ({selectedLayout.fontSize})
-            </li>
-            <li>• Espaçamento: {selectedLayout.lineSpacing}</li>
-            {importedHeader && <li>• Cabeçalho customizado incluído</li>}
-            {selectedMessage && <li>• Texto adicional incluída</li>}
-            {gabaritoData && <li>• Gabarito incluído</li>}
-          </ul>
+        <div className="mt-5 p-4 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-xl animate-fadeIn">
+          <div className="flex items-center gap-2 mb-3">
+            <Settings className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-blue-900">
+              Configurações Aplicadas
+            </h3>
+          </div>
+          <div className="flex flex-col gap-3 text-sm">
+            <div className="flex items-center gap-2 text-blue-700">
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+              <span>{selectedLayout.name}</span>
+            </div>
+            <div className="flex items-center gap-2 text-blue-700">
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+              <span>
+                {selectedLayout.fontFamily} {selectedLayout.fontSize}
+              </span>
+            </div>
+            {importedHeader && (
+              <div className="flex items-center gap-2 text-green-700">
+                <Check className="w-3.5 h-3.5" />
+                <span>Cabeçalho</span>
+              </div>
+            )}
+            {selectedMessage && (
+              <div className="flex items-center gap-2 text-green-700">
+                <Check className="w-3.5 h-3.5" />
+                <span>Texto</span>
+              </div>
+            )}
+            {gabaritoData && (
+              <div className="flex items-center gap-2 text-green-700">
+                <Check className="w-3.5 h-3.5" />
+                <span>Gabarito</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

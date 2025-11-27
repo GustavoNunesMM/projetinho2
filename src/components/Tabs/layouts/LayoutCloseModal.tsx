@@ -1,5 +1,6 @@
 import Button from "@/components/common/Button.tsx";
-import { Trash2, X } from "lucide-react";
+import Portal from "@/components/common/Portal.tsx";
+import { Trash2, AlertTriangle } from "lucide-react";
 
 interface props {
   onClose: () => void;
@@ -9,40 +10,53 @@ interface props {
 
 const LayoutCloseModal = ({ onClose, onSubmit, layoutName }: props) => {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto absolute p-6">
-        <div className="flex flex-col  text-center w-full gap-4 mb-6">
-          <h2 className="text-2xl font-bold text-center">
-            Deseja deletar o layout {layoutName}?
-          </h2>
-          <h3 className="text-start">
-            Esta ação é permanente e irá apagar os dados
-          </h3>
-        </div>
-        <Button
-          className="absolute right-2 top-2"
-          onClick={onClose}
-          variant="light-danger"
-          isIconOnly={true}
-          aria-label="Fechar"
-        >
-          <X size={20} />
-        </Button>
-        <div className="flex gap-3 mt-6">
-          <Button
-            variant="danger"
-            icon={Trash2}
-            onClick={onSubmit}
-            className="flex-1"
-          >
-            Deletar Layout
-          </Button>
-          <Button variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
+    <Portal>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] animate-fadeIn">
+        <div className="bg-white rounded-2xl shadow-2xl p-2 max-w-md w-full overflow-hidden border border-gray-100 animate-scaleIn">
+          <div className="p-6">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-4 animate-bounceIn">
+                <AlertTriangle className="w-8 h-8 text-red-500" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
+                Deletar Layout
+              </h2>
+              <p className="text-gray-600">
+                Deseja realmente excluir o layout{" "}
+                <span className="font-semibold text-primary-700">
+                  "{layoutName}"
+                </span>
+                ?
+              </p>
+            </div>
+
+            <div className="p-4 bg-red-50 border border-red-100 rounded-xl mb-6">
+              <p className="text-sm text-red-600 text-center">
+                ⚠️ Esta ação é permanente e não pode ser desfeita.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="custom"
+                onClick={onClose}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl transition-all duration-300 font-medium"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="custom"
+                icon={Trash2}
+                onClick={onSubmit}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold transform hover:scale-[1.02]"
+              >
+                Deletar
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Portal>
   );
 };
 

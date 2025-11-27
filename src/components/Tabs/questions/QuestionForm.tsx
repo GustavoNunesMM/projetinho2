@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Image, X } from "lucide-react";
+import { Image, X, Plus, Minus } from "lucide-react";
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import Textarea from "@/components/common/Textarea";
@@ -52,6 +52,38 @@ const QuestionForm = ({ formData, setFormData }: QuestionFormProps) => {
     updateField("optionImages", newImages);
   };
 
+  // Função para adicionar alternativa
+  const addOption = () => {
+    const newOptions = [...formData.options, ""];
+    const newOptionImages = [...formData.optionImages, null];
+    updateField("options", newOptions);
+    updateField("optionImages", newOptionImages);
+  };
+
+  // Função para remover alternativa
+  const removeOption = (index: number) => {
+    if (formData.options.length <= 2) {
+      return; // Não permitir menos que 2 alternativas
+    }
+
+    const newOptions = formData.options.filter((_, i) => i !== index);
+    const newOptionImages = formData.optionImages.filter((_, i) => i !== index);
+
+    updateField("options", newOptions);
+    updateField("optionImages", newOptionImages);
+
+    // Ajustar resposta correta se necessário
+    if (formData.correctAnswer) {
+      const currentIndex = formData.correctAnswer.charCodeAt(0) - 65;
+      if (currentIndex === index) {
+        updateField("correctAnswer", "");
+      } else if (currentIndex > index) {
+        const newAnswer = String.fromCharCode(65 + currentIndex - 1);
+        updateField("correctAnswer", newAnswer);
+      }
+    }
+  };
+
   const typeOptions = [
     { value: "multipla", label: "Múltipla Escolha" },
     { value: "aberta", label: "Aberta" },
@@ -65,10 +97,10 @@ const QuestionForm = ({ formData, setFormData }: QuestionFormProps) => {
 
   const answerOptions = [
     { value: "", label: "Selecione a alternativa correta" },
-    { value: "A", label: "A" },
-    { value: "B", label: "B" },
-    { value: "C", label: "C" },
-    { value: "D", label: "D" },
+    ...formData.options.map((_, index) => ({
+      value: String.fromCharCode(65 + index),
+      label: String.fromCharCode(65 + index),
+    })),
   ];
 
   return (
@@ -152,9 +184,11 @@ const QuestionForm = ({ formData, setFormData }: QuestionFormProps) => {
 
       {formData.type === "multipla" && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Alternativas
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Alternativas
+            </label>
+          </div>
           <div className="space-y-3">
             {formData.options.map((option, idx) => (
               <div key={idx}>
@@ -177,13 +211,25 @@ const QuestionForm = ({ formData, setFormData }: QuestionFormProps) => {
                     accept="image/*"
                     className="hidden"
                   />
+                  
                   <Button
-                    variant="primary"
+                    variant="light"
                     onClick={() => optionImageRefs.current[idx]?.click()}
                     aria-label="Adicionar imagem"
+                    className="p-2 w-[40px] min-w-[40px]"
                   >
                     <Image size={18} />
                   </Button>
+                  {formData.options.length > 2 && (
+                    <Button
+                      variant="light-danger"
+                      isIconOnly={true}
+                      onClick={() => removeOption(idx)}
+                      className="text-xs px-2 py-1 "
+                    >
+                      <Minus size={14} />
+                    </Button>
+                  )}
                 </div>
                 {formData.optionImages[idx] && (
                   <div className="ml-10 mt-2 relative inline-block">
@@ -203,6 +249,16 @@ const QuestionForm = ({ formData, setFormData }: QuestionFormProps) => {
                 )}
               </div>
             ))}
+            <div className="flex gap-2">
+              <Button
+                variant="light"
+                onClick={addOption}
+                className="text-xs px-2 py-1"
+              >
+                <Plus size={14} />
+                Adicionar alternativa
+              </Button>
+            </div>
           </div>
         </div>
       )}

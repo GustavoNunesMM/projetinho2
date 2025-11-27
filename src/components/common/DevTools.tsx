@@ -80,7 +80,7 @@ export default function DevTools() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-purple-700 transition z-50"
+        className="fixed bottom-4 right-4 bg-primary-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-primary-700 transition z-50"
       >
         🔧 Dev Tools
       </button>
@@ -88,9 +88,9 @@ export default function DevTools() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 bg-white border-2 border-purple-600 rounded-lg shadow-xl p-4 z-50 min-w-[300px]">
+    <div className="fixed bottom-4 right-4 bg-white border-2 border-primary-600 rounded-lg shadow-xl p-4 z-50 min-w-[300px]">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="font-bold text-purple-600">🔧 Ferramentas Dev</h3>
+        <h3 className="font-bold text-primary-600">🔧 Ferramentas Dev</h3>
         <button
           onClick={() => setIsOpen(false)}
           className="text-gray-500 hover:text-gray-700"

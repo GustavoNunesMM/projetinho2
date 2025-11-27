@@ -5,7 +5,6 @@ import { Question } from "@/types/question";
 import { HeaderData } from "@/types/documentGeneration";
 import { getImageDimensions } from "@/utils/imageImport";
 
-/* ----------  PDF  ---------- */
 export const generatePdf = async (
   questions: Question[],
   layout: Layout,
@@ -32,7 +31,6 @@ export const generatePdf = async (
       }
     };
 
-    /* ------- HEADER (DOCX) ------- */
     if (importedHeader?.length) {
       const hd = importedHeader[0];
       const tableData = hd.rawData;
@@ -78,13 +76,11 @@ export const generatePdf = async (
                 proc.add(`${rIdx + mr}-${cIdx + mc}`);
           }
 
-          /* fundo */
           if (style.backgroundColor) {
             doc.setFillColor(`#${style.backgroundColor}`);
             doc.rect(x, yPosition, cellW, rowH * rowSpan, "F");
           }
 
-          /* bordas */
           const drawBorder = (
             b: { style?: string; color?: string } | undefined,
             line: () => void
@@ -118,7 +114,6 @@ export const generatePdf = async (
             )
           );
 
-          /* imagens */
           const cellImgs = hd.images.filter(
             (i) => i.row === rIdx && i.col === cIdx
           );
@@ -202,7 +197,6 @@ export const generatePdf = async (
       doc.setFontSize(fontSize);
     }
 
-    /* ------- QUESTÕES ------- */
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       const qHeight =
@@ -282,7 +276,6 @@ export const generatePdf = async (
       yPosition += lineHeight;
     }
 
-    /* ------- FOOTER ------- */
     if (layout.footer || layout.footerText) {
       const totalPages = (doc as any).internal.pages.length;
       for (let i = 1; i <= totalPages; i++) {
