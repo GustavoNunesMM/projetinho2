@@ -93,7 +93,9 @@ export const useQuestions = () => {
   const deleteQuestion = async (id: number): Promise<void> => {
     try {
       await deleteQuestionDB(id);
+      console.log('Questão deletada com sucesso:', id)
       setQuestions((prev) => prev.filter((q) => q.id !== id));
+      console.log('Novas questões definidas', questions)
     } catch (err) {
       const message = `Erro ao deletar questão: ${(err as Error).message}`;
       setError(message);

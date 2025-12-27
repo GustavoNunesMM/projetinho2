@@ -65,7 +65,9 @@ export class SyncService {
       if (fetchError) throw fetchError;
 
       const remoteMap = new Map(remoteQuestions?.map(q => [q.id, q]) || []);
+      console.log('remoteMap', remoteMap)
       const localMap = new Map(localQuestions.map(q => [q.id, q]));
+      console.log('localMap', localMap)
 
       for (const local of localQuestions) {
         const remote = remoteMap.get(local.id);
