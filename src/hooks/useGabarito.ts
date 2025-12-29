@@ -1,5 +1,4 @@
-import { Question } from "@/types/question";
-import { GabaritoData } from "@/types";
+import { Question, GabaritoData } from "@/types/question";
 
 export function useGabarito() {
   function gerarGabarito(

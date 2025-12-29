@@ -17,6 +17,7 @@ export interface Layout {
 }
 
 export interface LayoutFormData extends Omit<Layout, "id"> {}
+
 export type WordLayoutInfo = Omit<
   LayoutFormData,
   "name" | "headerText" | "footerText" | "headerLocked" | "importedFrom"

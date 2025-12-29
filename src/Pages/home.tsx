@@ -77,7 +77,7 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-white to-primary-50/30">
+    <div className="min-h-screen w-full ">
       <Container>
         <div className={activeTab === "generate" ? "animate-fadeIn" : "hidden"}>
           <GenerateTab layouts={layouts} questions={questions} />

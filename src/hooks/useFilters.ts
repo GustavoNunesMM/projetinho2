@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Question } from "@/types/question";
 
 interface Filters {
@@ -8,6 +8,21 @@ interface Filters {
   category: string;
 }
 
+export function useDebounce<T>(value: T, delay: number = 300): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 export const useFilters = (items: Question[]) => {
   const [filters, setFilters] = useState<Filters>({
     type: "",
@@ -29,6 +44,9 @@ export const useFilters = (items: Question[]) => {
     });
   };
 
+  const debouncedContent = useDebounce(filters.content, 300);
+  const debouncedCategory = useDebounce(filters.category, 300);
+
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       const matchesType = !filters.type || item.type === filters.type;
@@ -45,7 +63,8 @@ export const useFilters = (items: Question[]) => {
         matchesType && matchesDifficulty && matchesContent && matchesCategory
       );
     });
-  }, [items, filters]);
+  }, [items, debouncedContent,debouncedCategory , filters.difficulty, 
+       filters.type]);
 
   return {
     filters,

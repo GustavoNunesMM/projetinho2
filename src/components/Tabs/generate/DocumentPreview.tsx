@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
 import { renderAsync } from "docx-preview";
-import { Question } from "@/types/question";
+import { Question, GabaritoData } from "@/types/question";
 import { Layout } from "@/types/layout";
 import { Message } from "@/types/messages";
-import { GabaritoData } from "@/types";
 import { useDocumentGenerator } from "@/hooks/useDocumentGenerator";
 
 interface DocumentPreviewProps {
@@ -61,12 +60,21 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
     return () => {
       if (containerRef.current) containerRef.current.innerHTML = "";
     };
-  }, [questions, layout, importedHeader, selectedMessage, gabaritoData, generateDocx]);
+  }, [
+    questions,
+    layout,
+    importedHeader,
+    selectedMessage,
+    gabaritoData,
+    generateDocx,
+  ]);
 
   if (questions.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6 h-full flex items-center justify-center">
-        <p className="text-gray-500">Selecione questões para visualizar o documento</p>
+        <p className="text-gray-500">
+          Selecione questões para visualizar o documento
+        </p>
       </div>
     );
   }

@@ -1,6 +1,5 @@
 import { Table } from "docx";
 
-// pdf
 export interface Alternative {
   letter?: string;
   text?: string;
@@ -15,7 +14,6 @@ export interface ParsedQuestion {
   tags: string[];
   alternatives: Alternative[];
 }
-// header
 export type borderStyle =
   | "none"
   | "nil"

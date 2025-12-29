@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { X, ClipboardList, Check } from "lucide-react";
 import Button from "@/components/common/Button";
 import Portal from "@/components/common/Portal";
-import { GabaritoData } from "@/types";
+import { GabaritoData } from "@/types/question";
 
 interface GabaritoModalProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ export const GabaritoModal: React.FC<GabaritoModalProps> = ({
     <Portal>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fadeIn">
         <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col p-2 mx-4 border border-gray-100 animate-scaleIn">
-          <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-white to-primary-50/50">
+          <div className="flex items-center justify-between p-5 border-b border-gray-100 ">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-md">
                 <ClipboardList className="w-5 h-5 text-white" />

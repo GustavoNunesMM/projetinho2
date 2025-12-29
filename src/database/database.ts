@@ -1,3 +1,4 @@
+import { Message } from "@/types/messages";
 import Database from "@tauri-apps/plugin-sql";
 
 // ==================== Tipagens ====================
@@ -46,6 +47,7 @@ export async function getDatabase(): Promise<Database> {
   await initializeDatabase(db);
   return db;
 }
+
 async function initializeDatabase(db: Database) {
   await db.execute(`
     PRAGMA journal_mode = WAL;
@@ -95,6 +97,7 @@ async function initializeDatabase(db: Database) {
     );
   `);
 }
+
 // ==================== CRUD: Questões ====================
 
 export async function insertQuestion(
@@ -178,6 +181,13 @@ export async function getAllQuestions(): Promise<Question[]> {
 export async function deleteQuestion(id: number): Promise<void> {
   const db = await getDatabase();
   await db.execute("DELETE FROM questions WHERE id = $1", [id]);
+  await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+}
+
+export async function deleteAllQuestion(): Promise<void> {
+  const db = await getDatabase();
+  await db.execute("DELETE FROM questions");
+  await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
 }
 
 // ==================== CRUD: Layouts ====================
@@ -266,12 +276,12 @@ export async function deleteLayout(id: number): Promise<void> {
   await db.execute("DELETE FROM layouts WHERE id = $1", [id]);
 }
 // ===================== CRUD: Messages ===================
-export async function getAllMessages(): Promise<any[]> {
+export async function getAllMessages(): Promise<Message[]> {
   const db = await getDatabase();
   return await db.select("SELECT * FROM messages ORDER BY createdAt DESC");
 }
 
-export async function insertMessage(message: any): Promise<any> {
+export async function insertMessage(message: Omit<Message, "id" | "createdAt" | "updatedAt">): Promise<Message> {
   const db = await getDatabase();
   const result = await db.execute(
     `INSERT INTO messages (title, items, isList, isOrdered, createdAt, updatedAt) 
@@ -288,7 +298,7 @@ export async function insertMessage(message: any): Promise<any> {
   ]);
 }
 
-export async function updateMessage(id: number, message: any): Promise<void> {
+export async function updateMessage(id: number, message: Omit<Message, "id" | "createdAt" | "updatedAt">): Promise<void> {
   const db = await getDatabase();
   await db.execute(
     `UPDATE messages 
@@ -307,6 +317,11 @@ export async function updateMessage(id: number, message: any): Promise<void> {
 export async function deleteMessage(id: number): Promise<void> {
   const db = await getDatabase();
   await db.execute("DELETE FROM messages WHERE id = ?", [id]);
+}
+
+export async function deleteAllMessages(): Promise<void> {
+  const db = await getDatabase();
+  await db.execute("DELETE FROM messages");
 }
 // ==================== Utilitários ====================
 

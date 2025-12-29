@@ -39,9 +39,19 @@ export class SyncService {
       const layoutsResult = await this.syncLayouts();
       const messagesResult = await this.syncMessages();
 
-      result.uploaded = questionsResult.uploaded + layoutsResult.uploaded + messagesResult.uploaded;
-      result.downloaded = questionsResult.downloaded + layoutsResult.downloaded + messagesResult.downloaded;
-      result.errors = [...questionsResult.errors, ...layoutsResult.errors, ...messagesResult.errors];
+      result.uploaded =
+        questionsResult.uploaded +
+        layoutsResult.uploaded +
+        messagesResult.uploaded;
+      result.downloaded =
+        questionsResult.downloaded +
+        layoutsResult.downloaded +
+        messagesResult.downloaded;
+      result.errors = [
+        ...questionsResult.errors,
+        ...layoutsResult.errors,
+        ...messagesResult.errors,
+      ];
       result.success = result.errors.length === 0;
     } catch (error: any) {
       result.success = false;
@@ -52,11 +62,16 @@ export class SyncService {
   }
 
   async syncQuestions(): Promise<SyncResult> {
-    const result: SyncResult = { success: true, uploaded: 0, downloaded: 0, errors: [] };
+    const result: SyncResult = {
+      success: true,
+      uploaded: 0,
+      downloaded: 0,
+      errors: [],
+    };
 
     try {
       const localQuestions = await getAllQuestions();
-      
+
       const { data: remoteQuestions, error: fetchError } = await supabase
         .from("questions")
         .select("*")
@@ -64,9 +79,9 @@ export class SyncService {
 
       if (fetchError) throw fetchError;
 
-      const remoteMap = new Map(remoteQuestions?.map(q => [q.id, q]) || []);
-      const localMap = new Map(localQuestions.map(q => [q.id, q]));
-
+      //const remoteMap = new Map(remoteQuestions?.map((q) => [q.id, q]) || []);
+      const localMap = new Map(localQuestions.map((q) => [q.id, q]));
+      /*
       for (const local of localQuestions) {
         const remote = remoteMap.get(local.id);
         
@@ -95,11 +110,11 @@ export class SyncService {
             result.uploaded++;
           }
         }
-      }
+      }*/
 
       for (const remote of remoteQuestions || []) {
         const local = localMap.get(remote.id);
-        
+
         if (!local) {
           await insertQuestion({
             title: remote.title,
@@ -127,11 +142,16 @@ export class SyncService {
   }
 
   async syncLayouts(): Promise<SyncResult> {
-    const result: SyncResult = { success: true, uploaded: 0, downloaded: 0, errors: [] };
+    const result: SyncResult = {
+      success: true,
+      uploaded: 0,
+      downloaded: 0,
+      errors: [],
+    };
 
     try {
       const localLayouts = await getAllLayouts();
-      
+
       const { data: remoteLayouts, error: fetchError } = await supabase
         .from("layouts")
         .select("*")
@@ -139,12 +159,12 @@ export class SyncService {
 
       if (fetchError) throw fetchError;
 
-      const remoteMap = new Map(remoteLayouts?.map(l => [l.id, l]) || []);
-      const localMap = new Map(localLayouts.map(l => [l.id, l]));
+      const remoteMap = new Map(remoteLayouts?.map((l) => [l.id, l]) || []);
+      const localMap = new Map(localLayouts.map((l) => [l.id, l]));
 
       for (const local of localLayouts) {
         const remote = remoteMap.get(local.id);
-        
+
         if (!remote) {
           const { error } = await supabase.from("layouts").insert({
             id: local.id,
@@ -165,7 +185,9 @@ export class SyncService {
           });
 
           if (error) {
-            result.errors.push(`Erro ao enviar layout ${local.id}: ${error.message}`);
+            result.errors.push(
+              `Erro ao enviar layout ${local.id}: ${error.message}`
+            );
           } else {
             result.uploaded++;
           }
@@ -174,7 +196,7 @@ export class SyncService {
 
       for (const remote of remoteLayouts || []) {
         const local = localMap.get(remote.id);
-        
+
         if (!local) {
           await insertLayout({
             name: remote.name,
@@ -202,11 +224,16 @@ export class SyncService {
   }
 
   async syncMessages(): Promise<SyncResult> {
-    const result: SyncResult = { success: true, uploaded: 0, downloaded: 0, errors: [] };
+    const result: SyncResult = {
+      success: true,
+      uploaded: 0,
+      downloaded: 0,
+      errors: [],
+    };
 
     try {
       const localMessages = await getAllMessages();
-      
+
       const { data: remoteMessages, error: fetchError } = await supabase
         .from("messages")
         .select("*")
@@ -214,12 +241,12 @@ export class SyncService {
 
       if (fetchError) throw fetchError;
 
-      const remoteMap = new Map(remoteMessages?.map(m => [m.id, m]) || []);
-      const localMap = new Map(localMessages.map(m => [m.id, m]));
+      // const remoteMap = new Map(remoteMessages?.map((m) => [m.id, m]) || []);
+      const localMap = new Map(localMessages.map((m) => [m.id, m]));
 
-      for (const local of localMessages) {
+      /*      for (const local of localMessages) {
         const remote = remoteMap.get(local.id);
-        
+
         if (!remote) {
           const { error } = await supabase.from("messages").insert({
             id: local.id,
@@ -232,16 +259,18 @@ export class SyncService {
           });
 
           if (error) {
-            result.errors.push(`Erro ao enviar mensagem ${local.id}: ${error.message}`);
+            result.errors.push(
+              `Erro ao enviar mensagem ${local.id}: ${error.message}`
+            );
           } else {
             result.uploaded++;
           }
         }
       }
-
+*/
       for (const remote of remoteMessages || []) {
         const local = localMap.get(remote.id);
-        
+
         if (!local) {
           await insertMessage({
             title: remote.title,
@@ -254,7 +283,9 @@ export class SyncService {
       }
     } catch (error: any) {
       result.success = false;
-      result.errors.push(`Erro na sincronização de mensagens: ${error.message}`);
+      result.errors.push(
+        `Erro na sincronização de mensagens: ${error.message}`
+      );
     }
 
     return result;

@@ -47,8 +47,8 @@ const QuestionModal = ({ question, onSave, onClose }: QuestionModalProps) => {
 
   return (
     <Portal>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] animate-fadeIn">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl p-2 w-full max-h-[90vh] overflow-y-auto border border-gray-100 animate-scaleIn">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] animate-fadeIn ">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl p-2 w-full max-h-[90vh] overflow-y-auto border border-gray-100 animate-scaleIn scrollbar">
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">

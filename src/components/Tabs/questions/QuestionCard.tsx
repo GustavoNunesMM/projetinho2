@@ -110,8 +110,8 @@ const QuestionCard = ({
       >
         {hovering && (
           <div
-            className="absolute top-0 left-0 h-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-t-2xl transition-all duration-100"
-            style={{ width: `${progress}%` }}
+            className="absolute top-0 left-1 overflow-hidden h-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-t-2xl transition-all duration-100"
+            style={{ width: `${progress - 1}%` }}
           />
         )}
 

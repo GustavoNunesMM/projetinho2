@@ -3,6 +3,7 @@ import { Plus, FileUp, Loader, MessageSquare, FileText } from "lucide-react";
 import MessageCard from "./MessageCard";
 import MessageModal from "./MessageModal";
 import Button from "@/components/common/Button";
+import { deleteAllMessages } from "@/database/database";
 import { Toast } from "@/components/common/Toast";
 import { Message, MessageFormData } from "@/types/messages";
 import { useMessages } from "@/hooks/useMessages";
@@ -86,7 +87,9 @@ const MessagesTab = () => {
             <Loader className="w-8 h-8 text-white animate-spin" />
           </div>
         </div>
-        <p className="mt-6 text-lg font-medium text-gray-700">Carregando textos...</p>
+        <p className="mt-6 text-lg font-medium text-gray-700">
+          Carregando textos...
+        </p>
         <p className="text-sm text-gray-500 mt-1">Aguarde um momento</p>
       </div>
     );
@@ -146,7 +149,13 @@ const MessagesTab = () => {
           >
             {importing ? "Importando..." : "Importar"}
           </Button>
-
+          <Button
+            variant="light-danger"
+            onClick={() => deleteAllMessages()}
+            className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
+          >
+            Deletar questões
+          </Button>
           <Button
             variant="custom"
             icon={Plus}

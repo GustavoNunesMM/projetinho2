@@ -1,23 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-interface DriveFile {
-  id: string;
-  name: string;
-  parents?: string[];
-}
-
-interface DriveClientOptions {
-  clientId?: string;
-  apiKey?: string;
-  discoveryDoc?: string;
-  scope?: string;
-  filesTTL?: number;
-}
-
-interface TokenResponse {
-  error?: string;
-  access_token?: string;
-}
+import { DriveClientOptions, DriveFile, TokenResponse } from "@/types/drive";
 
 interface GapiClient {
   init: (config: { apiKey: string; discoveryDocs: string[] }) => Promise<void>;
@@ -136,12 +118,11 @@ export function useDriveClient(options: DriveClientOptions = {}) {
         }
 
         if (!tokenClientSingleton) {
-          tokenClientSingleton =
-            window.google.accounts.oauth2.initTokenClient({
-              client_id: clientId,
-              scope,
-              callback: () => {},
-            });
+          tokenClientSingleton = window.google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope,
+            callback: () => {},
+          });
         }
 
         if (isMounted.current) {
@@ -160,7 +141,8 @@ export function useDriveClient(options: DriveClientOptions = {}) {
   }, [apiKey, clientId, discoveryDoc, scope]);
 
   const signIn = useCallback(() => {
-    if (!tokenClientSingleton) return Promise.reject(new Error('Token client not initialized'));
+    if (!tokenClientSingleton)
+      return Promise.reject(new Error("Token client not initialized"));
     return new Promise<boolean>((resolve, reject) => {
       tokenClientSingleton!.callback = async (resp: TokenResponse) => {
         if (resp?.error) {
@@ -224,7 +206,9 @@ export function useDriveClient(options: DriveClientOptions = {}) {
   }, []);
 
   const listDocxFiles = useCallback(
-    async ({ force = false }: { force?: boolean } = {}): Promise<DriveFile[]> => {
+    async ({ force = false }: { force?: boolean } = {}): Promise<
+      DriveFile[]
+    > => {
       if (!authorized) throw new Error("Não autorizado no Google Drive.");
       const freshEnough = now() - filesCacheAt < filesTTL;
 
@@ -249,7 +233,11 @@ export function useDriveClient(options: DriveClientOptions = {}) {
   );
 
   const createDocxFile = useCallback(
-    async (fileName: string, blob: Blob, parentId: string | null = null): Promise<any> => {
+    async (
+      fileName: string,
+      blob: Blob,
+      parentId: string | null = null
+    ): Promise<any> => {
       if (!authorized) throw new Error("Não autorizado no Google Drive.");
 
       const baseFolderId = folderIdCache || (await ensureFolder());
@@ -288,22 +276,25 @@ export function useDriveClient(options: DriveClientOptions = {}) {
     [authorized, ensureFolder]
   );
 
-  const readDocxFile = useCallback(async (fileId: string): Promise<Blob> => {
-    if (!authorized) throw new Error("Não autorizado no Google Drive.");
-    const accessToken = window.gapi.client.getToken()!.access_token;
+  const readDocxFile = useCallback(
+    async (fileId: string): Promise<Blob> => {
+      if (!authorized) throw new Error("Não autorizado no Google Drive.");
+      const accessToken = window.gapi.client.getToken()!.access_token;
 
-    const res = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-      {
-        headers: new Headers({
-          Authorization: `Bearer ${accessToken}`,
-        }),
-      }
-    );
+      const res = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+        {
+          headers: new Headers({
+            Authorization: `Bearer ${accessToken}`,
+          }),
+        }
+      );
 
-    if (!res.ok) throw new Error("Erro ao baixar arquivo .docx");
-    return await res.blob();
-  }, [authorized]);
+      if (!res.ok) throw new Error("Erro ao baixar arquivo .docx");
+      return await res.blob();
+    },
+    [authorized]
+  );
 
   const refreshFiles = useCallback(async () => {
     setLoadingFiles(true);

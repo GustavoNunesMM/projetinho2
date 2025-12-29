@@ -90,7 +90,7 @@ const PreviewModal = ({
     <Portal>
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fadeIn p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full p-2 max-w-6xl h-[90vh] flex flex-col border border-gray-100 animate-scaleIn">
-          <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-white to-primary-50/50 flex-shrink-0">
+          <div className="flex items-center justify-between p-5 border-b border-gray-100  flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-md">
                 <Eye className="w-5 h-5 text-white" />

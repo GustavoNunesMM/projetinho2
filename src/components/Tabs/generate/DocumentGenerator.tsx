@@ -24,7 +24,7 @@ import MessagesModal from "./modal/MessagesModal";
 import PreviewModal from "./modal/PreviewModal";
 import { useGabarito } from "@/hooks/useGabarito";
 import { GabaritoModal } from "./modal/GabaritoModal";
-import { GabaritoData } from "@/types";
+import { GabaritoData } from "@/types/question";
 
 interface DocumentGeneratorProps {
   selectedLayout: Layout | null;
@@ -207,9 +207,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           <h2 className="text-xl font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
             Gerar Documento
           </h2>
-          <p className="text-xs text-gray-500">
-            Configure e exporte sua prova
-          </p>
+          <p className="text-xs text-gray-500">Configure e exporte sua prova</p>
         </div>
       </div>
 

@@ -7,6 +7,8 @@ import {
   deleteQuestion as deleteQuestionDB,
 } from "../database/database";
 import { useDocumentGenerator } from "./useDocumentGenerator";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 function serializeQuestion(q: QuestionFormData) {
   return {
@@ -30,6 +32,7 @@ export const useQuestions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { readDocx, parseQuestionsFromText } = useDocumentGenerator();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadQuestions();
@@ -93,7 +96,24 @@ export const useQuestions = () => {
   const deleteQuestion = async (id: number): Promise<void> => {
     try {
       await deleteQuestionDB(id);
+      
       setQuestions((prev) => prev.filter((q) => q.id !== id));
+
+      if (user?.id) {
+        try {
+          const { error } = await supabase
+            .from("questions")
+            .delete()
+            .eq("id", id)
+            .eq("user_id", user.id);
+
+          if (error) {
+            console.warn(`Aviso: Não foi possível deletar a questão ${id} do Supabase:`, error.message);
+          }
+        } catch (supabaseError) {
+          console.warn(`Erro ao sincronizar deleção com Supabase:`, supabaseError);
+        }
+      }
     } catch (err) {
       const message = `Erro ao deletar questão: ${(err as Error).message}`;
       setError(message);

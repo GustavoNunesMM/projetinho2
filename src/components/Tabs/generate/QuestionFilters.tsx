@@ -26,7 +26,7 @@ const QuestionFilters = ({
   ];
 
   const difficultyOptions = [
-    { value: "", label: "Todas" },
+    { value: "", label: "all" },
     { value: "facil", label: "Fácil" },
     { value: "media", label: "Média" },
     { value: "dificil", label: "Difícil" },
@@ -39,8 +39,8 @@ const QuestionFilters = ({
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg hover:border-primary-200 transition-all duration-300">
-      <div className="flex items-center justify-between mb-5">
+    <div className="bg-white rounded-2xl shadow-md animate-slideUp border border-gray-100 py-1 px-2 hover:shadow-lg  transition-all duration-300">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-semibold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
           Filtros
         </h3>
@@ -87,7 +87,7 @@ const QuestionFilters = ({
         />
       </div>
 
-      <div className="mt-4 text-right">
+      <div className="mt-2 text-right">
         <span className="text-xs text-gray-500">
           Filtros ativos:{" "}
           <span className="font-semibold text-primary-600">

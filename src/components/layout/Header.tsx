@@ -70,27 +70,16 @@ const Header = () => {
   ];
 
   return (
-    <header className="bg-white text-black p-6 shadow-xl border-b border-gray-100 stick w-full">
+    <header className="bg-white text-black shadow-xl p-1 border-b border-gray-100 stick w-full">
       <div className="container mx-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-105">
+            <div className="min-w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-105">
               <List className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
-                QuestPro By Gustavo
-              </h1>
-              <p className="text-xs text-gray-500 font-medium">
-                Gerenciamento Inteligente de Questões
-              </p>
-              <p className="text-[10px] text-gray-500 font-medium">
-                Feito por mim para pessoas em sofrimento pedagogico
-              </p>
             </div>
           </div>
 
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-center ">
             <Tabs
               variant="solid"
               selectedKey={activeTab}

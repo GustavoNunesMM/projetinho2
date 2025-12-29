@@ -20,9 +20,8 @@ import JSZip from "jszip";
 import { WordLayoutInfo } from "@/types/layout";
 import mammoth from "mammoth";
 import { Layout } from "@/types/layout";
-import { Question } from "@/types/question";
+import { Question, GabaritoData } from "@/types/question";
 import { HeaderData, ParsedQuestion } from "@/types/documentGeneration";
-import { GabaritoData } from "@/types";
 
 const base64ToUint8Array = (base64: string): Uint8Array => {
   const base64Data = base64.includes(",") ? base64.split(",")[1] : base64;
@@ -389,7 +388,7 @@ export const generateDocx = async (
 
             const imageRunOptions: any = {
               data: bytes,
-              type: type === "jpeg" ? "jpg" : type, 
+              type: type === "jpeg" ? "jpg" : type,
               transformation: {
                 width: width * scale,
                 height: height * scale,
@@ -397,7 +396,7 @@ export const generateDocx = async (
             };
 
             if (type === "svg") {
-              imageRunOptions.fallback = 'Imagem não encontrada';
+              imageRunOptions.fallback = "Imagem não encontrada";
             }
 
             sections.push(
