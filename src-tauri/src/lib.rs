@@ -19,7 +19,6 @@ pub fn run() {
 )
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
-            // Verificar atualização em background após 5 segundos
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;

@@ -146,6 +146,7 @@ const Dropdown = ({
               }
               endContent={item.endContent}
               isDisabled={item.isDisabled}
+              
               className={item.isDanger ? "text-danger" : ""}
             >
               {item.title}

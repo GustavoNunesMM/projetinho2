@@ -1,10 +1,13 @@
 import React, { useState, useRef } from "react";
-import { Plus, Upload, Layout, Layers } from "lucide-react";
+import { Plus, Upload, Layout, Layers, List } from "lucide-react";
 import Button from "@/components/common/Button.tsx";
 import LayoutCard from "./LayoutCard.tsx";
 import LayoutModal from "./LayoutModal.tsx";
 import DeleteModal from "@/components/Tabs/generate/modal/DeleteModal";
+import DropDown from "@/components/common/Dropdown";
 import { Layout as LayoutType, LayoutFormData } from "@/types/layout.ts";
+import { deleteAllLayout } from "@/database/database.ts";
+import DevOnly from "@/components/common/DevOnly.tsx";
 
 interface LayoutsTabProps {
   layouts: LayoutType[];
@@ -42,6 +45,16 @@ const LayoutsTab = ({
     setEditingLayout(null);
   };
 
+  const handleLayoutAction = async (key: string) => {
+    if (key === "import") {
+      fileInputRef.current?.click();
+    }
+    if (key === "new") {
+      setEditingLayout(null);
+      setShowModal(true);
+    }
+  };
+
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -73,25 +86,48 @@ const LayoutsTab = ({
             accept=".docx"
             className="hidden"
           />
-          <Button
-            variant="custom"
-            icon={Upload}
-            onClick={() => fileInputRef.current?.click()}
-            className="bg-[#97dffc] hover:bg-[#87cfe8] text-gray-800 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-[#87cfe8]"
-          >
-            Importar Word
-          </Button>
-          <Button
-            variant="custom"
-            icon={Plus}
-            onClick={() => {
-              setEditingLayout(null);
-              setShowModal(true);
-            }}
-            className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
-          >
-            Novo Layout
-          </Button>
+          <div className="flex gap-3 max-md:hidden">
+            <Button
+              variant="custom"
+              icon={Upload}
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-[#97dffc] hover:bg-[#87cfe8] text-gray-800 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-[#87cfe8]"
+            >
+              Importar Word
+            </Button>
+            <DevOnly>
+              <Button
+                variant="light-danger"
+                onClick={() => deleteAllLayout()}
+                className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
+              >
+                Deletar layouts
+              </Button>
+            </DevOnly>
+
+            <Button
+              variant="custom"
+              icon={Plus}
+              onClick={() => {
+                setEditingLayout(null);
+                setShowModal(true);
+              }}
+              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
+            >
+              Novo Layout
+            </Button>
+          </div>
+          <DropDown
+            triggerLabel={"Criar layout"}
+            items={[
+              { key: "new", title: "Novo Layout", icon: Plus },
+              { key: "import", title: "Importar Word", icon: Upload },
+            ]}
+            triggerIcon={List}
+            placement="bottom-end"
+            onAction={handleLayoutAction}
+            className="md:hidden"
+          ></DropDown>
         </div>
       </div>
 

@@ -159,6 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const result = await syncService.syncAll();
       if (!result.success) {
+        console.log("syncData: Erros durante a sincronização", result.errors);
         throw new Error(result.errors.join(", "));
       }
       console.log("Sincronização concluída:", result);

@@ -72,7 +72,7 @@ async function initializeDatabase(db: Database) {
 
     CREATE TABLE IF NOT EXISTS layouts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
       fontSize TEXT NOT NULL DEFAULT '12',
       fontFamily TEXT NOT NULL DEFAULT 'Arial',
       lineSpacing TEXT NOT NULL DEFAULT '1.5',
@@ -101,32 +101,66 @@ async function initializeDatabase(db: Database) {
 // ==================== CRUD: Questões ====================
 
 export async function insertQuestion(
-  q: Omit<Question, "id" | "created_at">
+  q: Omit<Question, "created_at"> & { id?: number }
 ): Promise<Question> {
   const db = await getDatabase();
 
+  const hasId = q.id !== undefined && q.id !== null;
+  
+  if (hasId) {
+    const existing = await db.select<Question[]>(
+      "SELECT * FROM questions WHERE id = $1",
+      [q.id]
+    );
+    
+    if (existing && existing.length > 0) {
+      return existing[0];
+    }
+  }
+
+  const columns = hasId
+    ? `id, title, content, contentImage, difficulty, subject, category, type, options, optionImages, correctAnswer, explanation, importedFrom`
+    : `title, content, contentImage, difficulty, subject, category, type, options, optionImages, correctAnswer, explanation, importedFrom`;
+  const placeholders = hasId
+    ? `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13`
+    : `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12`;
+  const values = hasId
+    ? [
+        q.id,
+        q.title,
+        q.content,
+        q.contentImage || null,
+        q.difficulty,
+        q.subject,
+        q.category,
+        q.type,
+        q.options,
+        q.optionImages || "[]",
+        q.correctAnswer,
+        q.explanation,
+        q.importedFrom || null,
+      ]
+    : [
+        q.title,
+        q.content,
+        q.contentImage || null,
+        q.difficulty,
+        q.subject,
+        q.category,
+        q.type,
+        q.options,
+        q.optionImages || "[]",
+        q.correctAnswer,
+        q.explanation,
+        q.importedFrom || null,
+      ];
+
   const result = await db.execute(
-    `INSERT INTO questions (
-      title, content, contentImage, difficulty, subject, category, 
-      type, options, optionImages, correctAnswer, explanation, importedFrom
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-    [
-      q.title,
-      q.content,
-      q.contentImage || null,
-      q.difficulty,
-      q.subject,
-      q.category,
-      q.type,
-      q.options,
-      q.optionImages || "[]",
-      q.correctAnswer,
-      q.explanation,
-      q.importedFrom || null,
-    ]
+    `INSERT INTO questions (${columns}) VALUES (${placeholders})`,
+    values
   );
 
-  const insertedId = Number(result.lastInsertId);
+  const insertedId = hasId ? q.id! : Number(result.lastInsertId);
 
   const inserted = await db.select<Question[]>(
     "SELECT * FROM questions WHERE id = $1",
@@ -193,33 +227,66 @@ export async function deleteAllQuestion(): Promise<void> {
 // ==================== CRUD: Layouts ====================
 
 export async function insertLayout(
-  l: Omit<Layout, "id" | "created_at">
+  l: Omit<Layout, "created_at"> & { id?: number }
 ): Promise<Layout> {
   const db = await getDatabase();
 
+  const hasId = l.id !== undefined && l.id !== null;
+  
+  if (hasId) {
+    const existing = await db.select<Layout[]>(
+      "SELECT * FROM layouts WHERE id = $1",
+      [l.id]
+    );
+    
+    if (existing && existing.length > 0) {
+      return existing[0];
+    }
+  }
+
+  const columns = hasId 
+    ? `id, name, fontSize, fontFamily, lineSpacing, marginTop, marginBottom, marginLeft, marginRight, headerText, headerLocked, footerText, importedFrom`
+    : `name, fontSize, fontFamily, lineSpacing, marginTop, marginBottom, marginLeft, marginRight, headerText, headerLocked, footerText, importedFrom`;
+  const placeholders = hasId 
+    ? `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13`
+    : `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12`;
+  const values = hasId
+    ? [
+        l.id,
+        l.name,
+        l.fontSize,
+        l.fontFamily,
+        l.lineSpacing,
+        l.marginTop,
+        l.marginBottom,
+        l.marginLeft,
+        l.marginRight,
+        l.headerText,
+        l.headerLocked,
+        l.footerText,
+        l.importedFrom || null,
+      ]
+    : [
+        l.name,
+        l.fontSize,
+        l.fontFamily,
+        l.lineSpacing,
+        l.marginTop,
+        l.marginBottom,
+        l.marginLeft,
+        l.marginRight,
+        l.headerText,
+        l.headerLocked,
+        l.footerText,
+        l.importedFrom || null,
+      ];
+
   const result = await db.execute(
-    `INSERT INTO layouts (
-      name, fontSize, fontFamily, lineSpacing, 
-      marginTop, marginBottom, marginLeft, marginRight, 
-      headerText, headerLocked, footerText, importedFrom
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-    [
-      l.name,
-      l.fontSize,
-      l.fontFamily,
-      l.lineSpacing,
-      l.marginTop,
-      l.marginBottom,
-      l.marginLeft,
-      l.marginRight,
-      l.headerText,
-      l.headerLocked,
-      l.footerText,
-      l.importedFrom || null,
-    ]
+    `INSERT INTO layouts (${columns}) VALUES (${placeholders})`,
+    values
   );
 
-  const insertedId = Number(result.lastInsertId);
+  const insertedId = hasId ? l.id! : Number(result.lastInsertId);
 
   const inserted = await db.select<Layout[]>(
     "SELECT * FROM layouts WHERE id = $1",
@@ -273,7 +340,15 @@ export async function getAllLayouts(): Promise<Layout[]> {
 
 export async function deleteLayout(id: number): Promise<void> {
   const db = await getDatabase();
+  console.log(db, id);
   await db.execute("DELETE FROM layouts WHERE id = $1", [id]);
+  await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+}
+
+export async function deleteAllLayout(): Promise<void> {
+  const db = await getDatabase();
+  await db.execute("DELETE FROM layouts");
+  await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
 }
 // ===================== CRUD: Messages ===================
 export async function getAllMessages(): Promise<Message[]> {
@@ -281,24 +356,67 @@ export async function getAllMessages(): Promise<Message[]> {
   return await db.select("SELECT * FROM messages ORDER BY createdAt DESC");
 }
 
-export async function insertMessage(message: Omit<Message, "id" | "createdAt" | "updatedAt">): Promise<Message> {
+export async function insertMessage(
+  message: Omit<Message, "createdAt" | "updatedAt"> & { id?: number }
+): Promise<Message> {
   const db = await getDatabase();
+  
+  const hasId = message.id !== undefined && message.id !== null;
+  
+  if (hasId) {
+    const existing = await db.select<Message[]>(
+      "SELECT * FROM messages WHERE id = ?",
+      [message.id]
+    );
+    
+    if (existing && existing.length > 0) {
+      return existing[0];
+    }
+  }
+
+  const columns = hasId
+    ? `id, title, items, isList, isOrdered, createdAt, updatedAt`
+    : `title, items, isList, isOrdered, createdAt, updatedAt`;
+  const placeholders = hasId
+    ? `?, ?, ?, ?, datetime('now'), datetime('now')`
+    : `?, ?, ?, ?, datetime('now'), datetime('now')`;
+  const values = hasId
+    ? [
+        message.id,
+        message.title,
+        message.items,
+        message.isList ? 1 : 0,
+        message.isOrdered ? 1 : 0,
+      ]
+    : [
+        message.title,
+        message.items,
+        message.isList ? 1 : 0,
+        message.isOrdered ? 1 : 0,
+      ];
+
   const result = await db.execute(
-    `INSERT INTO messages (title, items, isList, isOrdered, createdAt, updatedAt) 
-     VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
-    [
-      message.title,
-      message.items,
-      message.isList ? 1 : 0,
-      message.isOrdered ? 1 : 0,
-    ]
+    `INSERT INTO messages (${columns}) VALUES (${placeholders})`,
+    values
   );
-  return await db.select("SELECT * FROM messages WHERE id = ?", [
-    result.lastInsertId,
-  ]);
+
+  const insertedId = hasId ? message.id! : Number(result.lastInsertId);
+  const inserted = await db.select<Message[]>(
+    "SELECT * FROM messages WHERE id = ?",
+    [insertedId]
+  );
+
+  if (!inserted || inserted.length === 0) {
+    throw new Error("Falha ao recuperar mensagem inserida");
+  }
+
+  return inserted[0];
 }
 
-export async function updateMessage(id: number, message: Omit<Message, "id" | "createdAt" | "updatedAt">): Promise<void> {
+export async function updateMessage(
+  id: number,
+  message: Omit<Message, "createdAt" | "updatedAt">
+): Promise<void> {
   const db = await getDatabase();
   await db.execute(
     `UPDATE messages 

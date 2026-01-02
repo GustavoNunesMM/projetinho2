@@ -79,58 +79,88 @@ export class SyncService {
 
       if (fetchError) throw fetchError;
 
-      //const remoteMap = new Map(remoteQuestions?.map((q) => [q.id, q]) || []);
-      const localMap = new Map(localQuestions.map((q) => [q.id, q]));
-      /*
+      const remoteMap = new Map(
+        (remoteQuestions || []).map((q) => [Number(q.id), q])
+      );
+      const localMap = new Map(localQuestions.map((q) => [Number(q.id), q]));
+
+      // Upload: enviar questões locais que não existem no remoto
       for (const local of localQuestions) {
         const remote = remoteMap.get(local.id);
-        
-        if (!remote) {
-          const { error } = await supabase.from("questions").insert({
-            id: local.id,
-            user_id: this.userId,
-            title: local.title,
-            content: local.content,
-            content_image: local.contentImage,
-            difficulty: local.difficulty,
-            subject: local.subject,
-            category: local.category,
-            type: local.type,
-            options: JSON.parse(local.options),
-            option_images: JSON.parse(local.optionImages || "[]"),
-            correct_answer: local.correctAnswer,
-            explanation: local.explanation,
-            imported_from: local.importedFrom,
-            created_at: local.created_at,
-          });
 
-          if (error) {
-            result.errors.push(`Erro ao enviar questão ${local.id}: ${error.message}`);
-          } else {
-            result.uploaded++;
+        if (!remote) {
+          try {
+            const { error } = await supabase.from("questions").insert({
+              id: local.id,
+              user_id: this.userId,
+              title: local.title,
+              content: local.content,
+              content_image: local.contentImage,
+              difficulty: local.difficulty,
+              subject: local.subject,
+              category: local.category,
+              type: local.type,
+              options: typeof local.options === 'string' 
+                ? JSON.parse(local.options) 
+                : local.options,
+              option_images: typeof local.optionImages === 'string'
+                ? JSON.parse(local.optionImages || "[]")
+                : local.optionImages || [],
+              correct_answer: local.correctAnswer,
+              explanation: local.explanation,
+              imported_from: local.importedFrom,
+              created_at: local.created_at,
+            });
+
+            if (error) {
+              result.errors.push(
+                `Erro ao enviar questão ${local.id}: ${error.message}`
+              );
+            } else {
+              result.uploaded++;
+            }
+          } catch (uploadError: any) {
+            result.errors.push(
+              `Erro ao enviar questão ${local.id}: ${uploadError.message}`
+            );
           }
         }
-      }*/
+      }
 
+      // Download: baixar questões remotas que não existem no local
       for (const remote of remoteQuestions || []) {
-        const local = localMap.get(remote.id);
+        const remoteId = Number(remote.id);
+        const local = localMap.get(remoteId);
 
         if (!local) {
-          await insertQuestion({
-            title: remote.title,
-            content: remote.content,
-            contentImage: remote.content_image,
-            difficulty: remote.difficulty,
-            subject: remote.subject,
-            category: remote.category,
-            type: remote.type,
-            options: JSON.stringify(remote.options),
-            optionImages: JSON.stringify(remote.option_images),
-            correctAnswer: remote.correct_answer,
-            explanation: remote.explanation,
-            importedFrom: remote.imported_from,
-          });
-          result.downloaded++;
+          try {
+            await insertQuestion({
+              id: remoteId,
+              title: remote.title,
+              content: remote.content,
+              contentImage: remote.content_image,
+              difficulty: remote.difficulty,
+              subject: remote.subject,
+              category: remote.category,
+              type: remote.type,
+              options:
+                typeof remote.options === "string"
+                  ? remote.options
+                  : JSON.stringify(remote.options),
+              optionImages:
+                typeof remote.option_images === "string"
+                  ? remote.option_images
+                  : JSON.stringify(remote.option_images || []),
+              correctAnswer: remote.correct_answer,
+              explanation: remote.explanation,
+              importedFrom: remote.imported_from,
+            });
+            result.downloaded++;
+          } catch (downloadError: any) {
+            result.errors.push(
+              `Erro ao baixar questão ${remoteId}: ${downloadError.message}`
+            );
+          }
         }
       }
     } catch (error: any) {
@@ -159,67 +189,86 @@ export class SyncService {
 
       if (fetchError) throw fetchError;
 
-      const remoteMap = new Map(remoteLayouts?.map((l) => [l.id, l]) || []);
-      const localMap = new Map(localLayouts.map((l) => [l.id, l]));
+      const remoteMap = new Map(
+        (remoteLayouts || []).map((l) => [Number(l.id), l])
+      );
+      const localMap = new Map(
+        localLayouts.map((l) => [Number(l.id), l])
+      );
 
+      // Upload: enviar layouts locais que não existem no remoto
       for (const local of localLayouts) {
         const remote = remoteMap.get(local.id);
 
         if (!remote) {
-          const { error } = await supabase.from("layouts").insert({
-            id: local.id,
-            user_id: this.userId,
-            name: local.name,
-            font_size: local.fontSize,
-            font_family: local.fontFamily,
-            line_spacing: local.lineSpacing,
-            margin_top: local.marginTop,
-            margin_bottom: local.marginBottom,
-            margin_left: local.marginLeft,
-            margin_right: local.marginRight,
-            header_text: local.headerText,
-            header_locked: local.headerLocked === 1,
-            footer_text: local.footerText,
-            imported_from: local.importedFrom,
-            created_at: local.created_at,
-          });
+          try {
+            const { error } = await supabase.from("layouts").insert({
+              id: local.id,
+              user_id: this.userId,
+              name: local.name,
+              font_size: local.fontSize,
+              font_family: local.fontFamily,
+              line_spacing: local.lineSpacing,
+              margin_top: local.marginTop,
+              margin_bottom: local.marginBottom,
+              margin_left: local.marginLeft,
+              margin_right: local.marginRight,
+              header_text: local.headerText,
+              header_locked: local.headerLocked === 1,
+              footer_text: local.footerText,
+              imported_from: local.importedFrom,
+              created_at: local.created_at,
+            });
 
-          if (error) {
+            if (error) {
+              result.errors.push(
+                `Erro ao enviar layout ${local.id}: ${error.message}`
+              );
+            } else {
+              result.uploaded++;
+            }
+          } catch (uploadError: any) {
             result.errors.push(
-              `Erro ao enviar layout ${local.id}: ${error.message}`
+              `Erro ao enviar layout ${local.id}: ${uploadError.message}`
             );
-          } else {
-            result.uploaded++;
           }
         }
       }
 
+      // Download: baixar layouts remotos que não existem no local
       for (const remote of remoteLayouts || []) {
-        const local = localMap.get(remote.id);
+        const remoteId = Number(remote.id);
+        const local = localMap.get(remoteId);
 
         if (!local) {
-          await insertLayout({
-            name: remote.name,
-            fontSize: remote.font_size,
-            fontFamily: remote.font_family,
-            lineSpacing: remote.line_spacing,
-            marginTop: remote.margin_top,
-            marginBottom: remote.margin_bottom,
-            marginLeft: remote.margin_left,
-            marginRight: remote.margin_right,
-            headerText: remote.header_text,
-            headerLocked: remote.header_locked ? 1 : 0,
-            footerText: remote.footer_text,
-            importedFrom: remote.imported_from,
-          });
-          result.downloaded++;
+          try {
+            await insertLayout({
+              id: remoteId,
+              name: remote.name,
+              fontSize: remote.font_size,
+              fontFamily: remote.font_family,
+              lineSpacing: remote.line_spacing,
+              marginTop: remote.margin_top,
+              marginBottom: remote.margin_bottom,
+              marginLeft: remote.margin_left,
+              marginRight: remote.margin_right,
+              headerText: remote.header_text,
+              headerLocked: remote.header_locked ? 1 : 0,
+              footerText: remote.footer_text,
+              importedFrom: remote.imported_from,
+            });
+            result.downloaded++;
+          } catch (downloadError: any) {
+            result.errors.push(
+              `Erro ao baixar layout ${remoteId}: ${downloadError.message}`
+            );
+          }
         }
       }
     } catch (error: any) {
       result.success = false;
       result.errors.push(`Erro na sincronização de layouts: ${error.message}`);
     }
-
     return result;
   }
 
@@ -241,44 +290,64 @@ export class SyncService {
 
       if (fetchError) throw fetchError;
 
-      // const remoteMap = new Map(remoteMessages?.map((m) => [m.id, m]) || []);
-      const localMap = new Map(localMessages.map((m) => [m.id, m]));
+      const remoteMap = new Map(
+        (remoteMessages || []).map((m) => [Number(m.id), m])
+      );
+      const localMap = new Map(
+        localMessages.map((m) => [Number(m.id), m])
+      );
 
-      /*      for (const local of localMessages) {
+      // Upload: enviar mensagens locais que não existem no remoto
+      for (const local of localMessages) {
         const remote = remoteMap.get(local.id);
 
         if (!remote) {
-          const { error } = await supabase.from("messages").insert({
-            id: local.id,
-            user_id: this.userId,
-            title: local.title,
-            items: local.items,
-            is_list: local.isList === 1,
-            is_ordered: local.isOrdered === 1,
-            created_at: local.createdAt,
-          });
+          try {
+            const { error } = await supabase.from("messages").insert({
+              id: local.id,
+              user_id: this.userId,
+              title: local.title,
+              items: local.items,
+              is_list: local.isList === 1,
+              is_ordered: local.isOrdered === 1,
+              created_at: local.createdAt,
+            });
 
-          if (error) {
+            if (error) {
+              result.errors.push(
+                `Erro ao enviar mensagem ${local.id}: ${error.message}`
+              );
+            } else {
+              result.uploaded++;
+            }
+          } catch (uploadError: any) {
             result.errors.push(
-              `Erro ao enviar mensagem ${local.id}: ${error.message}`
+              `Erro ao enviar mensagem ${local.id}: ${uploadError.message}`
             );
-          } else {
-            result.uploaded++;
           }
         }
       }
-*/
+
+      // Download: baixar mensagens remotas que não existem no local
       for (const remote of remoteMessages || []) {
-        const local = localMap.get(remote.id);
+        const remoteId = Number(remote.id);
+        const local = localMap.get(remoteId);
 
         if (!local) {
-          await insertMessage({
-            title: remote.title,
-            items: remote.items,
-            isList: remote.is_list,
-            isOrdered: remote.is_ordered,
-          });
-          result.downloaded++;
+          try {
+            await insertMessage({
+              id: remoteId,
+              title: remote.title,
+              items: remote.items,
+              isList: remote.is_list,
+              isOrdered: remote.is_ordered,
+            });
+            result.downloaded++;
+          } catch (downloadError: any) {
+            result.errors.push(
+              `Erro ao baixar mensagem ${remoteId}: ${downloadError.message}`
+            );
+          }
         }
       }
     } catch (error: any) {

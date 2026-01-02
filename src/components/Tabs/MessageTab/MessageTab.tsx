@@ -1,5 +1,12 @@
 import React, { useState, useRef } from "react";
-import { Plus, FileUp, Loader, MessageSquare, FileText } from "lucide-react";
+import {
+  Plus,
+  FileUp,
+  Loader,
+  MessageSquare,
+  FileText,
+  List,
+} from "lucide-react";
 import MessageCard from "./MessageCard";
 import MessageModal from "./MessageModal";
 import Button from "@/components/common/Button";
@@ -9,6 +16,7 @@ import { Message, MessageFormData } from "@/types/messages";
 import { useMessages } from "@/hooks/useMessages";
 import DevOnly from "@/components/common/DevOnly";
 import DeleteModal from "@/components/Tabs/generate/modal/DeleteModal";
+import DropDown from "@/components/common/Dropdown";
 const MessagesTab = () => {
   const {
     messages,
@@ -65,6 +73,19 @@ const MessagesTab = () => {
     } finally {
       setImporting(false);
       event.target.value = "";
+    }
+  };
+  const handleMessageAction = (key: string) => {
+    switch (key) {
+      case "new":
+        setSelectedMessage(null);
+        setShowModal(true);
+        break;
+      case "import":
+        fileInputRef.current?.click();
+        break;
+      default:
+        break;
     }
   };
 
@@ -128,36 +149,49 @@ const MessagesTab = () => {
             className="hidden"
             disabled={importing}
           />
-
-          <Button
-            variant="custom"
-            icon={importing ? Loader : FileUp}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importing}
-            className="bg-[#97dffc] hover:bg-[#87cfe8] text-gray-800 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-[#87cfe8]"
-          >
-            {importing ? "Importando..." : "Importar"}
-          </Button>
-          <DevOnly>
+          <div className="flex gap-3 max-md:hidden">
             <Button
-              variant="light-danger"
-              onClick={() => deleteAllMessages()}
-              className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
+              variant="custom"
+              icon={importing ? Loader : FileUp}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+              className="bg-[#97dffc] hover:bg-[#87cfe8] text-gray-800 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-[#87cfe8]"
             >
-              Deletar questões
+              {importing ? "Importando..." : "Importar"}
             </Button>
-          </DevOnly>
-          <Button
-            variant="custom"
-            icon={Plus}
-            onClick={() => {
-              setSelectedMessage(null);
-              setShowModal(true);
-            }}
-            className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
-          >
-            Novo Texto
-          </Button>
+            <DevOnly>
+              <Button
+                variant="light-danger"
+                onClick={() => deleteAllMessages()}
+                className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
+              >
+                Deletar questões
+              </Button>
+            </DevOnly>
+            <Button
+              variant="custom"
+              icon={Plus}
+              onClick={() => {
+                setSelectedMessage(null);
+                setShowModal(true);
+              }}
+              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
+            >
+              Novo Texto
+            </Button>
+          </div>
+
+          <DropDown
+            triggerLabel={"Criar questão"}
+            items={[
+              { key: "new", title: "Nova mensagem", icon: Plus },
+              { key: "import", title: "Importar Word", icon: FileUp },
+            ]}
+            triggerIcon={List}
+            placement="bottom-end"
+            onAction={handleMessageAction}
+            className="md:hidden"
+          ></DropDown>
         </div>
       </div>
 

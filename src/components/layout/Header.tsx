@@ -88,11 +88,11 @@ const Header = () => {
     <header className="bg-white text-black shadow-xl p-1 border-b border-gray-100 stick w-full">
       <div className="container mx-auto">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 group">
+          {/*<div className="flex items-center space-x-3 group">
             <div className="min-w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-105">
               <List className="w-5 h-5 text-white" />
             </div>
-          </div>
+          </div>*/}
 
           <div className="flex-1 flex justify-center ">
             <Tabs
@@ -101,9 +101,8 @@ const Header = () => {
               onSelectionChange={(key) => setActiveTab(String(key))}
               aria-label="Navegação principal"
               radius="full"
-              className="max-md:hidden"
               classNames={{
-                base: "group",
+                base: "group max-md:hidden",
                 tabList:
                   "bg-gray-50 shadow-inner-lg gap-1 border border-gray-200",
                 cursor:
@@ -135,7 +134,7 @@ const Header = () => {
               triggerIcon={tabs.find((t) => t.key === activeTab)?.icon || List}
               placement="bottom-end"
               onAction={handleTabsAction}
-              className="md:hidden rounded-full"
+              className="md:hidden"
             />
           </div>
 

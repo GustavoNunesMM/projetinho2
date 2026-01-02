@@ -7,6 +7,8 @@ import {
   Database,
   Search,
   Sparkles,
+  Upload,
+  List,
 } from "lucide-react";
 import QuestionCard from "./QuestionCard";
 import QuestionModal from "./QuestionModal";
@@ -22,6 +24,7 @@ import { useQuestions } from "@/hooks/useQuestions";
 import { useFilters } from "@/hooks/useFilters";
 import DevOnly from "@/components/common/DevOnly";
 import DeleteModal from "@/components/Tabs/generate/modal/DeleteModal";
+import DropDown from "@/components/common/Dropdown";
 
 const QuestionsTab = () => {
   const {
@@ -35,7 +38,6 @@ const QuestionsTab = () => {
   } = useQuestions();
 
   const { filters, updateFilter, filteredItems } = useFilters(questions);
-
   const [format, setFormat] = useState<"block" | "list" | "detail">("block");
 
   const [showModal, setShowModal] = useState(false);
@@ -76,7 +78,6 @@ const QuestionsTab = () => {
     }
   };
 
-
   const handleLocalImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -89,6 +90,20 @@ const QuestionsTab = () => {
     } finally {
       setImporting(false);
       e.target.value = "";
+    }
+  };
+
+  const handleQuestionAction = async (key: string) => {
+    switch (key) {
+      case "new":
+        setSelectedQuestion(null);
+        setShowModal(true);
+        break;
+      case "import":
+        fileInputRef.current?.click();
+        break;
+      default:
+        break;
     }
   };
 
@@ -167,48 +182,67 @@ const QuestionsTab = () => {
             className="hidden"
             disabled={importing}
           />
-          <Button
-            variant="custom"
-            icon={importing ? Loader : FileUp}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importing}
-            className="bg-[#97dffc] hover:bg-[#87cfe8] text-gray-800 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-[#87cfe8]"
-          >
-            {importing ? "Importando..." : "Importar Local"}
-          </Button>
-          <DevOnly>
-            <Button
-              variant="light-danger"
-              onClick={() => deleteAllQuestion()}
-              className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
-            >
-              Deletar questões
-            </Button>
-          </DevOnly>
-
-          {driveClient.ready && driveClient.authorized && (
+          <div className="flex gap-3 max-md:hidden">
             <Button
               variant="custom"
-              icon={Cloud}
-              onClick={() => setShowDriveModal(true)}
+              icon={importing ? Loader : FileUp}
+              onClick={() => fileInputRef.current?.click()}
               disabled={importing}
-              className="bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-gray-200"
+              className="bg-[#97dffc] hover:bg-[#87cfe8] text-gray-800 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-[#87cfe8]"
             >
-              Importar do Drive
+              {importing ? "Importando..." : "Importar Local"}
             </Button>
-          )}
+            <DevOnly>
+              <Button
+                variant="light-danger"
+                onClick={() => deleteAllQuestion()}
+                className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
+              >
+                Deletar questões
+              </Button>
+            </DevOnly>
 
-          <Button
-            variant="custom"
-            icon={Plus}
-            onClick={() => {
-              setSelectedQuestion(null);
-              setShowModal(true);
-            }}
-            className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
-          >
-            Nova Questão
-          </Button>
+            {driveClient.ready && driveClient.authorized && (
+              <Button
+                variant="custom"
+                icon={Cloud}
+                onClick={() => setShowDriveModal(true)}
+                disabled={importing}
+                className="bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-gray-200"
+              >
+                Importar do Drive
+              </Button>
+            )}
+
+            <Button
+              variant="custom"
+              icon={Plus}
+              onClick={() => {
+                setSelectedQuestion(null);
+                setShowModal(true);
+              }}
+              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
+            >
+              Nova Questão
+            </Button>
+          </div>
+          <DropDown
+            triggerLabel={"Criar questão"}
+            items={[
+              { key: "new", title: "Nova questão", icon: Plus },
+              { key: "import", title: "Importar Word", icon: Upload },
+              {
+                key: "import-drive",
+                title: "Importar do Drive",
+                icon: Cloud,
+                isDisabled: !driveClient.ready || !driveClient.authorized,
+              },
+            ]}
+            triggerIcon={List}
+            placement="bottom-end"
+            onAction={handleQuestionAction}
+            className="md:hidden"
+          ></DropDown>
         </div>
       </div>
 

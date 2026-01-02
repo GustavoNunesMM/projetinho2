@@ -1,36 +1,153 @@
-import { useState } from "react";
-import { Button } from "@heroui/react";
-import { getDatabase, clearDatabase } from "@/database/database";
-import { importHeaderFromDocx } from "@/hooks/useDocumentGenerator/importHeader";
-import { HeaderData } from "@/types/documentGeneration";
-interface props {
-  closeModal: () => void;
-}
-function TestDocxImport({ closeModal }: props) {
-  const [header, setHeader] = useState<HeaderData[] | null>(null);
+import { useState, useEffect } from "react";
+import {
+  Button,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  Tabs,
+  Tab,
+} from "@heroui/react";
+import {
+  getDatabase,
+  clearDatabase,
+  getAllQuestions,
+  getAllLayouts,
+  getAllMessages,
+} from "@/database/database";
+import { useAuth } from "@/contexts/AuthContext";
+import Portal from "./Portal";
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
-    const result = await importHeaderFromDocx(e.target.files[0]);
-    setHeader(result);
-    console.log("HEADER RESULT:", result);
+function DatabaseViewerModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const { user } = useAuth();
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [layouts, setLayouts] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [questionsData, layoutsData, messagesData] = await Promise.all([
+        getAllQuestions(),
+        getAllLayouts(),
+        getAllMessages(),
+      ]);
+      setQuestions(questionsData);
+      setLayouts(layoutsData);
+      setMessages(messagesData);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="bg-gray-200 rounded w-[90%] fixed p-2 m-2  h-full top-0 left-0 z-10 overflow-scroll">
-      <button className="absolute top-4 right-4" onClick={() => closeModal}>
-        X
-      </button>
-      <input type="file" accept=".docx" onChange={handleUpload} />
+  useEffect(() => {
+    if (isOpen) {
+      loadData();
+    }
+  }, [isOpen]);
 
-      {header && <pre>{JSON.stringify(header, null, 2)}</pre>}
-    </div>
+  const renderData = (data: any[]) => {
+    if (loading) {
+      return <div className="text-center py-8">Carregando...</div>;
+    }
+    if (data.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          Nenhum dado encontrado
+        </div>
+      );
+    }
+    return (
+      <div className="max-h-[60vh] overflow-y-auto">
+        <pre className="bg-gray-50 p-4 rounded-lg text-xs overflow-x-auto">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </div>
+    );
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <Portal>
+      <Modal isOpen={isOpen}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-100">
+            <ModalHeader className="flex flex-col gap-1 border-b p-4">
+              <h2 className="text-xl font-bold">
+                📊 Visualizador de Banco de Dados
+              </h2>
+              <p className="text-sm text-gray-500">Dados do banco local</p>
+            </ModalHeader>
+            <ModalBody className="p-0">
+              <Tabs
+                className="w-full"
+                classNames={{
+                  tabList: "px-4 pt-2",
+                  panel: "p-4",
+                }}
+                selectedKey={activeTab}
+                onSelectionChange={(key) => setActiveTab(key as string)}
+              >
+                <Tab key="profile" title="👤 Profile">
+                  <div className="space-y-4">
+                    {user ? (
+                      <div>
+                        <h3 className="font-semibold mb-2">
+                          Informações do Usuário
+                        </h3>
+                        <pre className="bg-gray-50 p-4 rounded-lg text-xs overflow-x-auto">
+                          {JSON.stringify(user, null, 2)}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        Nenhum usuário autenticado
+                      </div>
+                    )}
+                  </div>
+                </Tab>
+                <Tab
+                  key="questions"
+                  title={`❓ Questions (${questions.length})`}
+                >
+                  {renderData(questions)}
+                </Tab>
+                <Tab key="layouts" title={`🎨 Layouts (${layouts.length})`}>
+                  {renderData(layouts)}
+                </Tab>
+                <Tab key="messages" title={`💬 Messages (${messages.length})`}>
+                  {renderData(messages)}
+                </Tab>
+              </Tabs>
+            </ModalBody>
+            <div className="flex justify-end gap-2 p-4 border-t">
+              <Button onPress={onClose} color="default" variant="light">
+                Fechar
+              </Button>
+              <Button isLoading={loading} onPress={loadData} color="primary">
+                🔄 Atualizar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    </Portal>
   );
 }
 
 export default function DevTools() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isTestXslxImport, setisTestXslxImport] = useState<boolean>(false);
+  const [isDatabaseViewerOpen, setIsDatabaseViewerOpen] = useState(false);
   const handleTestConnection = async () => {
     try {
       const db = await getDatabase();
@@ -116,15 +233,6 @@ export default function DevTools() {
         >
           🔄 Recriar Schema
         </Button>
-        <Button
-          color="warning"
-          size="sm"
-          className="w-full"
-          onPress={() => setisTestXslxImport(!isTestXslxImport)}
-        ></Button>
-        {isTestXslxImport && (
-          <TestDocxImport closeModal={() => setisTestXslxImport(false)} />
-        )}
 
         <Button
           color="danger"
@@ -134,11 +242,25 @@ export default function DevTools() {
         >
           🗑️ Limpar Dados
         </Button>
+
+        <Button
+          className="w-full"
+          color="secondary"
+          onPress={() => setIsDatabaseViewerOpen(true)}
+          size="sm"
+        >
+          📊 Ver Banco de Dados
+        </Button>
       </div>
 
       <div className="mt-3 pt-3 border-t text-xs text-gray-500">
         <p>💡 Use para debug em desenvolvimento</p>
       </div>
+
+      <DatabaseViewerModal
+        isOpen={isDatabaseViewerOpen}
+        onClose={() => setIsDatabaseViewerOpen(false)}
+      />
     </div>
   );
 }
