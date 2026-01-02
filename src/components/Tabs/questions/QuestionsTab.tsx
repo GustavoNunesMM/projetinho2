@@ -21,6 +21,8 @@ import { DriveFile, DriveFileSelectorProps } from "@/types/drive";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useFilters } from "@/hooks/useFilters";
 import DevOnly from "@/components/common/DevOnly";
+import DeleteModal from "@/components/Tabs/generate/modal/DeleteModal";
+
 const QuestionsTab = () => {
   const {
     questions,
@@ -37,23 +39,25 @@ const QuestionsTab = () => {
   const [format, setFormat] = useState<"block" | "list" | "detail">("block");
 
   const [showModal, setShowModal] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
+    null
+  );
   const [importing, setImporting] = useState(false);
   const [showDriveModal, setShowDriveModal] = useState(false);
-
+  const [deleteModal, setDeleteModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { importQuestions, driveClient } = useImportHandlers();
   const { generateQuestionDocx } = useDocumentGenerator();
 
   const handleEdit = (question: Question) => {
-    setEditingQuestion(question);
+    setSelectedQuestion(question);
     setShowModal(true);
   };
 
   const handleSave = async (questionData: QuestionFormData) => {
     try {
-      if (editingQuestion) {
-        await updateQuestion(editingQuestion.id, questionData);
+      if (selectedQuestion) {
+        await updateQuestion(selectedQuestion.id, questionData);
         Toast({ message: "Questão atualizada com sucesso!" });
       } else {
         const question = await addQuestion(questionData);
@@ -66,21 +70,12 @@ const QuestionsTab = () => {
         }
       }
       setShowModal(false);
-      setEditingQuestion(null);
+      setSelectedQuestion(null);
     } catch (err) {
       Toast({ message: String(err) });
     }
   };
 
-  const handleDelete = async (id: number) => {
-    // if (!confirm("Deseja realmente excluir esta questão?")) return;
-    try {
-      await deleteQuestion(id);
-      Toast({ message: "Questão excluída com sucesso!" });
-    } catch (err) {
-      Toast({ message: `Erro ao excluir: ${err}` });
-    }
-  };
 
   const handleLocalImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -207,7 +202,7 @@ const QuestionsTab = () => {
             variant="custom"
             icon={Plus}
             onClick={() => {
-              setEditingQuestion(null);
+              setSelectedQuestion(null);
               setShowModal(true);
             }}
             className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
@@ -257,7 +252,10 @@ const QuestionsTab = () => {
               <QuestionCard
                 question={question}
                 onEdit={() => handleEdit(question)}
-                onDelete={() => handleDelete(question.id)}
+                onDelete={() => {
+                  setDeleteModal(true);
+                  setSelectedQuestion(question);
+                }}
                 format={format}
               />
             </div>
@@ -267,15 +265,30 @@ const QuestionsTab = () => {
 
       {showModal && (
         <QuestionModal
-          question={editingQuestion}
+          question={selectedQuestion}
           onSave={handleSave}
           onClose={() => {
             setShowModal(false);
-            setEditingQuestion(null);
+            setSelectedQuestion(null);
           }}
         />
       )}
 
+      {deleteModal && (
+        <DeleteModal
+          onClose={() => {
+            setSelectedQuestion(null);
+            setDeleteModal(false);
+          }}
+          onSubmit={() => {
+            deleteQuestion(selectedQuestion!.id);
+            setDeleteModal(false);
+            setSelectedQuestion(null);
+          }}
+          elementName={selectedQuestion!.title}
+          type="question"
+        />
+      )}
       {showDriveModal && (
         <DriveFileSelector
           onSelect={handleDriveImport}

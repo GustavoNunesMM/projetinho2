@@ -3,7 +3,7 @@ import { Plus, Upload, Layout, Layers } from "lucide-react";
 import Button from "@/components/common/Button.tsx";
 import LayoutCard from "./LayoutCard.tsx";
 import LayoutModal from "./LayoutModal.tsx";
-import LayoutCloseModal from "./LayoutCloseModal.tsx";
+import DeleteModal from "@/components/Tabs/generate/modal/DeleteModal";
 import { Layout as LayoutType, LayoutFormData } from "@/types/layout.ts";
 
 interface LayoutsTabProps {
@@ -147,7 +147,7 @@ const LayoutsTab = ({
       )}
 
       {deleteModal && selectedLayout && (
-        <LayoutCloseModal
+        <DeleteModal
           onClose={() => {
             setSelectedLayout(null);
             setDeleteModal(false);
@@ -157,7 +157,8 @@ const LayoutsTab = ({
             setDeleteModal(false);
             setSelectedLayout(null);
           }}
-          layoutName={selectedLayout.name}
+          elementName={selectedLayout.name}
+          type="layout"
         />
       )}
 

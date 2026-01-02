@@ -1,17 +1,38 @@
-import Button from "@/components/common/Button.tsx";
-import Portal from "@/components/common/Portal.tsx";
 import { Trash2, AlertTriangle } from "lucide-react";
+import Portal from "@/components/common/Portal";
+import Button from "@/components/common/Button";
 
-interface props {
+interface DeleteModalProps {
   onClose: () => void;
   onSubmit: () => void;
-  layoutName: string;
+  elementName: string;
+  type: "question" | "layout" | "message";
 }
 
-const LayoutCloseModal = ({ onClose, onSubmit, layoutName }: props) => {
+const DeleteModal = ({
+  onClose,
+  onSubmit,
+  elementName,
+  type = "question",
+}: DeleteModalProps) => {
+  const getEntityName = () => {
+    switch (type) {
+      case "question":
+        return "a questão";
+      case "layout":
+        return "o layout";
+      case "message":
+        return "a mensagem";
+      default:
+        return "o item";
+    }
+  };
+
+  const entityName = getEntityName();
+
   return (
     <Portal>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] animate-fadeIn">
+      <div className="inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center fixed w-full h-full p-4 z-[9999] animate-fadeIn">
         <div className="bg-white rounded-2xl shadow-2xl p-2 max-w-md w-full overflow-hidden border border-gray-100 animate-scaleIn">
           <div className="p-6">
             <div className="flex flex-col items-center text-center mb-6">
@@ -19,23 +40,16 @@ const LayoutCloseModal = ({ onClose, onSubmit, layoutName }: props) => {
                 <AlertTriangle className="w-8 h-8 text-red-500" />
               </div>
               <h2 className="text-xl font-bold text-gray-800 mb-2">
-                Deletar Layout
+                Deletar {entityName}
               </h2>
               <p className="text-gray-600">
-                Deseja realmente excluir o layout{" "}
+                Deseja realmente excluir {entityName}{" "}
                 <span className="font-semibold text-primary-700">
-                  "{layoutName}"
+                  "{elementName}"
                 </span>
                 ?
               </p>
             </div>
-
-            <div className="p-4 bg-red-50 border border-red-100 rounded-xl mb-6">
-              <p className="text-sm text-red-600 text-center">
-                ⚠️ Esta ação é permanente e não pode ser desfeita.
-              </p>
-            </div>
-
             <div className="flex gap-3">
               <Button
                 variant="custom"
@@ -60,4 +74,4 @@ const LayoutCloseModal = ({ onClose, onSubmit, layoutName }: props) => {
   );
 };
 
-export default LayoutCloseModal;
+export default DeleteModal;

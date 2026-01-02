@@ -1,6 +1,5 @@
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import Button from "@/components/common/Button";
 import {
   LogOut,
   RefreshCw,
@@ -15,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Toast } from "@/components/common/Toast";
 import { Tabs, Tab } from "@heroui/react";
 import { useTab } from "@/contexts/TabContext";
+import DropDown from "@/components/common/Dropdown";
 
 const Header = () => {
   const { user, logout, syncData, isSyncing } = useAuth();
@@ -68,6 +68,21 @@ const Header = () => {
       description: "Central de comunicação",
     },
   ];
+  function handleUserAction(key: string) {
+    switch (key) {
+      case "sync":
+        handleSync();
+        break;
+      case "exit":
+        handleLogout();
+        break;
+      default:
+        break;
+    }
+  }
+  function handleTabsAction(key: string) {
+    setActiveTab(key);
+  }
 
   return (
     <header className="bg-white text-black shadow-xl p-1 border-b border-gray-100 stick w-full">
@@ -86,6 +101,7 @@ const Header = () => {
               onSelectionChange={(key) => setActiveTab(String(key))}
               aria-label="Navegação principal"
               radius="full"
+              className="max-md:hidden"
               classNames={{
                 base: "group",
                 tabList:
@@ -113,43 +129,40 @@ const Header = () => {
                 />
               ))}
             </Tabs>
+            <DropDown
+              triggerLabel={activeTab}
+              items={tabs}
+              triggerIcon={tabs.find((t) => t.key === activeTab)?.icon || List}
+              placement="bottom-end"
+              onAction={handleTabsAction}
+              className="md:hidden rounded-full"
+            />
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-3 px-4 py-2 rounded-full bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 group hover:shadow-md transition-all duration-300">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center shadow-inner">
-                <User className="w-4 h-4 text-white" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-gray-800 group-hover:text-primary-700 transition-colors cursor-default">
-                  {user?.username}
-                </p>
-              </div>
-            </div>
-
-            <Button
-              variant="custom"
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="bg-[#97dffc] hover:bg-[#87cfe8] text-gray-800 hover:text-gray-900 px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold border-2 border-transparent hover:border-[#77bfd4]"
-            >
-              <RefreshCw
-                className={`size-4 mr-2 transition-all duration-500 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`}
-              />
-              {isSyncing ? "Sincronizando..." : "Sincronizar"}
-            </Button>
-
-            <Button
-              variant="custom"
-              onClick={handleLogout}
-              className="bg-[#613dc1] hover:bg-[#5130b0] text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold relative overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="relative flex items-center">
-                <LogOut className="size-4 mr-2 transition-transform duration-300 group-hover:translate-x-1" />
-                Sair
-              </div>
-            </Button>
+            <DropDown
+              triggerLabel={user?.username || "Usuário"}
+              triggerIcon={User}
+              variant="outline"
+              placement="bottom-end"
+              items={[
+                {
+                  key: "sync",
+                  title: "Sincronizar",
+                  icon: RefreshCw,
+                  isDisabled: isSyncing,
+                  iconClass: `transition-all duration-500 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`,
+                },
+                {
+                  key: "exit",
+                  icon: LogOut,
+                  iconClass: `transition-all duration-500 group-hover:translate-x-0.5`,
+                  title: "Sair",
+                  color: "danger",
+                },
+              ]}
+              onAction={handleUserAction}
+            />
           </div>
         </div>
       </div>

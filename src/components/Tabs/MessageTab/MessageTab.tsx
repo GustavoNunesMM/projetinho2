@@ -8,6 +8,7 @@ import { Toast } from "@/components/common/Toast";
 import { Message, MessageFormData } from "@/types/messages";
 import { useMessages } from "@/hooks/useMessages";
 import DevOnly from "@/components/common/DevOnly";
+import DeleteModal from "@/components/Tabs/generate/modal/DeleteModal";
 const MessagesTab = () => {
   const {
     messages,
@@ -20,42 +21,30 @@ const MessagesTab = () => {
   } = useMessages();
 
   const [showModal, setShowModal] = useState(false);
-  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [importing, setImporting] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleEdit = (message: Message) => {
-    setEditingMessage(message);
+    setSelectedMessage(message);
     setShowModal(true);
   };
 
   const handleSave = async (messageData: MessageFormData) => {
     try {
-      if (editingMessage) {
-        await updateMessage(editingMessage.id, messageData);
+      if (selectedMessage) {
+        await updateMessage(selectedMessage.id, messageData);
         Toast({ message: "Texto atualizado com sucesso!" });
       } else {
         await addMessage(messageData);
         Toast({ message: "Texto criado com sucesso!" });
       }
       setShowModal(false);
-      setEditingMessage(null);
+      setSelectedMessage(null);
     } catch (err) {
       Toast({ message: String(err) });
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("Deseja realmente excluir este texto?")) {
-      return;
-    }
-
-    try {
-      await deleteMessage(id);
-      Toast({ message: "Texto excluído com sucesso!" });
-    } catch (err) {
-      Toast({ message: `Erro ao excluir: ${err}` });
     }
   };
 
@@ -162,7 +151,7 @@ const MessagesTab = () => {
             variant="custom"
             icon={Plus}
             onClick={() => {
-              setEditingMessage(null);
+              setSelectedMessage(null);
               setShowModal(true);
             }}
             className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
@@ -203,20 +192,39 @@ const MessagesTab = () => {
               <MessageCard
                 message={message}
                 onEdit={() => handleEdit(message)}
-                onDelete={() => handleDelete(message.id)}
+                onDelete={() => {
+                  setDeleteModal(true);
+                  setSelectedMessage(message);
+                }}
               />
             </div>
           ))}
         </div>
       )}
 
+      {deleteModal && selectedMessage && (
+        <DeleteModal
+          onClose={() => {
+            setSelectedMessage(null);
+            setDeleteModal(false);
+          }}
+          onSubmit={() => {
+            deleteMessage(selectedMessage.id);
+            setDeleteModal(false);
+            setSelectedMessage(null);
+          }}
+          elementName={selectedMessage.title}
+          type="message"
+        />
+      )}
+
       {showModal && (
         <MessageModal
-          message={editingMessage}
+          message={selectedMessage}
           onSave={handleSave}
           onClose={() => {
             setShowModal(false);
-            setEditingMessage(null);
+            setSelectedMessage(null);
           }}
         />
       )}

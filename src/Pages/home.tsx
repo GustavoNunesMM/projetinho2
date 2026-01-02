@@ -10,7 +10,7 @@ import { useQuestions } from "@/hooks/useQuestions.ts";
 import { useImportHandlers } from "@/hooks/useImportHandlers.ts";
 import { Loader } from "lucide-react";
 import { Toast } from "@/components/common/Toast.tsx";
-import { LayoutFormData } from "@/types/index";
+import { LayoutFormData } from "@/types/layout";
 import { extractWordLayoutInfo } from "@/hooks/useDocumentGenerator/ExportWord";
 import { useTab } from "@/contexts/TabContext";
 
