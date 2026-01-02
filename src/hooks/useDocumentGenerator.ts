@@ -6,9 +6,8 @@ import {
   generateQuestionDocx,
   parseQuestionsFromText,
 } from "./useDocumentGenerator/ExportWord";
-import { useHeaderFromWord } from "./useDocumentGenerator/importHeader";
+import { importHeaderFromDocx } from "./useDocumentGenerator/importHeader";
 import { generatePdf } from "./useDocumentGenerator/exportPdf";
-const { importHeaderFromDocx } = useHeaderFromWord();
 
 export function useDocumentGenerator() {
   const saveFile = useCallback((blob: Blob, fileName: string): void => {

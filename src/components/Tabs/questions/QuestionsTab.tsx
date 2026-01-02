@@ -20,7 +20,7 @@ import { Question, QuestionFormData } from "@/types/question";
 import { DriveFile, DriveFileSelectorProps } from "@/types/drive";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useFilters } from "@/hooks/useFilters";
-
+import DevOnly from "@/components/common/DevOnly";
 const QuestionsTab = () => {
   const {
     questions,
@@ -181,13 +181,15 @@ const QuestionsTab = () => {
           >
             {importing ? "Importando..." : "Importar Local"}
           </Button>
-          <Button
-            variant="light-danger"
-            onClick={() => deleteAllQuestion()}
-            className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
-          >
-            Deletar questões
-          </Button>
+          <DevOnly>
+            <Button
+              variant="light-danger"
+              onClick={() => deleteAllQuestion()}
+              className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
+            >
+              Deletar questões
+            </Button>
+          </DevOnly>
 
           {driveClient.ready && driveClient.authorized && (
             <Button

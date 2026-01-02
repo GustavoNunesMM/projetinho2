@@ -8,7 +8,8 @@ import UpdateNotification from "@/components/common/UpdateNotification";
 import { useUpdater } from "@/hooks/useUpdater";
 import DefaultLayout from "@/layouts/default";
 import Home from "./Pages/home";
-
+import DevTools from "./components/common/DevTools";
+import DevOnly from "./components/common/DevOnly";
 
 const App = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -40,7 +41,7 @@ const App = () => {
       <Routes>
         <Route
           path="/auth"
-          element={!isAuthenticated ? <Login/>: <Navigate to="/home" />}
+          element={!isAuthenticated ? <Login /> : <Navigate to="/home" />}
         />
         <Route
           path="/home"
@@ -58,6 +59,9 @@ const App = () => {
         />
       </Routes>
       <UpdateNotification />
+      <DevOnly>
+        <DevTools />
+      </DevOnly>
     </>
   );
 };

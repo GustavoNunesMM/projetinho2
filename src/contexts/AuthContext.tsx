@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { User, LoginFormData, UserFormData } from "@/types/user";
 import { supabase } from "@/lib/supabase";
@@ -23,12 +29,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    console.log("AuthProvider: Iniciando verificação de usuário");
     checkUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("AuthProvider: Auth state changed", event);
+      async (_, session) => {
         if (session?.user) {
           loadUserFromAuth(session.user);
         } else {
@@ -44,34 +48,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkUser = async () => {
     try {
-      console.log("checkUser: Verificando sessão...");
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
       if (error) {
         console.error("checkUser: Erro ao obter sessão", error);
         throw error;
       }
-      
-      console.log("checkUser: Sessão obtida", !!session);
-      
+
       if (session?.user) {
         loadUserFromAuth(session.user);
       }
     } catch (error) {
       console.error("checkUser: Erro ao verificar usuário:", error);
     } finally {
-      console.log("checkUser: Finalizando loading");
       setLoading(false);
     }
   };
 
   const loadUserFromAuth = (authUser: SupabaseUser) => {
-    console.log("loadUserFromAuth: Carregando usuário", authUser.id);
-    
-    const username = authUser.user_metadata?.username || 
-                     authUser.email?.split('@')[0] || 
-                     'user';
-    
+    const username =
+      authUser.user_metadata?.username ||
+      authUser.email?.split("@")[0] ||
+      "user";
+
     setUser({
       id: authUser.id,
       email: authUser.email!,
@@ -79,21 +81,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     syncService.setUserId(authUser.id);
-    
-    syncService.syncAll()
+
+    syncService
+      .syncAll()
       .then(() => {
         console.log("loadUserFromAuth: Sincronização inicial concluída");
       })
       .catch((error) => {
-        console.error("loadUserFromAuth: Erro na sincronização inicial:", error);
+        console.error(
+          "loadUserFromAuth: Erro na sincronização inicial:",
+          error
+        );
       });
-    
-    console.log("loadUserFromAuth: Usuário carregado com sucesso");
   };
 
   const login = async (data: LoginFormData) => {
     console.log("login: Tentando fazer login com", data.email);
-    
+
     const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
@@ -113,15 +117,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (data: UserFormData) => {
     console.log("register: Tentando registrar", data.email);
-    
+
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
           username: data.username,
-        }
-      }
+        },
+      },
     });
 
     if (signUpError) {
@@ -162,8 +166,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsSyncing(false);
     }
   };
-
-  console.log("AuthProvider: Render - loading:", loading, "isAuthenticated:", !!user);
 
   return (
     <AuthContext.Provider

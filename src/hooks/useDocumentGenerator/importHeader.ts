@@ -43,315 +43,309 @@ interface ParsedCell {
   imageId?: string;
 }
 
-export function useHeaderFromWord() {
-  const importHeaderFromDocx = async (file: File): Promise<HeaderData[]> => {
-    const arrayBuffer = await file.arrayBuffer();
-    const zip = await JSZip.loadAsync(arrayBuffer);
+export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
 
-    const docXml = await zip.file("word/document.xml")?.async("text");
-    if (!docXml) throw new Error("Documento Word inválido");
+  const docXml = await zip.file("word/document.xml")?.async("text");
+  if (!docXml) throw new Error("Documento Word inválido");
 
-    const relsXml = await zip
-      .file("word/_rels/document.xml.rels")
-      ?.async("text");
-    const relationshipMap = relsXml ? parseRelationships(relsXml) : new Map();
+  const relsXml = await zip.file("word/_rels/document.xml.rels")?.async("text");
+  const relationshipMap = relsXml ? parseRelationships(relsXml) : new Map();
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(docXml, "text/xml");
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(docXml, "text/xml");
 
-    const tableEl = doc.querySelector("w\\:tbl, tbl");
-    if (!tableEl) throw new Error("Nenhuma tabela encontrada no Word");
+  const tableEl = doc.querySelector("w\\:tbl, tbl");
+  if (!tableEl) throw new Error("Nenhuma tabela encontrada no Word");
 
-    const tblBorders = tableEl.querySelector(
-      "w\\:tblPr w\\:tblBorders, tblPr tblBorders"
-    );
-    const defaultBorder: Record<
-      keyof ParsedCell["borders"],
-      CellBorder | undefined
-    > = {
-      top: parseBorderFromXml(tblBorders?.querySelector("w\\:top, top")),
-      bottom: parseBorderFromXml(
-        tblBorders?.querySelector("w\\:bottom, bottom")
-      ),
-      left: parseBorderFromXml(tblBorders?.querySelector("w\\:left, left")),
-      right: parseBorderFromXml(tblBorders?.querySelector("w\\:right, right")),
-    };
+  const tblBorders = tableEl.querySelector(
+    "w\\:tblPr w\\:tblBorders, tblPr tblBorders"
+  );
+  const defaultBorder: Record<
+    keyof ParsedCell["borders"],
+    CellBorder | undefined
+  > = {
+    top: parseBorderFromXml(tblBorders?.querySelector("w\\:top, top")),
+    bottom: parseBorderFromXml(tblBorders?.querySelector("w\\:bottom, bottom")),
+    left: parseBorderFromXml(tblBorders?.querySelector("w\\:left, left")),
+    right: parseBorderFromXml(tblBorders?.querySelector("w\\:right, right")),
+  };
 
-    const imageMap = await extractImages(zip);
+  const imageMap = await extractImages(zip);
 
-    const tableRows = tableEl.querySelectorAll("w\\:tr, tr");
-    const parsedTable: ParsedCell[][] = [];
-    const tcElements: Element[][] = [];
+  const tableRows = tableEl.querySelectorAll("w\\:tr, tr");
+  const parsedTable: ParsedCell[][] = [];
+  const tcElements: Element[][] = [];
 
-    tableRows.forEach((trEl) => {
-      const cells = trEl.querySelectorAll("w\\:tc, tc");
-      const parsedRow: ParsedCell[] = [];
-      const tcRow: Element[] = [];
+  tableRows.forEach((trEl) => {
+    const cells = trEl.querySelectorAll("w\\:tc, tc");
+    const parsedRow: ParsedCell[] = [];
+    const tcRow: Element[] = [];
 
-      cells.forEach((tcEl) => {
-        parsedRow.push(parseCellFromXml(tcEl));
-        tcRow.push(tcEl);
-      });
-
-      parsedTable.push(parsedRow);
-      tcElements.push(tcRow);
+    cells.forEach((tcEl) => {
+      parsedRow.push(parseCellFromXml(tcEl));
+      tcRow.push(tcEl);
     });
 
-    const grid: (ParsedCell | null)[][] = [];
+    parsedTable.push(parsedRow);
+    tcElements.push(tcRow);
+  });
 
-    for (let r = 0; r < parsedTable.length; r++) {
-      if (!grid[r]) grid[r] = [];
+  const grid: (ParsedCell | null)[][] = [];
 
-      let cellIndex = 0;
-      let gridCol = 0;
+  for (let r = 0; r < parsedTable.length; r++) {
+    if (!grid[r]) grid[r] = [];
 
-      while (cellIndex < parsedTable[r].length) {
-        while (grid[r][gridCol] !== undefined) gridCol++;
+    let cellIndex = 0;
+    let gridCol = 0;
 
-        const cell = parsedTable[r][cellIndex];
-        if (cell.vMerge === "continue") {
-          cellIndex++;
-          continue;
-        }
+    while (cellIndex < parsedTable[r].length) {
+      while (grid[r][gridCol] !== undefined) gridCol++;
 
-        grid[r][gridCol] = cell;
-
-        for (let c = 1; c < cell.gridSpan; c++) grid[r][gridCol + c] = null;
-
-        if (cell.vMerge === "restart") {
-          let rowspanCount = 1;
-          for (let nextR = r + 1; nextR < parsedTable.length; nextR++) {
-            let foundContinue = false;
-            let tempGridCol = 0;
-            for (const nextCell of parsedTable[nextR]) {
-              while (grid[nextR] && grid[nextR][tempGridCol] !== undefined)
-                tempGridCol++;
-              if (tempGridCol === gridCol && nextCell.vMerge === "continue") {
-                foundContinue = true;
-                rowspanCount++;
-                for (let c = 0; c < cell.gridSpan; c++) {
-                  if (!grid[nextR]) grid[nextR] = [];
-                  grid[nextR][gridCol + c] = null;
-                }
-                break;
-              }
-              tempGridCol += nextCell.gridSpan;
-            }
-            if (!foundContinue) break;
-          }
-          cell.rowspan = rowspanCount;
-        }
-        gridCol += cell.gridSpan;
+      const cell = parsedTable[r][cellIndex];
+      if (cell.vMerge === "continue") {
         cellIndex++;
+        continue;
       }
-    }
 
-    for (let r = 0; r < grid.length; r++) {
-      for (let c = 0; c < grid[r].length; c++) {
-        const cell = grid[r][c];
-        if (!cell) continue;
-        if (!cell.borders.top) cell.borders.top = defaultBorder.top;
-        if (!cell.borders.bottom) cell.borders.bottom = defaultBorder.bottom;
-        if (!cell.borders.left) cell.borders.left = defaultBorder.left;
-        if (!cell.borders.right) cell.borders.right = defaultBorder.right;
+      grid[r][gridCol] = cell;
+
+      for (let c = 1; c < cell.gridSpan; c++) grid[r][gridCol + c] = null;
+
+      if (cell.vMerge === "restart") {
+        let rowspanCount = 1;
+        for (let nextR = r + 1; nextR < parsedTable.length; nextR++) {
+          let foundContinue = false;
+          let tempGridCol = 0;
+          for (const nextCell of parsedTable[nextR]) {
+            while (grid[nextR] && grid[nextR][tempGridCol] !== undefined)
+              tempGridCol++;
+            if (tempGridCol === gridCol && nextCell.vMerge === "continue") {
+              foundContinue = true;
+              rowspanCount++;
+              for (let c = 0; c < cell.gridSpan; c++) {
+                if (!grid[nextR]) grid[nextR] = [];
+                grid[nextR][gridCol + c] = null;
+              }
+              break;
+            }
+            tempGridCol += nextCell.gridSpan;
+          }
+          if (!foundContinue) break;
+        }
+        cell.rowspan = rowspanCount;
       }
+      gridCol += cell.gridSpan;
+      cellIndex++;
     }
+  }
 
-    applyAdjacentBorders(grid);
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid[r].length; c++) {
+      const cell = grid[r][c];
+      if (!cell) continue;
+      if (!cell.borders.top) cell.borders.top = defaultBorder.top;
+      if (!cell.borders.bottom) cell.borders.bottom = defaultBorder.bottom;
+      if (!cell.borders.left) cell.borders.left = defaultBorder.left;
+      if (!cell.borders.right) cell.borders.right = defaultBorder.right;
+    }
+  }
 
-    const rawData: string[][] = [];
-    const styles: CellStyle[][] = [];
-    const mergedCells: {
-      row: number;
-      col: number;
-      rowspan: number;
-      colspan: number;
-    }[] = [];
-    const images: {
-      row: number;
-      col: number;
-      data: string;
-      width: number;
-      height: number;
-    }[] = [];
-    const rows: TableRow[] = [];
-    const gridColEls = Array.from(
-      tableEl.querySelectorAll("w\\:tblGrid w\\:gridCol, tblGrid gridCol")
-    );
-    const colWidthsDXA: number[] = gridColEls.map((col) =>
-      parseInt(col.getAttribute("w:w") || "2500")
-    );
+  applyAdjacentBorders(grid);
 
-    for (let r = 0; r < grid.length; r++) {
-      const rowData: string[] = [];
-      const rowStyles: CellStyle[] = [];
-      const tableCells: TableCell[] = [];
-      let originalCellIndex = 0;
+  const rawData: string[][] = [];
+  const styles: CellStyle[][] = [];
+  const mergedCells: {
+    row: number;
+    col: number;
+    rowspan: number;
+    colspan: number;
+  }[] = [];
+  const images: {
+    row: number;
+    col: number;
+    data: string;
+    width: number;
+    height: number;
+  }[] = [];
+  const rows: TableRow[] = [];
+  const gridColEls = Array.from(
+    tableEl.querySelectorAll("w\\:tblGrid w\\:gridCol, tblGrid gridCol")
+  );
+  const colWidthsDXA: number[] = gridColEls.map((col) =>
+    parseInt(col.getAttribute("w:w") || "2500")
+  );
 
-      for (let c = 0; c < grid[r].length; c++) {
-        const cell = grid[r][c];
-        if (cell === null) continue;
+  for (let r = 0; r < grid.length; r++) {
+    const rowData: string[] = [];
+    const rowStyles: CellStyle[] = [];
+    const tableCells: TableCell[] = [];
+    let originalCellIndex = 0;
 
-        rowData.push(cell.text);
-        rowStyles.push({
-          bold: cell.bold,
-          italic: cell.italic,
-          fontSize: cell.fontSize,
-          color: cell.color,
-          backgroundColor: cell.backgroundColor,
-          alignment: cell.alignment,
-          verticalAlignment: cell.verticalAlignment,
-          borders: cell.borders,
+    for (let c = 0; c < grid[r].length; c++) {
+      const cell = grid[r][c];
+      if (cell === null) continue;
+
+      rowData.push(cell.text);
+      rowStyles.push({
+        bold: cell.bold,
+        italic: cell.italic,
+        fontSize: cell.fontSize,
+        color: cell.color,
+        backgroundColor: cell.backgroundColor,
+        alignment: cell.alignment,
+        verticalAlignment: cell.verticalAlignment,
+        borders: cell.borders,
+      });
+
+      if (cell.gridSpan > 1 || cell.rowspan > 1)
+        mergedCells.push({
+          row: r,
+          col: c,
+          rowspan: cell.rowspan,
+          colspan: cell.gridSpan,
         });
 
-        if (cell.gridSpan > 1 || cell.rowspan > 1)
-          mergedCells.push({
-            row: r,
-            col: c,
-            rowspan: cell.rowspan,
-            colspan: cell.gridSpan,
-          });
+      let imgData: { base64: string; width: number; height: number } | null =
+        null;
+      if (cell.hasImage && cell.imageId) {
+        const target = relationshipMap.get(cell.imageId);
+        if (target) {
+          const filename = target.replace("media/", "");
+          imgData = imageMap.get(filename) ?? null;
+          const tcEl = tcElements[r]?.[originalCellIndex];
 
-        let imgData: { base64: string; width: number; height: number } | null =
-          null;
-        if (cell.hasImage && cell.imageId) {
-          const target = relationshipMap.get(cell.imageId);
-          if (target) {
-            const filename = target.replace("media/", "");
-            imgData = imageMap.get(filename) ?? null;
-            const tcEl = tcElements[r]?.[originalCellIndex];
-
-            if (tcEl) {
-              const drawing = tcEl.querySelector("w\\:drawing, drawing");
-              const extent = drawing?.querySelector("wp\\:extent, extent");
-              if (extent) {
-                const cx = extent.getAttribute("cx");
-                const cy = extent.getAttribute("cy");
-                if (cx && cy) {
-                  const width = Math.round(parseInt(cx) / 9525);
-                  const height = Math.round(parseInt(cy) / 9525);
-                  if (imgData) imgData = { ...imgData, width, height };
-                }
+          if (tcEl) {
+            const drawing = tcEl.querySelector("w\\:drawing, drawing");
+            const extent = drawing?.querySelector("wp\\:extent, extent");
+            if (extent) {
+              const cx = extent.getAttribute("cx");
+              const cy = extent.getAttribute("cy");
+              if (cx && cy) {
+                const width = Math.round(parseInt(cx) / 9525);
+                const height = Math.round(parseInt(cy) / 9525);
+                if (imgData) imgData = { ...imgData, width, height };
               }
             }
           }
         }
-        const cellChildren: any[] = [];
-        if (imgData) {
-          images.push({
-            row: r,
-            col: c,
-            data: imgData.base64,
+      }
+      const cellChildren: any[] = [];
+      if (imgData) {
+        images.push({
+          row: r,
+          col: c,
+          data: imgData.base64,
+          width: imgData.width,
+          height: imgData.height,
+        });
+        const bytes = base64ToUint8Array(imgData.base64);
+        const type = detectImageType(bytes);
+
+        const imageRunOptions: any = {
+          data: bytes,
+          type: type === "jpeg" ? "jpg" : type,
+          transformation: {
             width: imgData.width,
             height: imgData.height,
-          });
-          const bytes = base64ToUint8Array(imgData.base64);
-          const type = detectImageType(bytes);
+          },
+        };
 
-          const imageRunOptions: any = {
-            data: bytes,
-            type: type === "jpeg" ? "jpg" : type, 
-            transformation: {
-              width: imgData.width,
-              height: imgData.height,
-            },
-          };
-
-          if (type === "svg") {
-            imageRunOptions.fallback = "Imagem não encontrada"; 
-          }
-
-          cellChildren.push(
-            new Paragraph({
-              children: [new ImageRun(imageRunOptions)],
-              alignment: AlignmentType.CENTER,
-              spacing: { line: 360 },
-            })
-          );
+        if (type === "svg") {
+          imageRunOptions.fallback = "Imagem não encontrada";
         }
 
-        if (cell.text)
-          cellChildren.push(
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: cell.text,
-                  bold: cell.bold,
-                  italics: cell.italic,
-                  underline: cell.underline ? {} : undefined,
-                  size: Math.max(1, Math.round(cell.fontSize * 2)),
-                  color: cell.color,
-                  font: cell.fontFamily,
-                }),
-              ],
-              alignment:
-                cell.alignment === "center"
-                  ? AlignmentType.CENTER
-                  : cell.alignment === "right"
-                    ? AlignmentType.RIGHT
-                    : AlignmentType.LEFT,
-              spacing: cell.spacing,
-            })
-          );
-
-        if (cellChildren.length === 0)
-          cellChildren.push(new Paragraph({ text: "", spacing: cell.spacing }));
-
-        tableCells.push(
-          new TableCell({
-            children: cellChildren,
-            width: { size: colWidthsDXA[c] || 2500, type: WidthType.DXA },
-            columnSpan: cell.gridSpan > 1 ? cell.gridSpan : undefined,
-            rowSpan: cell.rowspan > 1 ? cell.rowspan : undefined,
-            verticalAlign:
-              cell.verticalAlignment === "top"
-                ? VerticalAlign.TOP
-                : cell.verticalAlignment === "bottom"
-                  ? VerticalAlign.BOTTOM
-                  : VerticalAlign.CENTER,
-            margins: { top: 120, bottom: 120, left: 120, right: 120 },
-            shading: cell.backgroundColor
-              ? { fill: cell.backgroundColor, color: cell.backgroundColor }
-              : undefined,
-            borders: {
-              top: convertBorderToDocx(cell.borders.top),
-              bottom: convertBorderToDocx(cell.borders.bottom),
-              left: convertBorderToDocx(cell.borders.left),
-              right: convertBorderToDocx(cell.borders.right),
-            },
+        cellChildren.push(
+          new Paragraph({
+            children: [new ImageRun(imageRunOptions)],
+            alignment: AlignmentType.CENTER,
+            spacing: { line: 360 },
           })
         );
       }
 
-      if (tableCells.length) {
-        rawData.push(rowData);
-        styles.push(rowStyles);
-        rows.push(new TableRow({ children: tableCells }));
-      }
+      if (cell.text)
+        cellChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: cell.text,
+                bold: cell.bold,
+                italics: cell.italic,
+                underline: cell.underline ? {} : undefined,
+                size: Math.max(1, Math.round(cell.fontSize * 2)),
+                color: cell.color,
+                font: cell.fontFamily,
+              }),
+            ],
+            alignment:
+              cell.alignment === "center"
+                ? AlignmentType.CENTER
+                : cell.alignment === "right"
+                  ? AlignmentType.RIGHT
+                  : AlignmentType.LEFT,
+            spacing: cell.spacing,
+          })
+        );
+
+      if (cellChildren.length === 0)
+        cellChildren.push(new Paragraph({ text: "", spacing: cell.spacing }));
+
+      tableCells.push(
+        new TableCell({
+          children: cellChildren,
+          width: { size: colWidthsDXA[c] || 2500, type: WidthType.DXA },
+          columnSpan: cell.gridSpan > 1 ? cell.gridSpan : undefined,
+          rowSpan: cell.rowspan > 1 ? cell.rowspan : undefined,
+          verticalAlign:
+            cell.verticalAlignment === "top"
+              ? VerticalAlign.TOP
+              : cell.verticalAlignment === "bottom"
+                ? VerticalAlign.BOTTOM
+                : VerticalAlign.CENTER,
+          margins: { top: 120, bottom: 120, left: 120, right: 120 },
+          shading: cell.backgroundColor
+            ? { fill: cell.backgroundColor, color: cell.backgroundColor }
+            : undefined,
+          borders: {
+            top: convertBorderToDocx(cell.borders.top),
+            bottom: convertBorderToDocx(cell.borders.bottom),
+            left: convertBorderToDocx(cell.borders.left),
+            right: convertBorderToDocx(cell.borders.right),
+          },
+        })
+      );
     }
 
-    const table = new Table({
-      rows,
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      columnWidths: colWidthsDXA,
-    });
+    if (tableCells.length) {
+      rawData.push(rowData);
+      styles.push(rowStyles);
+      rows.push(new TableRow({ children: tableCells }));
+    }
+  }
 
-    return [
-      {
-        docxTable: table,
-        rawData,
-        colWidths: [],
-        rowHeights: [],
-        styles,
-        mergedCells,
-        images,
-      },
-    ];
-  };
+  const table = new Table({
+    rows,
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    columnWidths: colWidthsDXA,
+    margins: {
+      bottom: 200,
+    },
+  });
 
-  return { importHeaderFromDocx };
+  return [
+    {
+      docxTable: table,
+      rawData,
+      colWidths: [],
+      rowHeights: [],
+      styles,
+      mergedCells,
+      images,
+    },
+  ];
 }
-
 
 function parseCellFromXml(tcEl: Element): ParsedCell {
   const tcPr = tcEl.querySelector("w\\:tcPr, tcPr");
@@ -405,12 +399,11 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
 
     const spacingEl = pPr?.querySelector("w\\:spacing, spacing");
     if (spacingEl) {
-      spacing = {
-        before:
-          parseInt(spacingEl.getAttribute("w:before") || "0") || undefined,
-        after: parseInt(spacingEl.getAttribute("w:after") || "0") || undefined,
-        line: parseInt(spacingEl.getAttribute("w:line") || "0") || undefined,
-      };
+      spacing = normalizeParagraphSpacing({
+        before: parseInt(spacingEl.getAttribute("w:before") || ""),
+        after: parseInt(spacingEl.getAttribute("w:after") || ""),
+        line: parseInt(spacingEl.getAttribute("w:line") || ""),
+      });
     }
 
     const drawing = p.querySelector("w\\:drawing, drawing");
@@ -450,6 +443,14 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
       if (textEl) text += textEl.textContent || "";
     });
   });
+
+  if (!spacing) {
+    spacing = {
+      before: 60,
+      after: 60,
+      line: 360,
+    };
+  }
 
   return {
     text: text.trim(),
@@ -614,4 +615,29 @@ function base64ToUint8Array(base64: string): Uint8Array {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
+}
+
+function normalizeParagraphSpacing(spacing?: {
+  before?: number;
+  after?: number;
+  line?: number;
+}): { before?: number; after?: number; line?: number } | undefined {
+  if (!spacing) return;
+
+  const result: {
+    before?: number;
+    after?: number;
+    line?: number;
+  } = {};
+
+  if (spacing.before && spacing.before > 0)
+    result.before = Math.max(spacing.before, 40);
+
+  if (spacing.after && spacing.after > 0)
+    result.after = Math.max(spacing.after, 40);
+
+  if (spacing.line && spacing.line > 0)
+    result.line = Math.max(spacing.line, 240);
+
+  return Object.keys(result).length ? result : undefined;
 }

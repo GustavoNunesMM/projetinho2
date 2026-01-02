@@ -78,7 +78,6 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     try {
       Toast({ message: "Importando cabeçalho..." });
       const headerContent = await importHeaderFromDocx(file);
-      console.log(headerContent);
       setImportedHeader(headerContent);
       setHeaderFileName(file.name);
       Toast({ message: "Cabeçalho importado com sucesso!" });

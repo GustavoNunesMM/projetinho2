@@ -7,7 +7,7 @@ import { deleteAllMessages } from "@/database/database";
 import { Toast } from "@/components/common/Toast";
 import { Message, MessageFormData } from "@/types/messages";
 import { useMessages } from "@/hooks/useMessages";
-
+import DevOnly from "@/components/common/DevOnly";
 const MessagesTab = () => {
   const {
     messages,
@@ -149,13 +149,15 @@ const MessagesTab = () => {
           >
             {importing ? "Importando..." : "Importar"}
           </Button>
-          <Button
-            variant="light-danger"
-            onClick={() => deleteAllMessages()}
-            className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
-          >
-            Deletar questões
-          </Button>
+          <DevOnly>
+            <Button
+              variant="light-danger"
+              onClick={() => deleteAllMessages()}
+              className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
+            >
+              Deletar questões
+            </Button>
+          </DevOnly>
           <Button
             variant="custom"
             icon={Plus}
