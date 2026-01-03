@@ -9,9 +9,11 @@ import {
   Sparkles,
   Upload,
   List,
+  Download,
 } from "lucide-react";
 import QuestionCard from "./QuestionCard";
 import QuestionModal from "./QuestionModal";
+import ImportQuestionsModal from "./ImportQuestionsModal";
 import QuestionFilters from "@/components/Tabs/generate/QuestionFilters";
 import { useImportHandlers } from "@/hooks/useImportHandlers";
 import Button from "@/components/common/Button";
@@ -46,6 +48,7 @@ const QuestionsTab = () => {
   );
   const [importing, setImporting] = useState(false);
   const [showDriveModal, setShowDriveModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { importQuestions, driveClient } = useImportHandlers();
@@ -102,8 +105,24 @@ const QuestionsTab = () => {
       case "import":
         fileInputRef.current?.click();
         break;
+      case "import-drive":
+        setShowDriveModal(true);
+        break;
+      case "import-community":
+        setShowImportModal(true);
+        break;
       default:
         break;
+    }
+  };
+
+  const handleImportFromCommunity = async (questionData: QuestionFormData) => {
+    try {
+      await addQuestion(questionData);
+      Toast({ message: "Questão importada com sucesso!" });
+    } catch (error: any) {
+      Toast({ message: `Erro ao importar: ${error.message}` });
+      throw error;
     }
   };
 
@@ -216,6 +235,16 @@ const QuestionsTab = () => {
 
             <Button
               variant="custom"
+              icon={Download}
+              onClick={() => setShowImportModal(true)}
+              disabled={importing}
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
+            >
+              Importar da Comunidade
+            </Button>
+
+            <Button
+              variant="custom"
               icon={Plus}
               onClick={() => {
                 setSelectedQuestion(null);
@@ -236,6 +265,11 @@ const QuestionsTab = () => {
                 title: "Importar do Drive",
                 icon: Cloud,
                 isDisabled: !driveClient.ready || !driveClient.authorized,
+              },
+              {
+                key: "import-community",
+                title: "Importar da Comunidade",
+                icon: Download,
               },
             ]}
             triggerIcon={List}
@@ -328,6 +362,14 @@ const QuestionsTab = () => {
           onSelect={handleDriveImport}
           onClose={() => setShowDriveModal(false)}
           driveClient={driveClient}
+        />
+      )}
+
+      {showImportModal && (
+        <ImportQuestionsModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImport={handleImportFromCommunity}
         />
       )}
     </div>

@@ -84,7 +84,6 @@ export class SyncService {
       );
       const localMap = new Map(localQuestions.map((q) => [Number(q.id), q]));
 
-      // Upload: enviar questões locais que não existem no remoto
       for (const local of localQuestions) {
         const remote = remoteMap.get(local.id);
 
@@ -100,12 +99,14 @@ export class SyncService {
               subject: local.subject,
               category: local.category,
               type: local.type,
-              options: typeof local.options === 'string' 
-                ? JSON.parse(local.options) 
-                : local.options,
-              option_images: typeof local.optionImages === 'string'
-                ? JSON.parse(local.optionImages || "[]")
-                : local.optionImages || [],
+              options:
+                typeof local.options === "string"
+                  ? JSON.parse(local.options)
+                  : local.options,
+              option_images:
+                typeof local.optionImages === "string"
+                  ? JSON.parse(local.optionImages || "[]")
+                  : local.optionImages || [],
               correct_answer: local.correctAnswer,
               explanation: local.explanation,
               imported_from: local.importedFrom,
@@ -127,7 +128,6 @@ export class SyncService {
         }
       }
 
-      // Download: baixar questões remotas que não existem no local
       for (const remote of remoteQuestions || []) {
         const remoteId = Number(remote.id);
         const local = localMap.get(remoteId);
@@ -192,11 +192,8 @@ export class SyncService {
       const remoteMap = new Map(
         (remoteLayouts || []).map((l) => [Number(l.id), l])
       );
-      const localMap = new Map(
-        localLayouts.map((l) => [Number(l.id), l])
-      );
+      const localMap = new Map(localLayouts.map((l) => [Number(l.id), l]));
 
-      // Upload: enviar layouts locais que não existem no remoto
       for (const local of localLayouts) {
         const remote = remoteMap.get(local.id);
 
@@ -235,7 +232,6 @@ export class SyncService {
         }
       }
 
-      // Download: baixar layouts remotos que não existem no local
       for (const remote of remoteLayouts || []) {
         const remoteId = Number(remote.id);
         const local = localMap.get(remoteId);
@@ -293,11 +289,8 @@ export class SyncService {
       const remoteMap = new Map(
         (remoteMessages || []).map((m) => [Number(m.id), m])
       );
-      const localMap = new Map(
-        localMessages.map((m) => [Number(m.id), m])
-      );
+      const localMap = new Map(localMessages.map((m) => [Number(m.id), m]));
 
-      // Upload: enviar mensagens locais que não existem no remoto
       for (const local of localMessages) {
         const remote = remoteMap.get(local.id);
 
@@ -308,8 +301,8 @@ export class SyncService {
               user_id: this.userId,
               title: local.title,
               items: local.items,
-              is_list: local.isList === 1,
-              is_ordered: local.isOrdered === 1,
+              is_list: local.isList,
+              is_ordered: local.isOrdered,
               created_at: local.createdAt,
             });
 
@@ -328,7 +321,6 @@ export class SyncService {
         }
       }
 
-      // Download: baixar mensagens remotas que não existem no local
       for (const remote of remoteMessages || []) {
         const remoteId = Number(remote.id);
         const local = localMap.get(remoteId);

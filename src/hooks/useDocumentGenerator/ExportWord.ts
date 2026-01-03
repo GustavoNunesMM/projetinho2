@@ -151,7 +151,7 @@ export const generateDocx = async (
       })
     );
   }
-
+  sections.push(new Paragraph({ text: "" }));
   if (message) {
     sections.push(
       new Paragraph({
@@ -201,6 +201,7 @@ export const generateDocx = async (
       });
     }
   }
+  sections.push(new Paragraph({ text: "" }));
   if (gabaritoData && gabaritoData.questoes.length > 0) {
     const cols = gabaritoData.questoes[0].alternativas.length;
     const cellWidth = convertInchesToTwip(1.0 / 2.54);
@@ -296,9 +297,11 @@ export const generateDocx = async (
           insideHorizontal: { style: "single", size: 1, color: "000000" },
           insideVertical: { style: "single", size: 1, color: "000000" },
         },
+        alignment: AlignmentType.CENTER,
       })
     );
   }
+  sections.push(new Paragraph({ text: "" }));
 
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
