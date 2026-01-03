@@ -19,7 +19,7 @@ export const UpdateNotification: React.FC = () => {
 
   const handleUpdateClick = () => {
     setShowModal(true);
-    setShowNotification(false);
+    setShowNotification(true);
   };
 
   const handleUpdate = async () => {

@@ -26,7 +26,7 @@ const QuestionFilters = ({
   ];
 
   const difficultyOptions = [
-    { value: "", label: "all" },
+    { value: "", label: "Todas" },
     { value: "facil", label: "Fácil" },
     { value: "media", label: "Média" },
     { value: "dificil", label: "Difícil" },
@@ -44,7 +44,6 @@ const QuestionFilters = ({
         <h3 className="text-lg font-semibold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
           Filtros
         </h3>
-
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
