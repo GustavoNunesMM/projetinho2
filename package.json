@@ -1,7 +1,7 @@
 {
   "name": "vite-template",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,7 @@
     "tauri:dev": "pnpm run dev & pnpm exec tauri dev",
     "tauri:build": "pnpm run build && pnpm exec tauri build"
   },
-   "dependencies": {
+  "dependencies": {
     "@heroui/react": "^2.8.5",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -26,8 +26,7 @@
     "@tauri-apps/plugin-sql": "^2.3.1",
     "@tauri-apps/plugin-updater": "~2",
     "better-sqlite3": "^12.4.1",
-        "@tailwindcss/postcss": "4.1.11",
-
+    "@tailwindcss/postcss": "4.1.11",
     "clsx": "2.1.1",
     "docx": "9.5.1",
     "exceljs": "^4.4.0",
@@ -36,7 +35,6 @@
     "framer-motion": "11.18.2",
     "jspdf": "^3.0.3",
     "docx-preview": "^0.3.7",
-
     "jspdf-autotable": "^5.0.2",
     "jszip": "^3.10.1",
     "lucide-react": "^0.548.0",
