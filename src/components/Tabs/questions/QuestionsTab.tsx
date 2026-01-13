@@ -25,7 +25,7 @@ import { DriveFile, DriveFileSelectorProps } from "@/types/drive";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useFilters } from "@/hooks/useFilters";
 import DevOnly from "@/components/common/DevOnly";
-import DeleteModal from "@/components/Tabs/generate/modal/DeleteModal";
+import DeleteModal from "@/components/modal/DeleteModal";
 import DropDown from "@/components/common/Dropdown";
 
 const QuestionsTab = () => {

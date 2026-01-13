@@ -7,6 +7,7 @@ import {
   Layout,
   List,
   MessageSquare,
+  NotebookText,
   User,
   Database,
 } from "lucide-react";
@@ -45,7 +46,7 @@ const Header = () => {
   const tabs = [
     {
       key: "generate",
-      title: "Gerar Questões",
+      title: "Gerar prova",
       icon: Sparkles,
       description: "Criar novas questões com IA",
     },
@@ -65,7 +66,13 @@ const Header = () => {
       key: "messages",
       title: "Mensagens",
       icon: MessageSquare,
-      description: "Central de comunicação",
+      description: "Criar notas",
+    },
+    {
+      key: "proves",
+      title: "Testes",
+      icon: NotebookText,
+      description: "Testes já feitos",
     },
   ];
   function handleUserAction(key: string) {
@@ -134,7 +141,7 @@ const Header = () => {
               triggerIcon={tabs.find((t) => t.key === activeTab)?.icon || List}
               placement="bottom-end"
               onAction={handleTabsAction}
-              className="md:hidden"
+              className="md:hidden w-full mx-4"
             />
           </div>
 

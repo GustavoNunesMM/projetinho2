@@ -1,18 +1,19 @@
 import { useEffect } from "react";
 
-import Container from "@/components/layout/Container.tsx";
-import LayoutsTab from "@/components/Tabs/layouts/LayoutsTab.tsx";
-import QuestionsTab from "@/components/Tabs/questions/QuestionsTab.tsx";
-import GenerateTab from "@/components/Tabs/generate/GenerateTab.tsx";
-import MessageTab from "@/components/Tabs/MessageTab/MessageTab.tsx";
-import { useLayouts } from "@/hooks/useLayouts.ts";
-import { useQuestions } from "@/hooks/useQuestions.ts";
-import { useImportHandlers } from "@/hooks/useImportHandlers.ts";
+import Container from "@/components/layout/Container";
+import LayoutsTab from "@/components/Tabs/layouts/LayoutsTab";
+import QuestionsTab from "@/components/Tabs/questions/QuestionsTab";
+import GenerateTab from "@/components/Tabs/generate/GenerateTab";
+import MessageTab from "@/components/Tabs/MessageTab/MessageTab";
+import { useLayouts } from "@/hooks/useLayouts";
+import { useQuestions } from "@/hooks/useQuestions";
+import { useImportHandlers } from "@/hooks/useImportHandlers";
 import { Loader } from "lucide-react";
-import { Toast } from "@/components/common/Toast.tsx";
+import { Toast } from "@/components/common/Toast";
 import { LayoutFormData } from "@/types/layout";
 import { extractWordLayoutInfo } from "@/hooks/useDocumentGenerator/ExportWord";
 import { useTab } from "@/contexts/TabContext";
+import TestTab from "@/components/Tabs/Tests/TestTab";
 
 const Home = () => {
   const { activeTab } = useTab();
@@ -33,7 +34,7 @@ const Home = () => {
 
   useEffect(() => {
     refreshQuestions();
-  }, [ questions.length, layouts.length]);
+  }, [questions.length, layouts.length]);
 
   const handleImportLayout = async (file: File) => {
     try {
@@ -93,12 +94,17 @@ const Home = () => {
           />
         </div>
 
-        <div className={activeTab === "questions" ? "animate-fadeIn" : "hidden"}>
+        <div
+          className={activeTab === "questions" ? "animate-fadeIn" : "hidden"}
+        >
           <QuestionsTab />
         </div>
 
         <div className={activeTab === "messages" ? "animate-fadeIn" : "hidden"}>
           <MessageTab />
+        </div>
+        <div className={activeTab === "proves" ? "animate-fadeIn" : "hidden"}>
+          <TestTab />
         </div>
       </Container>
     </div>

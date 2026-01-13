@@ -3,11 +3,11 @@ import { Plus, Upload, Layout, Layers, List } from "lucide-react";
 import Button from "@/components/common/Button.tsx";
 import LayoutCard from "./LayoutCard.tsx";
 import LayoutModal from "./LayoutModal.tsx";
-import DeleteModal from "@/components/Tabs/generate/modal/DeleteModal";
+import DeleteModal from "@/components/modal/DeleteModal";
 import DropDown from "@/components/common/Dropdown";
-import { Layout as LayoutType, LayoutFormData } from "@/types/layout.ts";
-import { deleteAllLayout } from "@/database/database.ts";
-import DevOnly from "@/components/common/DevOnly.tsx";
+import { Layout as LayoutType, LayoutFormData } from "@/types/layout";
+import { deleteAllLayout } from "@/database/database";
+import DevOnly from "@/components/common/DevOnly";
 
 interface LayoutsTabProps {
   layouts: LayoutType[];

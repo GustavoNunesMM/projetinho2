@@ -15,7 +15,7 @@ import { Toast } from "@/components/common/Toast";
 import { Message, MessageFormData } from "@/types/messages";
 import { useMessages } from "@/hooks/useMessages";
 import DevOnly from "@/components/common/DevOnly";
-import DeleteModal from "@/components/Tabs/generate/modal/DeleteModal";
+import DeleteModal from "@/components/modal/DeleteModal";
 import DropDown from "@/components/common/Dropdown";
 const MessagesTab = () => {
   const {

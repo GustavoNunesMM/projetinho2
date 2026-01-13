@@ -12,18 +12,18 @@ import {
   ClipboardList,
   Sparkles,
 } from "lucide-react";
-import Button from "@/components/common/Button.tsx";
-import { useDocumentGenerator } from "@/hooks/useDocumentGenerator.ts";
-import { useDriveClient } from "@/hooks/useDriveClient.ts";
-import { useMessages } from "@/hooks/useMessages.ts";
+import Button from "@/components/common/Button";
+import { useDocumentGenerator } from "@/hooks/useDocumentGenerator";
+import { useDriveClient } from "@/hooks/useDriveClient";
+import { useMessages } from "@/hooks/useMessages";
 import { Layout } from "@/types/layout";
 import { Question } from "@/types/question";
 import { Message } from "@/types/messages";
-import { Toast } from "@/components/common/Toast.tsx";
-import MessagesModal from "./modal/MessagesModal";
-import PreviewModal from "./modal/PreviewModal";
+import { Toast } from "@/components/common/Toast";
+import MessagesModal from "@/components/modal/MessagesModal";
+import PreviewModal from "@/components/modal/PreviewModal";
 import { useGabarito } from "@/hooks/useGabarito";
-import { GabaritoModal } from "./modal/GabaritoModal";
+import { GabaritoModal } from "@/components/modal/GabaritoModal";
 import { GabaritoData } from "@/types/question";
 
 interface DocumentGeneratorProps {
@@ -193,6 +193,37 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       });
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleSaveFromPreview = async (blob: Blob) => {
+    try {
+      const fileName = `prova_${Date.now()}.docx`;
+      saveFile(blob, fileName);
+
+      if (driveClient.authorized) {
+        const shouldSaveToDrive = confirm(
+          "Documento salvo! Deseja também salvá-lo no Google Drive?"
+        );
+        if (shouldSaveToDrive) {
+          await driveClient.createDocxFile(fileName, blob);
+          Toast({ message: "Documento salvo localmente e no Google Drive!" });
+        } else {
+          Toast({
+            message: `Documento DOCX salvo com sucesso!`,
+          });
+        }
+      } else {
+        Toast({
+          message: `Documento DOCX salvo com sucesso!`,
+        });
+      }
+    } catch (error: any) {
+      console.error("Erro ao salvar documento:", error);
+      Toast({
+        message: `Erro ao salvar documento: ${error.message}`,
+        color: "danger",
+      });
     }
   };
 
@@ -397,6 +428,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         setIsPreviewOpen={setIsPreviewOpen}
         previewBlob={previewBlob}
         setPreviewUrl={setPreviewUrl}
+        onSave={handleSaveFromPreview}
       />
       {gabaritoData && (
         <GabaritoModal

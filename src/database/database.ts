@@ -37,6 +37,22 @@ export interface Layout {
   created_at?: string;
 }
 
+export interface TestDB {
+  id: number;
+  title: string;
+  description: string;
+  filePath: string;
+  fileName: string;
+  fileSize: number;
+  schoolYear: string;
+  subject: string;
+  quarter: string;
+  schoolUnit: string;
+  category: string;
+  tags: string;
+  createdAt: string;
+  updatedAt: string;
+}
 let db: Database | null = null;
 
 export async function getDatabase(): Promise<Database> {
@@ -52,6 +68,28 @@ async function initializeDatabase(db: Database) {
   await db.execute(`
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
+
+    CREATE TABLE IF NOT EXISTS tests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      filePath TEXT NOT NULL,
+      fileName TEXT NOT NULL,
+      fileSize INTEGER NOT NULL DEFAULT 0,
+      schoolYear TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      quarter TEXT NOT NULL,
+      schoolUnit TEXT NOT NULL,
+      category TEXT NOT NULL,
+      tags TEXT DEFAULT '',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_tests_schoolYear ON tests(schoolYear);
+    CREATE INDEX IF NOT EXISTS idx_tests_subject ON tests(subject);
+    CREATE INDEX IF NOT EXISTS idx_tests_quarter ON tests(quarter);
+    CREATE INDEX IF NOT EXISTS idx_tests_schoolUnit ON tests(schoolUnit);
+    CREATE INDEX IF NOT EXISTS idx_tests_category ON tests(category);
 
     CREATE TABLE IF NOT EXISTS questions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,6 +133,7 @@ async function initializeDatabase(db: Database) {
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
     );
+
   `);
 }
 
@@ -441,6 +480,67 @@ export async function deleteAllMessages(): Promise<void> {
   const db = await getDatabase();
   await db.execute("DELETE FROM messages");
 }
+
+// ==================== CRUD:Tests =====================
+
+export async function getAllTests(): Promise<TestDB[]> {
+  const db = await getDatabase();
+  const result = await db.select<TestDB[]>("SELECT * FROM tests ORDER BY createdAt DESC");
+  return result || [];
+}
+
+export async function insertTest(t: Omit<TestDB, "id" | "createdAt" | "updatedAt"> & { id?: number }): Promise<TestDB> {
+  const db = await getDatabase();
+
+  const hasId = t.id !== undefined && t.id !== null;
+
+  if (hasId) {
+    const existing = await db.select<TestDB[]>("SELECT * FROM tests WHERE id = $1", [t.id]);
+    if (existing && existing.length > 0) {
+      return existing[0];
+    }
+  }
+
+  const columns = hasId
+    ? `id, title, description, filePath, fileName, fileSize, schoolYear, subject, quarter, schoolUnit, category, tags`
+    : `title, description, filePath, fileName, fileSize, schoolYear, subject, quarter, schoolUnit, category, tags`;
+  const placeholders = hasId
+    ? `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12`
+    : `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11`;
+  const values = hasId
+    ? [t.id, t.title, t.description, t.filePath, t.fileName, t.fileSize, t.schoolYear, t.subject, t.quarter, t.schoolUnit, t.category, t.tags || ""]
+    : [t.title, t.description, t.filePath, t.fileName, t.fileSize, t.schoolYear, t.subject, t.quarter, t.schoolUnit, t.category, t.tags || ""];
+
+  const result = await db.execute(`INSERT INTO tests (${columns}) VALUES (${placeholders})`, values);
+
+  const insertedId = hasId ? t.id! : Number(result.lastInsertId);
+
+  const inserted = await db.select<TestDB[]>("SELECT * FROM tests WHERE id = $1", [insertedId]);
+
+  if (!inserted || inserted.length === 0) {
+    throw new Error("Falha ao recuperar prova inserida");
+  }
+
+  return inserted[0];
+}
+
+export async function updateTest(id: number, t: Omit<TestDB, "id" | "createdAt" | "updatedAt">): Promise<void> {
+  const db = await getDatabase();
+
+  await db.execute(
+    `UPDATE tests SET 
+      title = $1, description = $2, filePath = $3, fileName = $4, 
+      fileSize = $5, schoolYear = $6, subject = $7, quarter = $8, 
+      schoolUnit = $9, category = $10, tags = $11, updatedAt = CURRENT_TIMESTAMP
+     WHERE id = $12`,
+    [t.title, t.description, t.filePath, t.fileName, t.fileSize, t.schoolYear, t.subject, t.quarter, t.schoolUnit, t.category, t.tags || "", id]
+  );
+}
+
+export async function deleteTest(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.execute("DELETE FROM tests WHERE id = $1", [id]);
+}
 // ==================== Utilitários ====================
 
 export async function getStatistics() {
@@ -448,6 +548,9 @@ export async function getStatistics() {
 
   const q = await db.select<{ count: number }[]>(
     "SELECT COUNT(*) as count FROM questions"
+  );
+  const t = await db.select<{ count: number }[]>(
+    "SELECT COUNT(*) as count FROM tests"
   );
   const l = await db.select<{ count: number }[]>(
     "SELECT COUNT(*) as count FROM layouts"
@@ -458,6 +561,7 @@ export async function getStatistics() {
 
   return {
     questions: q[0]?.count || 0,
+    tests: t[0]?.count || 0,
     categories: 0,
     layouts: l[0]?.count || 0,
     message: m[0]?.count || 0,
@@ -467,5 +571,7 @@ export async function getStatistics() {
 export async function clearDatabase() {
   const db = await getDatabase();
   await db.execute("DELETE FROM questions");
+  await db.execute("DELETE FROM tests");
   await db.execute("DELETE FROM layouts");
+  await db.execute("DELETE FROM messages");
 }

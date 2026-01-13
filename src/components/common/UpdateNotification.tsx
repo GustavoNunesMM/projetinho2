@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Card, CardBody } from "@heroui/react";
 import Button from "./Button";
 import { Download, X } from "lucide-react";
 import { useUpdater } from "@/hooks/useUpdater";
 import UpdateModal from "./UpdateModal";
 
-export const UpdateNotification: React.FC = () => {
+export const UpdateNotification: FC = () => {
   const { isUpdateAvailable, updateInfo, downloadAndInstallUpdate } =
     useUpdater();
   const [showNotification, setShowNotification] = useState(false);

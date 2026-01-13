@@ -13,6 +13,7 @@ import {
   getAllQuestions,
   getAllLayouts,
   getAllMessages,
+  getAllTests,
 } from "@/database/database";
 import { useAuth } from "@/contexts/AuthContext";
 import Portal from "./Portal";
@@ -28,20 +29,23 @@ function DatabaseViewerModal({
   const [questions, setQuestions] = useState<any[]>([]);
   const [layouts, setLayouts] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
+  const [tests, setTests] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [questionsData, layoutsData, messagesData] = await Promise.all([
+      const [questionsData, layoutsData, messagesData, testsData] = await Promise.all([
         getAllQuestions(),
         getAllLayouts(),
         getAllMessages(),
+        getAllTests(),
       ]);
       setQuestions(questionsData);
       setLayouts(layoutsData);
       setMessages(messagesData);
+      setTests(testsData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
@@ -121,6 +125,9 @@ function DatabaseViewerModal({
                   title={`❓ Questions (${questions.length})`}
                 >
                   {renderData(questions)}
+                </Tab>
+                <Tab key="tests" title={`📝 Tests (${tests.length})`}>
+                  {renderData(tests)}
                 </Tab>
                 <Tab key="layouts" title={`🎨 Layouts (${layouts.length})`}>
                   {renderData(layouts)}

@@ -38,19 +38,25 @@ export class SyncService {
       const questionsResult = await this.syncQuestions();
       const layoutsResult = await this.syncLayouts();
       const messagesResult = await this.syncMessages();
+      const testsResult = await this.syncTests();
 
       result.uploaded =
         questionsResult.uploaded +
         layoutsResult.uploaded +
-        messagesResult.uploaded;
+        messagesResult.uploaded +
+        testsResult.uploaded;
+
       result.downloaded =
         questionsResult.downloaded +
         layoutsResult.downloaded +
-        messagesResult.downloaded;
+        messagesResult.downloaded +
+        testsResult.downloaded;
+
       result.errors = [
         ...questionsResult.errors,
         ...layoutsResult.errors,
         ...messagesResult.errors,
+        ...testsResult.errors
       ];
       result.success = result.errors.length === 0;
     } catch (error: any) {
@@ -347,6 +353,95 @@ export class SyncService {
       result.errors.push(
         `Erro na sincronização de mensagens: ${error.message}`
       );
+    }
+
+    return result;
+  }
+
+  async syncTests(): Promise<SyncResult> {
+    const result: SyncResult = {
+      success: true,
+      uploaded: 0,
+      downloaded: 0,
+      errors: [],
+    };
+
+    try {
+      const localTests = await getAllTests();
+
+      const { data: remoteTests, error: fetchError } = await supabase
+        .from("tests")
+        .select("*")
+        .eq("user_id", this.userId);
+
+      if (fetchError) throw fetchError;
+
+      const remoteMap = new Map((remoteTests || []).map((t) => [Number(t.id), t]));
+      const localMap = new Map(localTests.map((t) => [Number(t.id), t]));
+
+      for (const local of localTests) {
+        const remote = remoteMap.get(local.id);
+
+        if (!remote) {
+          try {
+            const { error } = await supabase.from("tests").insert({
+              id: local.id,
+              user_id: this.userId,
+              title: local.title,
+              description: local.description,
+              file_path: local.filePath,
+              file_name: local.fileName,
+              file_size: local.fileSize,
+              school_year: local.schoolYear,
+              subject: local.subject,
+              quarter: local.quarter,
+              school_unit: local.schoolUnit,
+              category: local.category,
+              tags: local.tags,
+              created_at: local.createdAt,
+              updated_at: local.updatedAt,
+            });
+
+            if (error) {
+              result.errors.push(`Erro ao enviar prova ${local.id}: ${error.message}`);
+            } else {
+              result.uploaded++;
+            }
+          } catch (uploadError: any) {
+            result.errors.push(`Erro ao enviar prova ${local.id}: ${uploadError.message}`);
+          }
+        }
+      }
+
+      for (const remote of remoteTests || []) {
+        const remoteId = Number(remote.id);
+        const local = localMap.get(remoteId);
+
+        if (!local) {
+          try {
+            await insertTest({
+              id: remoteId,
+              title: remote.title,
+              description: remote.description,
+              filePath: remote.file_path,
+              fileName: remote.file_name,
+              fileSize: remote.file_size,
+              schoolYear: remote.school_year,
+              subject: remote.subject,
+              quarter: remote.quarter,
+              schoolUnit: remote.school_unit,
+              category: remote.category,
+              tags: remote.tags,
+            });
+            result.downloaded++;
+          } catch (downloadError: any) {
+            result.errors.push(`Erro ao baixar prova ${remoteId}: ${downloadError.message}`);
+          }
+        }
+      }
+    } catch (error: any) {
+      result.success = false;
+      result.errors.push(`Erro na sincronização de provas: ${error.message}`);
     }
 
     return result;
