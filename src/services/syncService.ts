@@ -4,6 +4,7 @@ import {
   insertQuestion,
   getAllLayouts,
   getAllTests,
+  insertTest,
   insertLayout,
   getAllMessages,
   insertMessage,
@@ -57,7 +58,7 @@ export class SyncService {
         ...questionsResult.errors,
         ...layoutsResult.errors,
         ...messagesResult.errors,
-        ...testsResult.errors
+        ...testsResult.errors,
       ];
       result.success = result.errors.length === 0;
     } catch (error: any) {
@@ -87,7 +88,7 @@ export class SyncService {
       if (fetchError) throw fetchError;
 
       const remoteMap = new Map(
-        (remoteQuestions || []).map((q) => [Number(q.id), q])
+        (remoteQuestions || []).map((q) => [Number(q.id), q]),
       );
       const localMap = new Map(localQuestions.map((q) => [Number(q.id), q]));
 
@@ -122,14 +123,14 @@ export class SyncService {
 
             if (error) {
               result.errors.push(
-                `Erro ao enviar questão ${local.id}: ${error.message}`
+                `Erro ao enviar questão ${local.id}: ${error.message}`,
               );
             } else {
               result.uploaded++;
             }
           } catch (uploadError: any) {
             result.errors.push(
-              `Erro ao enviar questão ${local.id}: ${uploadError.message}`
+              `Erro ao enviar questão ${local.id}: ${uploadError.message}`,
             );
           }
         }
@@ -165,7 +166,7 @@ export class SyncService {
             result.downloaded++;
           } catch (downloadError: any) {
             result.errors.push(
-              `Erro ao baixar questão ${remoteId}: ${downloadError.message}`
+              `Erro ao baixar questão ${remoteId}: ${downloadError.message}`,
             );
           }
         }
@@ -197,7 +198,7 @@ export class SyncService {
       if (fetchError) throw fetchError;
 
       const remoteMap = new Map(
-        (remoteLayouts || []).map((l) => [Number(l.id), l])
+        (remoteLayouts || []).map((l) => [Number(l.id), l]),
       );
       const localMap = new Map(localLayouts.map((l) => [Number(l.id), l]));
 
@@ -226,14 +227,14 @@ export class SyncService {
 
             if (error) {
               result.errors.push(
-                `Erro ao enviar layout ${local.id}: ${error.message}`
+                `Erro ao enviar layout ${local.id}: ${error.message}`,
               );
             } else {
               result.uploaded++;
             }
           } catch (uploadError: any) {
             result.errors.push(
-              `Erro ao enviar layout ${local.id}: ${uploadError.message}`
+              `Erro ao enviar layout ${local.id}: ${uploadError.message}`,
             );
           }
         }
@@ -263,7 +264,7 @@ export class SyncService {
             result.downloaded++;
           } catch (downloadError: any) {
             result.errors.push(
-              `Erro ao baixar layout ${remoteId}: ${downloadError.message}`
+              `Erro ao baixar layout ${remoteId}: ${downloadError.message}`,
             );
           }
         }
@@ -294,7 +295,7 @@ export class SyncService {
       if (fetchError) throw fetchError;
 
       const remoteMap = new Map(
-        (remoteMessages || []).map((m) => [Number(m.id), m])
+        (remoteMessages || []).map((m) => [Number(m.id), m]),
       );
       const localMap = new Map(localMessages.map((m) => [Number(m.id), m]));
 
@@ -315,14 +316,14 @@ export class SyncService {
 
             if (error) {
               result.errors.push(
-                `Erro ao enviar mensagem ${local.id}: ${error.message}`
+                `Erro ao enviar mensagem ${local.id}: ${error.message}`,
               );
             } else {
               result.uploaded++;
             }
           } catch (uploadError: any) {
             result.errors.push(
-              `Erro ao enviar mensagem ${local.id}: ${uploadError.message}`
+              `Erro ao enviar mensagem ${local.id}: ${uploadError.message}`,
             );
           }
         }
@@ -344,7 +345,7 @@ export class SyncService {
             result.downloaded++;
           } catch (downloadError: any) {
             result.errors.push(
-              `Erro ao baixar mensagem ${remoteId}: ${downloadError.message}`
+              `Erro ao baixar mensagem ${remoteId}: ${downloadError.message}`,
             );
           }
         }
@@ -352,7 +353,7 @@ export class SyncService {
     } catch (error: any) {
       result.success = false;
       result.errors.push(
-        `Erro na sincronização de mensagens: ${error.message}`
+        `Erro na sincronização de mensagens: ${error.message}`,
       );
     }
 
@@ -377,7 +378,9 @@ export class SyncService {
 
       if (fetchError) throw fetchError;
 
-      const remoteMap = new Map((remoteTests || []).map((t) => [Number(t.id), t]));
+      const remoteMap = new Map(
+        (remoteTests || []).map((t) => [Number(t.id), t]),
+      );
       const localMap = new Map(localTests.map((t) => [Number(t.id), t]));
 
       for (const local of localTests) {
@@ -385,8 +388,11 @@ export class SyncService {
 
         if (!remote) {
           try {
-            const testId = typeof local.id === 'number' ? local.id : parseInt(String(local.id), 10);
-            
+            const testId =
+              typeof local.id === "number"
+                ? local.id
+                : parseInt(String(local.id), 10);
+
             if (isNaN(testId)) {
               result.errors.push(`ID inválido para prova: ${local.id}`);
               continue;
@@ -410,13 +416,17 @@ export class SyncService {
 
             if (error) {
               console.error(`Erro ao enviar prova ${local.id}:`, error);
-              result.errors.push(`Erro ao enviar prova ${local.id}: ${error.message}`);
+              result.errors.push(
+                `Erro ao enviar prova ${local.id}: ${error.message}`,
+              );
             } else {
               result.uploaded++;
             }
           } catch (uploadError: any) {
             console.error(`Erro ao enviar prova ${local.id}:`, uploadError);
-            result.errors.push(`Erro ao enviar prova ${local.id}: ${uploadError.message}`);
+            result.errors.push(
+              `Erro ao enviar prova ${local.id}: ${uploadError.message}`,
+            );
           }
         }
       }
@@ -443,7 +453,9 @@ export class SyncService {
             });
             result.downloaded++;
           } catch (downloadError: any) {
-            result.errors.push(`Erro ao baixar prova ${remoteId}: ${downloadError.message}`);
+            result.errors.push(
+              `Erro ao baixar prova ${remoteId}: ${downloadError.message}`,
+            );
           }
         }
       }
