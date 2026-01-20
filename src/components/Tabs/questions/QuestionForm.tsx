@@ -52,7 +52,6 @@ const QuestionForm = ({ formData, setFormData }: QuestionFormProps) => {
     updateField("optionImages", newImages);
   };
 
-  // Função para adicionar alternativa
   const addOption = () => {
     const newOptions = [...formData.options, ""];
     const newOptionImages = [...formData.optionImages, null];
@@ -60,10 +59,9 @@ const QuestionForm = ({ formData, setFormData }: QuestionFormProps) => {
     updateField("optionImages", newOptionImages);
   };
 
-  // Função para remover alternativa
   const removeOption = (index: number) => {
     if (formData.options.length <= 2) {
-      return; // Não permitir menos que 2 alternativas
+      return; 
     }
 
     const newOptions = formData.options.filter((_, i) => i !== index);
@@ -72,7 +70,6 @@ const QuestionForm = ({ formData, setFormData }: QuestionFormProps) => {
     updateField("options", newOptions);
     updateField("optionImages", newOptionImages);
 
-    // Ajustar resposta correta se necessário
     if (formData.correctAnswer) {
       const currentIndex = formData.correctAnswer.charCodeAt(0) - 65;
       if (currentIndex === index) {

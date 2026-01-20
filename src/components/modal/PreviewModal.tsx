@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { renderAsync } from "docx-preview";
-import { X, Eye, Loader, AlertCircle, Download } from "lucide-react";
+import { X, Eye, Loader, AlertCircle } from "lucide-react";
 
 import Button from "@/components/common/Button";
 import Portal from "@/components/common/Portal";
@@ -11,7 +11,6 @@ interface PreviewModalProps {
   setIsPreviewOpen: (arg: boolean) => void;
   previewBlob: Blob | null;
   setPreviewUrl: (arg: string | null) => void;
-  onSave?: (blob: Blob) => void;
 }
 
 const PreviewModal = ({
@@ -19,7 +18,6 @@ const PreviewModal = ({
   setIsPreviewOpen,
   previewBlob,
   setPreviewUrl,
-  onSave,
 }: PreviewModalProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isRendering, setIsRendering] = useState(true);
@@ -28,7 +26,6 @@ const PreviewModal = ({
   useEffect(() => {
     if (!isPreviewOpen) return;
 
-    // Reset states when modal opens
     setIsRendering(true);
     setRenderError(null);
 
@@ -38,9 +35,7 @@ const PreviewModal = ({
       return;
     }
 
-    // Aguardar o container estar montado
     const renderDocument = async () => {
-      // Small delay to ensure DOM is ready
       await new Promise((resolve) => setTimeout(resolve, 150));
 
       if (!containerRef.current) {
@@ -50,7 +45,6 @@ const PreviewModal = ({
       }
 
       try {
-        // Limpar container antes de renderizar
         containerRef.current.innerHTML = "";
 
         await renderAsync(previewBlob, containerRef.current, undefined, {
@@ -161,18 +155,6 @@ const PreviewModal = ({
             >
               Fechar
             </Button>
-            {previewBlob && onSave && (
-              <Button
-                variant="custom"
-                onClick={() => {
-                  onSave(previewBlob);
-                }}
-                className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Salvar Documento
-              </Button>
-            )}
           </div>
         </div>
       </div>

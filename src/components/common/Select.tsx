@@ -39,6 +39,7 @@ const Select = ({
       selectedKeys={selectedKeys}
       onSelectionChange={handleSelectionChange}
       className={className}
+      aria-label={label || placeholder || "Selecione uma opção"}
     >
       {options?.map((option) => (
         <SelectItem key={option.value}>{option.label}</SelectItem>

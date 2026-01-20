@@ -1,5 +1,6 @@
 import { Search, Filter, X } from "lucide-react";
 import { TestFilters as TestFiltersType } from "@/types/test";
+import Select from "@/components/common/Select";
 
 interface TestFiltersProps {
   filters: TestFiltersType;
@@ -66,70 +67,55 @@ export const TestFilters: React.FC<TestFiltersProps> = ({
           />
         </div>
 
-        <select
+        <Select
           value={filters.schoolYear}
           onChange={(e) => onUpdateFilter("schoolYear", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-        >
-          <option value="">Todos os Anos</option>
-          {uniqueSchoolYears.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "Todos os Anos" },
+            ...uniqueSchoolYears.map((year) => ({ value: year, label: year })),
+          ]}
+          placeholder="Selecione o ano"
+        />
 
-        <select
+        <Select
           value={filters.subject}
           onChange={(e) => onUpdateFilter("subject", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-        >
-          <option value="">Todas as Disciplinas</option>
-          {uniqueSubjects.map((subject) => (
-            <option key={subject} value={subject}>
-              {subject}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "Todas as Disciplinas" },
+            ...uniqueSubjects.map((subject) => ({ value: subject, label: subject })),
+          ]}
+          placeholder="Selecione a disciplina"
+        />
 
-        <select
+        <Select
           value={filters.quarter}
           onChange={(e) => onUpdateFilter("quarter", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-        >
-          <option value="">Todos os Bimestres</option>
-          {uniqueQuarters.map((quarter) => (
-            <option key={quarter} value={quarter}>
-              {quarter}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "Todos os Bimestres" },
+            ...uniqueQuarters.map((quarter) => ({ value: quarter, label: quarter })),
+          ]}
+          placeholder="Selecione o bimestre"
+        />
 
-        <select
+        <Select
           value={filters.schoolUnit}
           onChange={(e) => onUpdateFilter("schoolUnit", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-        >
-          <option value="">Todas as Unidades</option>
-          {uniqueSchoolUnits.map((unit) => (
-            <option key={unit} value={unit}>
-              {unit}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "Todas as Unidades" },
+            ...uniqueSchoolUnits.map((unit) => ({ value: unit, label: unit })),
+          ]}
+          placeholder="Selecione a unidade"
+        />
 
-        <select
+        <Select
           value={filters.category}
           onChange={(e) => onUpdateFilter("category", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-        >
-          <option value="">Todas as Categorias</option>
-          {uniqueCategories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "Todas as Categorias" },
+            ...uniqueCategories.map((category) => ({ value: category, label: category })),
+          ]}
+          placeholder="Selecione a categoria"
+        />
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">

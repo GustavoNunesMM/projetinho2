@@ -70,7 +70,7 @@ const Header = () => {
     },
     {
       key: "proves",
-      title: "Testes",
+      title: "Documentos",
       icon: NotebookText,
       description: "Testes já feitos",
     },

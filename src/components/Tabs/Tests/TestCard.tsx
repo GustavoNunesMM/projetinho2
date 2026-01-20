@@ -27,7 +27,10 @@ export const TestCard: React.FC<TestCardProps> = ({
   const getLayoutPreview = () => {
     if (format === "block") {
       return (
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer group">
+        <div 
+          onClick={() => onView(test)}
+          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer group"
+        >
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all">
@@ -59,6 +62,17 @@ export const TestCard: React.FC<TestCardProps> = ({
               >
                 <Download className="w-4 h-4" />
               </button>
+              {onDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(test);
+                  }}
+                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -91,7 +105,10 @@ export const TestCard: React.FC<TestCardProps> = ({
 
     if (format === "list") {
       return (
-        <div className="bg-white rounded-lg p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+        <div 
+          onClick={() => onView(test)}
+          className="bg-white rounded-lg p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
               <Upload className="w-8 h-8 text-blue-600" />
@@ -142,9 +159,11 @@ export const TestCard: React.FC<TestCardProps> = ({
       );
     }
 
-    // format === "detail"
     return (
-      <div className="bg-white rounded-lg p-6 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+      <div 
+        onClick={() => onView(test)}
+        className="bg-white rounded-lg p-6 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+      >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
             <div className="flex items-start gap-3 mb-3">

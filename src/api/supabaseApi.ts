@@ -219,19 +219,54 @@ export async function getTestByIdSupabase(
   return data ? deserializeTest(data) : null;
 }
 
+export async function uploadTestFileToStorage(
+  file: Blob,
+  fileName: string,
+  userId: string
+): Promise<string> {
+  const filePath = `${userId}/${Date.now()}_${fileName}`;
+
+  const { error } = await supabase.storage
+    .from("tests")
+    .upload(filePath, file, {
+      contentType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      upsert: false,
+    });
+
+  if (error) {
+    // Se o bucket não existir, criar um erro mais descritivo
+    if (
+      error.message.includes("Bucket not found") ||
+      error.message.includes("not found")
+    ) {
+      throw new Error(
+        "Bucket 'tests' não encontrado no Supabase Storage. Crie o bucket 'tests' no Supabase Dashboard.",
+      );
+    }
+    throw error;
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("tests").getPublicUrl(filePath);
+
+  return publicUrl;
+}
+
 export async function insertTestSupabase(
   test: TestFormData,
   userId: string,
   id?: number
 ): Promise<Test> {
+  // Gerar ID se não fornecido (usando timestamp + random para evitar colisões)
+  const testId = id !== undefined ? id : Date.now() + Math.floor(Math.random() * 1000);
+
   const testData: Partial<SupabaseTest> = {
     ...serializeTest(test),
     user_id: userId,
+    id: testId,
   };
-
-  if (id !== undefined) {
-    testData.id = id;
-  }
 
   const { data, error } = await supabase
     .from("tests")
@@ -239,7 +274,11 @@ export async function insertTestSupabase(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error("Erro ao inserir teste no Supabase:", error);
+    console.error("Dados tentados:", testData);
+    throw error;
+  }
 
   return deserializeTest(data);
 }

@@ -140,18 +140,18 @@ async function initializeDatabase(db: Database) {
 // ==================== CRUD: Questões ====================
 
 export async function insertQuestion(
-  q: Omit<Question, "created_at"> & { id?: number }
+  q: Omit<Question, "created_at"> & { id?: number },
 ): Promise<Question> {
   const db = await getDatabase();
 
   const hasId = q.id !== undefined && q.id !== null;
-  
+
   if (hasId) {
     const existing = await db.select<Question[]>(
       "SELECT * FROM questions WHERE id = $1",
-      [q.id]
+      [q.id],
     );
-    
+
     if (existing && existing.length > 0) {
       return existing[0];
     }
@@ -196,14 +196,14 @@ export async function insertQuestion(
 
   const result = await db.execute(
     `INSERT INTO questions (${columns}) VALUES (${placeholders})`,
-    values
+    values,
   );
 
   const insertedId = hasId ? q.id! : Number(result.lastInsertId);
 
   const inserted = await db.select<Question[]>(
     "SELECT * FROM questions WHERE id = $1",
-    [insertedId]
+    [insertedId],
   );
 
   if (!inserted || inserted.length === 0) {
@@ -215,7 +215,7 @@ export async function insertQuestion(
 
 export async function updateQuestion(
   id: number,
-  q: Omit<Question, "id" | "created_at">
+  q: Omit<Question, "id" | "created_at">,
 ): Promise<void> {
   const db = await getDatabase();
 
@@ -239,14 +239,14 @@ export async function updateQuestion(
       q.explanation,
       q.importedFrom || null,
       id,
-    ]
+    ],
   );
 }
 
 export async function getAllQuestions(): Promise<Question[]> {
   const db = await getDatabase();
   const rows = await db.select<Question[]>(
-    "SELECT * FROM questions ORDER BY created_at DESC"
+    "SELECT * FROM questions ORDER BY created_at DESC",
   );
   return rows;
 }
@@ -266,27 +266,27 @@ export async function deleteAllQuestion(): Promise<void> {
 // ==================== CRUD: Layouts ====================
 
 export async function insertLayout(
-  l: Omit<Layout, "created_at"> & { id?: number }
+  l: Omit<Layout, "created_at"> & { id?: number },
 ): Promise<Layout> {
   const db = await getDatabase();
 
   const hasId = l.id !== undefined && l.id !== null;
-  
+
   if (hasId) {
     const existing = await db.select<Layout[]>(
       "SELECT * FROM layouts WHERE id = $1",
-      [l.id]
+      [l.id],
     );
-    
+
     if (existing && existing.length > 0) {
       return existing[0];
     }
   }
 
-  const columns = hasId 
+  const columns = hasId
     ? `id, name, fontSize, fontFamily, lineSpacing, marginTop, marginBottom, marginLeft, marginRight, headerText, headerLocked, footerText, importedFrom`
     : `name, fontSize, fontFamily, lineSpacing, marginTop, marginBottom, marginLeft, marginRight, headerText, headerLocked, footerText, importedFrom`;
-  const placeholders = hasId 
+  const placeholders = hasId
     ? `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13`
     : `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12`;
   const values = hasId
@@ -322,14 +322,14 @@ export async function insertLayout(
 
   const result = await db.execute(
     `INSERT INTO layouts (${columns}) VALUES (${placeholders})`,
-    values
+    values,
   );
 
   const insertedId = hasId ? l.id! : Number(result.lastInsertId);
 
   const inserted = await db.select<Layout[]>(
     "SELECT * FROM layouts WHERE id = $1",
-    [insertedId]
+    [insertedId],
   );
 
   if (!inserted || inserted.length === 0) {
@@ -341,7 +341,7 @@ export async function insertLayout(
 
 export async function updateLayout(
   id: number,
-  l: Omit<Layout, "id" | "created_at">
+  l: Omit<Layout, "id" | "created_at">,
 ): Promise<void> {
   const db = await getDatabase();
 
@@ -365,14 +365,14 @@ export async function updateLayout(
       l.footerText,
       l.importedFrom || null,
       id,
-    ]
+    ],
   );
 }
 
 export async function getAllLayouts(): Promise<Layout[]> {
   const db = await getDatabase();
   const rows = await db.select<Layout[]>(
-    "SELECT * FROM layouts ORDER BY created_at DESC"
+    "SELECT * FROM layouts ORDER BY created_at DESC",
   );
   return rows;
 }
@@ -396,18 +396,18 @@ export async function getAllMessages(): Promise<Message[]> {
 }
 
 export async function insertMessage(
-  message: Omit<Message, "createdAt" | "updatedAt"> & { id?: number }
+  message: Omit<Message, "createdAt" | "updatedAt"> & { id?: number },
 ): Promise<Message> {
   const db = await getDatabase();
-  
+
   const hasId = message.id !== undefined && message.id !== null;
-  
+
   if (hasId) {
     const existing = await db.select<Message[]>(
       "SELECT * FROM messages WHERE id = ?",
-      [message.id]
+      [message.id],
     );
-    
+
     if (existing && existing.length > 0) {
       return existing[0];
     }
@@ -436,13 +436,13 @@ export async function insertMessage(
 
   const result = await db.execute(
     `INSERT INTO messages (${columns}) VALUES (${placeholders})`,
-    values
+    values,
   );
 
   const insertedId = hasId ? message.id! : Number(result.lastInsertId);
   const inserted = await db.select<Message[]>(
     "SELECT * FROM messages WHERE id = ?",
-    [insertedId]
+    [insertedId],
   );
 
   if (!inserted || inserted.length === 0) {
@@ -454,7 +454,7 @@ export async function insertMessage(
 
 export async function updateMessage(
   id: number,
-  message: Omit<Message, "createdAt" | "updatedAt">
+  message: Omit<Message, "createdAt" | "updatedAt">,
 ): Promise<void> {
   const db = await getDatabase();
   await db.execute(
@@ -467,7 +467,7 @@ export async function updateMessage(
       message.isList ? 1 : 0,
       message.isOrdered ? 1 : 0,
       id,
-    ]
+    ],
   );
 }
 
@@ -485,17 +485,25 @@ export async function deleteAllMessages(): Promise<void> {
 
 export async function getAllTests(): Promise<TestDB[]> {
   const db = await getDatabase();
-  const result = await db.select<TestDB[]>("SELECT * FROM tests ORDER BY createdAt DESC");
+  const result = await db.select<TestDB[]>(
+    "SELECT * FROM tests ORDER BY createdAt DESC",
+  );
+  console.log("resultado testes", result);
   return result || [];
 }
 
-export async function insertTest(t: Omit<TestDB, "id" | "createdAt" | "updatedAt"> & { id?: number }): Promise<TestDB> {
+export async function insertTest(
+  t: Omit<TestDB, "id" | "createdAt" | "updatedAt"> & { id?: number },
+): Promise<TestDB> {
   const db = await getDatabase();
 
   const hasId = t.id !== undefined && t.id !== null;
 
   if (hasId) {
-    const existing = await db.select<TestDB[]>("SELECT * FROM tests WHERE id = $1", [t.id]);
+    const existing = await db.select<TestDB[]>(
+      "SELECT * FROM tests WHERE id = $1",
+      [t.id],
+    );
     if (existing && existing.length > 0) {
       return existing[0];
     }
@@ -508,14 +516,46 @@ export async function insertTest(t: Omit<TestDB, "id" | "createdAt" | "updatedAt
     ? `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12`
     : `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11`;
   const values = hasId
-    ? [t.id, t.title, t.description, t.filePath, t.fileName, t.fileSize, t.schoolYear, t.subject, t.quarter, t.schoolUnit, t.category, t.tags || ""]
-    : [t.title, t.description, t.filePath, t.fileName, t.fileSize, t.schoolYear, t.subject, t.quarter, t.schoolUnit, t.category, t.tags || ""];
+    ? [
+        t.id,
+        t.title,
+        t.description,
+        t.filePath,
+        t.fileName,
+        t.fileSize,
+        t.schoolYear,
+        t.subject,
+        t.quarter,
+        t.schoolUnit,
+        t.category,
+        t.tags || "",
+      ]
+    : [
+        t.title,
+        t.description,
+        t.filePath,
+        t.fileName,
+        t.fileSize,
+        t.schoolYear,
+        t.subject,
+        t.quarter,
+        t.schoolUnit,
+        t.category,
+        t.tags || "",
+      ];
 
-  const result = await db.execute(`INSERT INTO tests (${columns}) VALUES (${placeholders})`, values);
+  const result = await db.execute(
+    `INSERT INTO tests (${columns}) VALUES (${placeholders})`,
+    values,
+  );
+  console.log("resultado insercao teste", result);
 
   const insertedId = hasId ? t.id! : Number(result.lastInsertId);
 
-  const inserted = await db.select<TestDB[]>("SELECT * FROM tests WHERE id = $1", [insertedId]);
+  const inserted = await db.select<TestDB[]>(
+    "SELECT * FROM tests WHERE id = $1",
+    [insertedId],
+  );
 
   if (!inserted || inserted.length === 0) {
     throw new Error("Falha ao recuperar prova inserida");
@@ -524,7 +564,10 @@ export async function insertTest(t: Omit<TestDB, "id" | "createdAt" | "updatedAt
   return inserted[0];
 }
 
-export async function updateTest(id: number, t: Omit<TestDB, "id" | "createdAt" | "updatedAt">): Promise<void> {
+export async function updateTest(
+  id: number,
+  t: Omit<TestDB, "id" | "createdAt" | "updatedAt">,
+): Promise<void> {
   const db = await getDatabase();
 
   await db.execute(
@@ -533,7 +576,20 @@ export async function updateTest(id: number, t: Omit<TestDB, "id" | "createdAt" 
       fileSize = $5, schoolYear = $6, subject = $7, quarter = $8, 
       schoolUnit = $9, category = $10, tags = $11, updatedAt = CURRENT_TIMESTAMP
      WHERE id = $12`,
-    [t.title, t.description, t.filePath, t.fileName, t.fileSize, t.schoolYear, t.subject, t.quarter, t.schoolUnit, t.category, t.tags || "", id]
+    [
+      t.title,
+      t.description,
+      t.filePath,
+      t.fileName,
+      t.fileSize,
+      t.schoolYear,
+      t.subject,
+      t.quarter,
+      t.schoolUnit,
+      t.category,
+      t.tags || "",
+      id,
+    ],
   );
 }
 
@@ -547,16 +603,16 @@ export async function getStatistics() {
   const db = await getDatabase();
 
   const q = await db.select<{ count: number }[]>(
-    "SELECT COUNT(*) as count FROM questions"
+    "SELECT COUNT(*) as count FROM questions",
   );
   const t = await db.select<{ count: number }[]>(
-    "SELECT COUNT(*) as count FROM tests"
+    "SELECT COUNT(*) as count FROM tests",
   );
   const l = await db.select<{ count: number }[]>(
-    "SELECT COUNT(*) as count FROM layouts"
+    "SELECT COUNT(*) as count FROM layouts",
   );
   const m = await db.select<{ count: number }[]>(
-    "SELECT COUNT(*) as count FROM messages"
+    "SELECT COUNT(*) as count FROM messages",
   );
 
   return {

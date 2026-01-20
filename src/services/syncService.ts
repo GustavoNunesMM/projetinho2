@@ -3,6 +3,7 @@ import {
   getAllQuestions,
   insertQuestion,
   getAllLayouts,
+  getAllTests,
   insertLayout,
   getAllMessages,
   insertMessage,
@@ -384,30 +385,37 @@ export class SyncService {
 
         if (!remote) {
           try {
+            const testId = typeof local.id === 'number' ? local.id : parseInt(String(local.id), 10);
+            
+            if (isNaN(testId)) {
+              result.errors.push(`ID inválido para prova: ${local.id}`);
+              continue;
+            }
+
             const { error } = await supabase.from("tests").insert({
-              id: local.id,
+              id: testId,
               user_id: this.userId,
               title: local.title,
-              description: local.description,
+              description: local.description || "",
               file_path: local.filePath,
               file_name: local.fileName,
-              file_size: local.fileSize,
+              file_size: local.fileSize || 0,
               school_year: local.schoolYear,
               subject: local.subject,
               quarter: local.quarter,
               school_unit: local.schoolUnit,
               category: local.category,
-              tags: local.tags,
-              created_at: local.createdAt,
-              updated_at: local.updatedAt,
+              tags: local.tags || "",
             });
 
             if (error) {
+              console.error(`Erro ao enviar prova ${local.id}:`, error);
               result.errors.push(`Erro ao enviar prova ${local.id}: ${error.message}`);
             } else {
               result.uploaded++;
             }
           } catch (uploadError: any) {
+            console.error(`Erro ao enviar prova ${local.id}:`, uploadError);
             result.errors.push(`Erro ao enviar prova ${local.id}: ${uploadError.message}`);
           }
         }

@@ -65,7 +65,7 @@ const TestTab = () => {
   };
 
   const handleDownloadTest = (test: Test) => {
-    // Implementar lógica de download
+    
     Toast({ message: `Baixando ${test.fileName}...` });
   };
 
@@ -220,32 +220,34 @@ const TestTab = () => {
           onDownload={handleDownloadTest}
           onDelete={(test) => {
             setSelectedTest(test);
-            setShowModal(false);
             setDeleteModal(true);
           }}
         />
       )}
 
-      {deleteModal && selectedTest && (
-        <DeleteModal
-          onClose={() => {
-            setSelectedTest(null);
-            setDeleteModal(false);
-          }}
-          onSubmit={async () => {
+      <DeleteModal
+        isOpen={deleteModal && !!selectedTest}
+        onClose={() => {
+          setDeleteModal(false);
+        }}
+        onSubmit={async () => {
+          if (selectedTest) {
             try {
               await deleteTest(selectedTest.id);
               setDeleteModal(false);
+              setShowModal(false); 
               setSelectedTest(null);
               Toast({ message: "Prova deletada com sucesso!" });
             } catch (error) {
-              Toast({ message: `Erro ao deletar prova: ${(error as Error).message}` });
+              Toast({
+                message: `Erro ao deletar prova: ${(error as Error).message}`,
+              });
             }
-          }}
-          elementName={selectedTest.title}
-          type="test"
-        />
-      )}
+          }
+        }}
+        elementName={selectedTest?.title || ""}
+        type="test"
+      />
     </div>
   );
 };

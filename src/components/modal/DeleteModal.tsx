@@ -3,6 +3,7 @@ import Portal from "@/components/common/Portal";
 import Button from "@/components/common/Button";
 
 interface DeleteModalProps {
+  isOpen?: boolean;
   onClose: () => void;
   onSubmit: () => void;
   elementName: string;
@@ -10,11 +11,13 @@ interface DeleteModalProps {
 }
 
 const DeleteModal = ({
+  isOpen = true,
   onClose,
   onSubmit,
   elementName,
   type = "question",
 }: DeleteModalProps) => {
+  if (!isOpen) return null;
   const getEntityName = () => {
     switch (type) {
       case "question":

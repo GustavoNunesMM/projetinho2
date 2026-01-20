@@ -188,7 +188,6 @@ export default function DevTools() {
     }
 
     try {
-      // Força recriação do banco
       await getDatabase();
       console.log("🔄 Schema recriado");
       alert("✅ Schema recriado! Recarregue a página.");

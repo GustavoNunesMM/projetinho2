@@ -25,6 +25,11 @@ import PreviewModal from "@/components/modal/PreviewModal";
 import { useGabarito } from "@/hooks/useGabarito";
 import { GabaritoModal } from "@/components/modal/GabaritoModal";
 import { GabaritoData } from "@/types/question";
+import { SaveTestModal } from "@/components/modal/SaveTestModal";
+import { useTests } from "@/hooks/useTests";
+import { TestFormData } from "@/types/test";
+import { uploadTestFileToStorage, insertTestSupabase } from "@/api/supabaseApi";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DocumentGeneratorProps {
   selectedLayout: Layout | null;
@@ -48,14 +53,19 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   const [gabaritoData, setGabaritoData] = useState<GabaritoData | null>(null);
   const [isGabaritoModalOpen, setIsGabaritoModalOpen] = useState(false);
   const [haveValidQuestion, sethaveValidQuestion] = useState(false);
+  const [isSaveTestModalOpen, setIsSaveTestModalOpen] = useState(false);
+  const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
+  const [pendingFileName, setPendingFileName] = useState<string>("");
   const { gerarGabarito } = useGabarito();
   const { generateDocx, generatePdf, importHeaderFromDocx, saveFile } =
     useDocumentGenerator();
   const { messages, loading: loadingMessages } = useMessages();
+  const { addTest } = useTests();
+  const { user, isAuthenticated } = useAuth();
   const driveClient = useDriveClient();
 
   const selectedQuestionsData = questions.filter((q) =>
-    selectedQuestions.includes(q.id)
+    selectedQuestions.includes(q.id),
   );
   const selectedCount = selectedQuestionsData.length;
 
@@ -65,7 +75,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   }, [selectedQuestionsData]);
 
   const handleImportHeader = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -132,27 +142,35 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           selectedLayout,
           importedHeader || undefined,
           selectedMessage || undefined,
-          gabaritoData || undefined
+          gabaritoData || undefined,
         );
         fileName = `prova_${Date.now()}.docx`;
       } else {
         blob = await generatePdf(
           selectedQuestionsData,
           selectedLayout,
-          importedHeader || undefined
+          importedHeader || undefined,
         );
         fileName = `prova_${Date.now()}.pdf`;
       }
 
       saveFile(blob, fileName);
 
+      if (format === "docx") {
+        setPendingBlob(blob);
+        setPendingFileName(fileName);
+        setIsSaveTestModalOpen(true);
+      }
+
       if (format === "docx" && driveClient.authorized) {
-        const shouldSaveToDrive = confirm(
-          "Documento gerado! Deseja também salvá-lo no Google Drive?"
-        );
-        if (shouldSaveToDrive) {
+        try {
           await driveClient.createDocxFile(fileName, blob);
           Toast({ message: "Documento salvo localmente e no Google Drive!" });
+        } catch (driveError) {
+          console.error("Erro ao salvar no Google Drive:", driveError);
+          Toast({
+            message: `Documento ${format.toUpperCase()} gerado com sucesso!`,
+          });
         }
       } else {
         Toast({
@@ -179,7 +197,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         selectedLayout,
         importedHeader || undefined,
         selectedMessage || undefined,
-        gabaritoData || undefined
+        gabaritoData || undefined,
       );
       setPreviewBlob(blob);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -196,22 +214,53 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     }
   };
 
-  const handleSaveFromPreview = async (blob: Blob) => {
+  const handleSaveFromPreview = async () => {
     try {
+      let blobToSave = previewBlob;
+
+      if (!blobToSave) {
+        if (!selectedLayout || selectedCount === 0) {
+          Toast({
+            message: "Selecione questões para gerar o documento!",
+            color: "warning",
+          });
+          return;
+        }
+
+        setGenerating(true);
+        try {
+          blobToSave = await generateDocx(
+            selectedQuestionsData,
+            selectedLayout,
+            importedHeader || undefined,
+            selectedMessage || undefined,
+            gabaritoData || undefined,
+          );
+          setPreviewBlob(blobToSave);
+        } catch (err: any) {
+          Toast({
+            message: `Erro ao gerar documento: ${err.message}`,
+            color: "danger",
+          });
+          return;
+        } finally {
+          setGenerating(false);
+        }
+      }
+
       const fileName = `prova_${Date.now()}.docx`;
-      saveFile(blob, fileName);
+      saveFile(blobToSave, fileName);
+
+      setPendingBlob(blobToSave);
+      setPendingFileName(fileName);
+      setIsSaveTestModalOpen(true);
 
       if (driveClient.authorized) {
-        const shouldSaveToDrive = confirm(
-          "Documento salvo! Deseja também salvá-lo no Google Drive?"
-        );
-        if (shouldSaveToDrive) {
-          await driveClient.createDocxFile(fileName, blob);
+        try {
+          await driveClient.createDocxFile(fileName, blobToSave);
           Toast({ message: "Documento salvo localmente e no Google Drive!" });
-        } else {
-          Toast({
-            message: `Documento DOCX salvo com sucesso!`,
-          });
+        } catch (driveError) {
+          console.error("Erro ao salvar no Google Drive:", driveError);
         }
       } else {
         Toast({
@@ -224,6 +273,81 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         message: `Erro ao salvar documento: ${error.message}`,
         color: "danger",
       });
+    }
+  };
+
+  const handleSaveTest = async (testData: TestFormData) => {
+    try {
+      if (!pendingBlob) {
+        throw new Error("Nenhum arquivo para salvar");
+      }
+
+      let filePath = testData.filePath;
+
+      if (isAuthenticated && user?.id) {
+        try {
+          Toast({ message: "Fazendo upload do arquivo para a nuvem..." });
+          const publicUrl = await uploadTestFileToStorage(
+            pendingBlob,
+            pendingFileName || testData.fileName,
+            user.id,
+          );
+          filePath = publicUrl;
+          Toast({ message: "Arquivo enviado para a nuvem com sucesso!" });
+        } catch (uploadError: any) {
+          console.error("Erro ao fazer upload para Supabase:", uploadError);
+          Toast({
+            message: `Erro ao fazer upload: ${uploadError.message}. Usando armazenamento local.`,
+            color: "warning",
+          });
+          if (!filePath || filePath.startsWith("blob:")) {
+            filePath = URL.createObjectURL(pendingBlob);
+          }
+        }
+      } else {
+        if (!filePath || filePath.startsWith("blob:")) {
+          filePath = URL.createObjectURL(pendingBlob);
+        }
+        Toast({
+          message: "Faça login para salvar arquivos permanentemente na nuvem.",
+        });
+      }
+
+      const testToSave: TestFormData = {
+        ...testData,
+        filePath: filePath,
+        fileName: pendingFileName || testData.fileName,
+        fileSize: pendingBlob.size || testData.fileSize,
+      };
+
+      const savedTest = await addTest(testToSave);
+
+      if (isAuthenticated && user?.id) {
+        try {
+          await insertTestSupabase(testToSave, user.id, savedTest.id);
+          Toast({ message: "Prova sincronizada com a nuvem!" });
+        } catch (supabaseError: any) {
+          console.error("Erro ao salvar no Supabase:", supabaseError);
+          Toast({
+            message: `Prova salva localmente, mas erro ao sincronizar: ${supabaseError.message}`,
+            color: "warning",
+          });
+        }
+      }
+
+      if (!isAuthenticated || !user?.id) {
+        Toast({ message: "Prova salva no banco de dados com sucesso!" });
+      }
+      setIsSaveTestModalOpen(false);
+      setPendingBlob(null);
+      setPendingFileName("");
+    } catch (error: any) {
+      console.error("Erro ao salvar teste:", error);
+      Toast({
+        message: `Erro ao salvar teste: ${error.message}`,
+        color: "danger",
+      });
+      throw error;
     }
   };
 
@@ -428,7 +552,6 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         setIsPreviewOpen={setIsPreviewOpen}
         previewBlob={previewBlob}
         setPreviewUrl={setPreviewUrl}
-        onSave={handleSaveFromPreview}
       />
       {gabaritoData && (
         <GabaritoModal
@@ -438,6 +561,21 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           onConfirm={(cols) => {
             setGabaritoData({ ...gabaritoData, colunasPorLinha: cols });
           }}
+        />
+      )}
+
+      {isSaveTestModalOpen && pendingBlob && (
+        <SaveTestModal
+          isOpen={isSaveTestModalOpen}
+          onClose={() => {
+            setIsSaveTestModalOpen(false);
+            setPendingBlob(null);
+            setPendingFileName("");
+          }}
+          onSave={handleSaveTest}
+          fileName={pendingFileName}
+          fileSize={pendingBlob.size}
+          filePath={URL.createObjectURL(pendingBlob)}
         />
       )}
 
@@ -473,6 +611,14 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         >
           <Eye className="w-4 h-4 mr-2" />
           Visualizar
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleSaveFromPreview}
+          disabled={!selectedLayout || selectedCount === 0 || generating}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Salvar Documento
         </Button>
       </div>
 
