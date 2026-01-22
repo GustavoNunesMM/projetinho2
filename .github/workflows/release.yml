@@ -30,9 +30,17 @@ jobs:
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          shared-key: "v1-cargo-${{ hashFiles('**/Cargo.lock') }}"
 
       - name: Install dependencies
         run: pnpm install
+      
+      - name: Update Rust dependencies
+        run: |
+          cd src-tauri
+          cargo update -p tauri-plugin-dialog -p tauri-plugin-log
 
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
