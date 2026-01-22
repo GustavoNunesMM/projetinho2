@@ -22,6 +22,9 @@ pub fn run() {
         )
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
+            log::info!("Iniciando aplicação Banco de Questões...");
+            log::info!("Versão: {}", app.package_info().version);
+            
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 // Aguardar 5 segundos antes de verificar atualizações
@@ -49,7 +52,11 @@ pub fn run() {
                 }
             });
 
+            log::info!("Setup concluído com sucesso!");
             Ok(())
+        })
+        .on_page_load(|window, _payload| {
+            log::info!("Página carregada na janela: {}", window.label());
         })
         .run(tauri::generate_context!())
         .expect("Erro ao executar aplicação Tauri");

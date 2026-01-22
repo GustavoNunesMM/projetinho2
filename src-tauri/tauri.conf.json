@@ -15,12 +15,17 @@
         "title": "Banco de Questões",
         "width": 1200,
         "height": 800,
-        "resizable": true
+        "resizable": true,
+        "center": true,
+        "decorations": true,
+        "transparent": false,
+        "fullscreen": false
       }
     ],
     "security": {
       "csp": null
-    }
+    },
+    "withGlobalTauri": true
   },
   "bundle": {
     "active": true,
