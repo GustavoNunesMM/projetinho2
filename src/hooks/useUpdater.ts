@@ -67,31 +67,51 @@ export function useUpdater(): UseUpdaterReturn {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      await pendingUpdate.downloadAndInstall((event: any) => {
-        switch (event.event) {
-          case "Started":
-            setDownloadProgress(0);
-            info(`Started downloading ${event.data.contentLength} bytes`);
-            break;
-          case "Progress":
-            const progress = (event.data.chunkLength / event.data.contentLength) * 100;
-            setDownloadProgress(progress);
-            break;
-          case "Finished":
-            setDownloadProgress(100);
-            info("Download finished");
-            break;
+      const progressCallback = (event: any) => {
+        try {
+          switch (event.event) {
+            case "Started":
+              setDownloadProgress(0);
+              info(`Started downloading ${event.data?.contentLength || 0} bytes`);
+              break;
+            case "Progress":
+              if (event.data?.contentLength > 0 && event.data?.chunkLength >= 0) {
+                const progress =
+                  (event.data.chunkLength / event.data.contentLength) * 100;
+                const clampedProgress = Math.min(Math.max(progress, 0), 100);
+                setDownloadProgress(clampedProgress);
+                info(`Progress: ${Math.round(clampedProgress)}%`);
+              }
+              break;
+            case "Finished":
+              setDownloadProgress(100);
+              info("Download and installation finished");
+              break;
+            case "Error":
+              const errorMsg = event.data || "Erro durante download/instalação";
+              info(`Error: ${errorMsg}`);
+              throw new Error(errorMsg);
+          }
+        } catch (err) {
+          throw err;
         }
-      });
+      };
 
+      await pendingUpdate.downloadAndInstall(progressCallback);
+
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      info("Relançando aplicativo após atualização...");
+      setIsDownloading(false);
+      
       await relaunch();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Erro ao instalar atualização";
       setError(message);
-      throw err;
-    } finally {
       setIsDownloading(false);
+      info(`Update error: ${message}`);
+      throw err;
     }
   }, [pendingUpdate]);
 

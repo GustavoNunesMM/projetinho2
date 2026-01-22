@@ -6,8 +6,14 @@ import { useUpdater } from "@/hooks/useUpdater";
 import UpdateModal from "./UpdateModal";
 
 export const UpdateNotification: FC = () => {
-  const { isUpdateAvailable, updateInfo, downloadAndInstallUpdate } =
-    useUpdater();
+  const {
+    isUpdateAvailable,
+    updateInfo,
+    downloadAndInstallUpdate,
+    downloadProgress,
+    isDownloading,
+    error,
+  } = useUpdater();
   const [showNotification, setShowNotification] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -23,7 +29,11 @@ export const UpdateNotification: FC = () => {
   };
 
   const handleUpdate = async () => {
-    await downloadAndInstallUpdate();
+    try {
+      await downloadAndInstallUpdate();
+    } catch (err) {
+      console.error("Erro ao instalar atualização:", err);
+    }
   };
 
   if (!showNotification || !updateInfo) return null;
@@ -59,6 +69,9 @@ export const UpdateNotification: FC = () => {
         onClose={() => setShowModal(false)}
         updateInfo={updateInfo}
         onUpdate={handleUpdate}
+        downloadProgress={downloadProgress}
+        isDownloading={isDownloading}
+        error={error}
       />
     </>
   );

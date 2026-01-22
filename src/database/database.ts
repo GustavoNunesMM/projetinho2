@@ -488,7 +488,6 @@ export async function getAllTests(): Promise<TestDB[]> {
   const result = await db.select<TestDB[]>(
     "SELECT * FROM tests ORDER BY createdAt DESC",
   );
-  console.log("resultado testes", result);
   return result || [];
 }
 

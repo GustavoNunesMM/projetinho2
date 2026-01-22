@@ -15,6 +15,9 @@ interface UpdateModalProps {
   onClose: () => void;
   updateInfo: UpdateInfo | null;
   onUpdate: () => void;
+  downloadProgress?: number;
+  isDownloading?: boolean;
+  error?: string | null;
 }
 
 export interface UpdateInfo {
@@ -31,12 +34,41 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   onClose,
   updateInfo,
   onUpdate,
+  downloadProgress: externalProgress = 0,
+  isDownloading = false,
+  error: externalError = null,
 }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [status, setStatus] = useState<
     "idle" | "downloading" | "installing" | "completed" | "error"
   >("idle");
   const [error, setError] = useState<string | null>(null);
+
+  // Sincronizar progresso e estado externos
+  useEffect(() => {
+    if (externalProgress > 0) {
+      setDownloadProgress(externalProgress);
+    }
+  }, [externalProgress]);
+
+  useEffect(() => {
+    if (isDownloading && status !== "downloading" && status !== "installing") {
+      setStatus("downloading");
+    } else if (!isDownloading && status === "downloading") {
+      setStatus("installing");
+      // Após instalar, marcar como concluído
+      setTimeout(() => {
+        setStatus("completed");
+      }, 2000);
+    }
+  }, [isDownloading, status]);
+
+  useEffect(() => {
+    if (externalError) {
+      setError(externalError);
+      setStatus("error");
+    }
+  }, [externalError]);
 
   useEffect(() => {
     if (!isOpen) {

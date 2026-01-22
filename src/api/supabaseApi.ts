@@ -235,7 +235,6 @@ export async function uploadTestFileToStorage(
     });
 
   if (error) {
-    // Se o bucket não existir, criar um erro mais descritivo
     if (
       error.message.includes("Bucket not found") ||
       error.message.includes("not found")
@@ -259,7 +258,6 @@ export async function insertTestSupabase(
   userId: string,
   id?: number
 ): Promise<Test> {
-  // Gerar ID se não fornecido (usando timestamp + random para evitar colisões)
   const testId = id !== undefined ? id : Date.now() + Math.floor(Math.random() * 1000);
 
   const testData: Partial<SupabaseTest> = {
@@ -268,6 +266,35 @@ export async function insertTestSupabase(
     id: testId,
   };
 
+  if (id !== undefined) {
+    const { data: existingTest, error: checkError } = await supabase
+      .from("tests")
+      .select("id")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single();
+
+    if (existingTest && !checkError) {
+      const { data, error } = await supabase
+        .from("tests")
+        .update({
+          ...serializeTest(test),
+        })
+        .eq("id", id)
+        .eq("user_id", userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Erro ao atualizar teste no Supabase:", error);
+        console.error("Dados tentados:", testData);
+        throw error;
+      }
+
+      return deserializeTest(data);
+    }
+  }
+
   const { data, error } = await supabase
     .from("tests")
     .insert(testData)
@@ -275,6 +302,27 @@ export async function insertTestSupabase(
     .single();
 
   if (error) {
+    if (error.code === "23505" || error.message.includes("duplicate key")) {
+      if (id !== undefined) {
+        const { data: updateData, error: updateError } = await supabase
+          .from("tests")
+          .update({
+            ...serializeTest(test),
+          })
+          .eq("id", id)
+          .eq("user_id", userId)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error("Erro ao atualizar teste no Supabase (após duplicate key):", updateError);
+          throw updateError;
+        }
+
+        return deserializeTest(updateData);
+      }
+    }
+
     console.error("Erro ao inserir teste no Supabase:", error);
     console.error("Dados tentados:", testData);
     throw error;

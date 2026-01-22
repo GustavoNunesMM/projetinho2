@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setUser(null);
         }
-      }
+      },
     );
 
     return () => {
@@ -84,13 +84,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     syncService
       .syncAll()
-      .then(() => {
-        console.log("loadUserFromAuth: Sincronização inicial concluída");
-      })
+
       .catch((error) => {
         console.error(
           "loadUserFromAuth: Erro na sincronização inicial:",
-          error
+          error,
         );
       });
   };
