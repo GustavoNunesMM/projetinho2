@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  release:
+  setup:
     permissions:
       contents: write
     runs-on: windows-latest    
@@ -33,15 +33,24 @@ jobs:
         with:
           workspaces: src-tauri
           shared-key: "v1-cargo-${{ hashFiles('**/Cargo.lock') }}"
-
+  setupDependencies:
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - name: Install dependencies
         run: pnpm install
-      
-      - name: Update Rust dependencies
-        run: |
-          cd src-tauri
-          cargo update -p tauri-plugin-dialog -p tauri-plugin-log
-
+  build:
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
         env:
