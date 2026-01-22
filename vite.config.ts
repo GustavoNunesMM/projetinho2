@@ -6,4 +6,31 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tsconfigPaths(), tailwindcss()],
+  
+  clearScreen: false,
+  
+  server: {
+    port: 5173,
+    strictPort: true,
+    host: "localhost",
+    hmr: {
+      protocol: "ws",
+      host: "localhost",
+      port: 5173,
+    },
+  },
+  
+  build: {
+    outDir: "dist",
+    minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
+    sourcemap: !!process.env.TAURI_DEBUG,
+    target: "esnext",
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
+  
+  envPrefix: ["VITE_", "TAURI_"],
 });
