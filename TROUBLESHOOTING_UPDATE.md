@@ -37,11 +37,13 @@ Procure por:
 2. **Criar e fazer push da tag**:
 ```bash
 git add .
-git commit -m "Bump version to 1.4.0"
+git commit -m "chore: bump version to 1.4.0 e corrigir workflows"
 git tag v1.4.0
 git push origin main
 git push origin v1.4.0
 ```
+
+**Nota**: Agora existe apenas UM workflow (`.github/workflows/release.yml`). O arquivo `main.yml` foi removido para evitar duplicação.
 
 3. **Aguardar o GitHub Actions**:
    - Vá em Actions no GitHub
