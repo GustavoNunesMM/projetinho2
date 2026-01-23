@@ -3,7 +3,7 @@
   "identifier": "bancodequestoes",
   "productName": "Banco de Questões",
   "build": {
-    "beforeBuildCommand": "pnpm run build",
+    "beforeBuildCommand": "node scripts/build-if-needed.js",
     "beforeDevCommand": "pnpm run dev",
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173"

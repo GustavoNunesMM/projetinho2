@@ -42,7 +42,7 @@ jobs:
           cd src-tauri
           cargo update -p tauri-plugin-dialog -p tauri-plugin-log
 
-      - name: Verify frontend build
+      - name: Build frontend
         run: |
           pnpm run build
           if (!(Test-Path "dist/index.html")) { 
@@ -50,6 +50,10 @@ jobs:
             exit 1 
           }
           Write-Host "Build do frontend concluído com sucesso!"
+          Write-Host "Conteúdo do dist/index.html:"
+          Get-Content dist/index.html
+          Write-Host "Arquivos no dist:"
+          Get-ChildItem -Path dist -Recurse | Select-Object FullName | Format-Table -AutoSize
 
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
