@@ -42,6 +42,15 @@ jobs:
           cd src-tauri
           cargo update -p tauri-plugin-dialog -p tauri-plugin-log
 
+      - name: Verify frontend build
+        run: |
+          pnpm run build
+          if (!(Test-Path "dist/index.html")) { 
+            Write-Error "Build falhou: dist/index.html não encontrado"
+            exit 1 
+          }
+          Write-Host "Build do frontend concluído com sucesso!"
+
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -55,4 +64,3 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: --target x86_64-pc-windows-msvc
-          projectPath: src-tauri
