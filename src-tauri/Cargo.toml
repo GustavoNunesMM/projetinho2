@@ -1,6 +1,6 @@
 [package]
 name = "bancodequestoes"
-version = "1.4.9"
+version = "1.4.11"
 description = "Banco de Questões"
 authors = ["Gustavo"]
 edition = "2021"
