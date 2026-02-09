@@ -4,35 +4,41 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react(), tsconfigPaths(), tailwindcss()],
+export default defineConfig(({ mode }) => {
+  const isProduction = mode === "production";
   
-  base: "./",
-  
-  clearScreen: false,
-  
-  server: {
-    port: 5173,
-    strictPort: true,
-    host: "localhost",
-    hmr: {
-      protocol: "ws",
-      host: "localhost",
+  return {
+    plugins: [react(), tsconfigPaths(), tailwindcss()],
+    
+    base: isProduction ? "./" : "/",
+    
+    clearScreen: false,
+    
+    server: {
       port: 5173,
-    },
-  },
-  
-  build: {
-    outDir: "dist",
-    minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
-    sourcemap: !!process.env.TAURI_DEBUG,
-    target: "esnext",
-    rollupOptions: {
-      output: {
-        manualChunks: undefined,
+      strictPort: true,
+      host: "localhost",
+      hmr: {
+        protocol: "ws",
+        host: "localhost",
+        port: 5173,
       },
     },
-  },
-  
-  envPrefix: ["VITE_", "TAURI_"],
+    
+    build: {
+      outDir: "dist",
+      minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
+      sourcemap: !!process.env.TAURI_DEBUG,
+      target: "esnext",
+      assetsDir: "assets",
+      emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        },
+      },
+    },
+    
+    envPrefix: ["VITE_", "TAURI_"],
+  };
 });

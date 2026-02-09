@@ -134,7 +134,84 @@ async function initializeDatabase(db: Database) {
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS document_templates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      filePath TEXT NOT NULL DEFAULT '',
+      fileName TEXT NOT NULL,
+      fileSize INTEGER NOT NULL DEFAULT 0,
+      fileContent TEXT,
+      fields TEXT NOT NULL DEFAULT '[]',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS generated_documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      templateId INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      filePath TEXT NOT NULL DEFAULT '',
+      fileName TEXT NOT NULL,
+      fileContent TEXT,
+      filledFields TEXT NOT NULL DEFAULT '{}',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (templateId) REFERENCES document_templates(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_generated_documents_templateId ON generated_documents(templateId);
+
   `);
+
+  await migrateDatabase(db);
+}
+
+async function migrateDatabase(db: Database) {
+  try {
+    // Verificar se a tabela document_templates existe antes de verificar colunas
+    const tables = await db.select<{ name: string }[]>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='document_templates'",
+    );
+
+    if (tables && tables.length > 0) {
+      const templateColumns = await db.select<{ name: string }[]>(
+        "PRAGMA table_info(document_templates)",
+      );
+      const hasFileContentInTemplates = templateColumns.some(
+        (col) => col.name === "fileContent",
+      );
+
+      if (!hasFileContentInTemplates) {
+        await db.execute(
+          "ALTER TABLE document_templates ADD COLUMN fileContent TEXT",
+        );
+      }
+    }
+
+    // Verificar se a tabela generated_documents existe antes de verificar colunas
+    const generatedTables = await db.select<{ name: string }[]>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='generated_documents'",
+    );
+
+    if (generatedTables && generatedTables.length > 0) {
+      const generatedColumns = await db.select<{ name: string }[]>(
+        "PRAGMA table_info(generated_documents)",
+      );
+      const hasFileContentInGenerated = generatedColumns.some(
+        (col) => col.name === "fileContent",
+      );
+
+      if (!hasFileContentInGenerated) {
+        await db.execute(
+          "ALTER TABLE generated_documents ADD COLUMN fileContent TEXT",
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Erro na migração do banco de dados:", error);
+    // Relançar o erro para que seja visível
+    throw error;
+  }
 }
 
 // ==================== CRUD: Questões ====================
@@ -596,6 +673,207 @@ export async function deleteTest(id: number): Promise<void> {
   const db = await getDatabase();
   await db.execute("DELETE FROM tests WHERE id = $1", [id]);
 }
+
+// ==================== CRUD: Document Templates ====================
+
+export interface DocumentTemplate {
+  id: number;
+  name: string;
+  filePath: string;
+  fileName: string;
+  fileSize: number;
+  fileContent?: string | null;
+  fields: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GeneratedDocument {
+  id: number;
+  templateId: number;
+  name: string;
+  filePath: string;
+  fileName: string;
+  fileContent?: string | null;
+  filledFields: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function insertDocumentTemplate(
+  template: Omit<DocumentTemplate, "id" | "createdAt" | "updatedAt"> & { id?: number },
+): Promise<DocumentTemplate> {
+  const db = await getDatabase();
+
+  const hasId = template.id !== undefined && template.id !== null;
+
+  if (hasId) {
+    const existing = await db.select<DocumentTemplate[]>(
+      "SELECT * FROM document_templates WHERE id = $1",
+      [template.id],
+    );
+
+    if (existing && existing.length > 0) {
+      return existing[0];
+    }
+  }
+
+  const columns = hasId
+    ? `id, name, filePath, fileName, fileSize, fileContent, fields`
+    : `name, filePath, fileName, fileSize, fileContent, fields`;
+  const placeholders = hasId
+    ? `$1, $2, $3, $4, $5, $6, $7`
+    : `$1, $2, $3, $4, $5, $6`;
+  const values = hasId
+    ? [
+        template.id,
+        template.name,
+        template.filePath || "",
+        template.fileName,
+        template.fileSize,
+        template.fileContent || null,
+        template.fields,
+      ]
+    : [
+        template.name,
+        template.filePath || "",
+        template.fileName,
+        template.fileSize,
+        template.fileContent || null,
+        template.fields,
+      ];
+
+  const result = await db.execute(
+    `INSERT INTO document_templates (${columns}) VALUES (${placeholders})`,
+    values,
+  );
+
+  const insertedId = hasId ? template.id! : Number(result.lastInsertId);
+
+  const inserted = await db.select<DocumentTemplate[]>(
+    "SELECT * FROM document_templates WHERE id = $1",
+    [insertedId],
+  );
+
+  if (!inserted || inserted.length === 0) {
+    throw new Error("Falha ao recuperar template inserido");
+  }
+
+  return inserted[0];
+}
+
+export async function getAllDocumentTemplates(): Promise<DocumentTemplate[]> {
+  const db = await getDatabase();
+  const rows = await db.select<DocumentTemplate[]>(
+    "SELECT * FROM document_templates ORDER BY createdAt DESC",
+  );
+  return rows;
+}
+
+export async function deleteDocumentTemplate(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.execute("DELETE FROM document_templates WHERE id = $1", [id]);
+  await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+}
+
+export async function getDocumentTemplate(id: number): Promise<DocumentTemplate | null> {
+  const db = await getDatabase();
+  const rows = await db.select<DocumentTemplate[]>(
+    "SELECT * FROM document_templates WHERE id = $1",
+    [id],
+  );
+  return rows && rows.length > 0 ? rows[0] : null;
+}
+
+// ==================== CRUD: Generated Documents ====================
+
+export async function insertGeneratedDocument(
+  document: Omit<GeneratedDocument, "id" | "createdAt" | "updatedAt"> & { id?: number },
+): Promise<GeneratedDocument> {
+  const db = await getDatabase();
+
+  const hasId = document.id !== undefined && document.id !== null;
+
+  if (hasId) {
+    const existing = await db.select<GeneratedDocument[]>(
+      "SELECT * FROM generated_documents WHERE id = $1",
+      [document.id],
+    );
+
+    if (existing && existing.length > 0) {
+      return existing[0];
+    }
+  }
+
+  const columns = hasId
+    ? `id, templateId, name, filePath, fileName, fileContent, filledFields`
+    : `templateId, name, filePath, fileName, fileContent, filledFields`;
+  const placeholders = hasId
+    ? `$1, $2, $3, $4, $5, $6, $7`
+    : `$1, $2, $3, $4, $5, $6`;
+  const values = hasId
+    ? [
+        document.id,
+        document.templateId,
+        document.name,
+        document.filePath || "",
+        document.fileName,
+        document.fileContent || null,
+        document.filledFields,
+      ]
+    : [
+        document.templateId,
+        document.name,
+        document.filePath || "",
+        document.fileName,
+        document.fileContent || null,
+        document.filledFields,
+      ];
+
+  const result = await db.execute(
+    `INSERT INTO generated_documents (${columns}) VALUES (${placeholders})`,
+    values,
+  );
+
+  const insertedId = hasId ? document.id! : Number(result.lastInsertId);
+
+  const inserted = await db.select<GeneratedDocument[]>(
+    "SELECT * FROM generated_documents WHERE id = $1",
+    [insertedId],
+  );
+
+  if (!inserted || inserted.length === 0) {
+    throw new Error("Falha ao recuperar documento gerado inserido");
+  }
+
+  return inserted[0];
+}
+
+export async function getAllGeneratedDocuments(): Promise<GeneratedDocument[]> {
+  const db = await getDatabase();
+  const rows = await db.select<GeneratedDocument[]>(
+    "SELECT * FROM generated_documents ORDER BY createdAt DESC",
+  );
+  return rows;
+}
+
+export async function deleteGeneratedDocument(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.execute("DELETE FROM generated_documents WHERE id = $1", [id]);
+  await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+}
+
+export async function getGeneratedDocumentsByTemplate(
+  templateId: number,
+): Promise<GeneratedDocument[]> {
+  const db = await getDatabase();
+  const rows = await db.select<GeneratedDocument[]>(
+    "SELECT * FROM generated_documents WHERE templateId = $1 ORDER BY createdAt DESC",
+    [templateId],
+  );
+  return rows;
+}
+
 // ==================== Utilitários ====================
 
 export async function getStatistics() {

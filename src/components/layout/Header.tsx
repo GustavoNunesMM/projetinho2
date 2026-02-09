@@ -10,6 +10,7 @@ import {
   NotebookText,
   User,
   Database,
+  FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Toast } from "@/components/common/Toast";
@@ -73,6 +74,12 @@ const Header = () => {
       title: "Documentos",
       icon: NotebookText,
       description: "Testes já feitos",
+    },
+    {
+      key: "document-generation",
+      title: "Geração de documentação",
+      icon: FileText,
+      description: "Gerar documentos a partir de templates",
     },
   ];
   function handleUserAction(key: string) {

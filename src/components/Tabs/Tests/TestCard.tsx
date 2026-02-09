@@ -46,7 +46,6 @@ export const TestCard: React.FC<TestCardProps> = ({
             <div className="flex gap-2">
               <button
                 onClick={(e) => {
-                  e.stopPropagation();
                   onView(test);
                 }}
                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -55,7 +54,6 @@ export const TestCard: React.FC<TestCardProps> = ({
               </button>
               <button
                 onClick={(e) => {
-                  e.stopPropagation();
                   onDownload(test);
                 }}
                 className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
@@ -65,7 +63,6 @@ export const TestCard: React.FC<TestCardProps> = ({
               {onDelete && (
                 <button
                   onClick={(e) => {
-                    e.stopPropagation();
                     onDelete(test);
                   }}
                   className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
@@ -126,7 +123,6 @@ export const TestCard: React.FC<TestCardProps> = ({
             <div className="flex gap-2">
               <button
                 onClick={(e) => {
-                  e.stopPropagation();
                   onView(test);
                 }}
                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -135,7 +131,6 @@ export const TestCard: React.FC<TestCardProps> = ({
               </button>
               <button
                 onClick={(e) => {
-                  e.stopPropagation();
                   onDownload(test);
                 }}
                 className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
@@ -145,7 +140,6 @@ export const TestCard: React.FC<TestCardProps> = ({
               {onDelete && (
                 <button
                   onClick={(e) => {
-                    e.stopPropagation();
                     onDelete(test);
                   }}
                   className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
@@ -205,7 +199,6 @@ export const TestCard: React.FC<TestCardProps> = ({
         <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
           <button
             onClick={(e) => {
-              e.stopPropagation();
               onView(test);
             }}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -215,7 +208,6 @@ export const TestCard: React.FC<TestCardProps> = ({
           </button>
           <button
             onClick={(e) => {
-              e.stopPropagation();
               onDownload(test);
             }}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -226,7 +218,6 @@ export const TestCard: React.FC<TestCardProps> = ({
           {onDelete && (
             <button
               onClick={(e) => {
-                e.stopPropagation();
                 onDelete(test);
               }}
               className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"

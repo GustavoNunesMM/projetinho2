@@ -97,7 +97,7 @@ export class SyncService {
 
         if (!remote) {
           try {
-            const { error } = await supabase.from("questions").insert({
+            const questionData = {
               id: local.id,
               user_id: this.userId,
               title: local.title,
@@ -119,7 +119,13 @@ export class SyncService {
               explanation: local.explanation,
               imported_from: local.importedFrom,
               created_at: local.created_at,
-            });
+            };
+
+            const { error } = await supabase
+              .from("questions")
+              .upsert(questionData, {
+                onConflict: "id",
+              });
 
             if (error) {
               result.errors.push(
@@ -207,7 +213,7 @@ export class SyncService {
 
         if (!remote) {
           try {
-            const { error } = await supabase.from("layouts").insert({
+            const layoutData = {
               id: local.id,
               user_id: this.userId,
               name: local.name,
@@ -223,7 +229,13 @@ export class SyncService {
               footer_text: local.footerText,
               imported_from: local.importedFrom,
               created_at: local.created_at,
-            });
+            };
+
+            const { error } = await supabase
+              .from("layouts")
+              .upsert(layoutData, {
+                onConflict: "id",
+              });
 
             if (error) {
               result.errors.push(
@@ -304,7 +316,7 @@ export class SyncService {
 
         if (!remote) {
           try {
-            const { error } = await supabase.from("messages").insert({
+            const messageData = {
               id: local.id,
               user_id: this.userId,
               title: local.title,
@@ -312,7 +324,13 @@ export class SyncService {
               is_list: local.isList,
               is_ordered: local.isOrdered,
               created_at: local.createdAt,
-            });
+            };
+
+            const { error } = await supabase
+              .from("messages")
+              .upsert(messageData, {
+                onConflict: "id",
+              });
 
             if (error) {
               result.errors.push(
@@ -369,6 +387,16 @@ export class SyncService {
     };
 
     try {
+      // Verificar sessão ativa
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error("Erro de sessão ao sincronizar testes:", sessionError);
+        result.errors.push("Sessão expirada. Faça login novamente.");
+        result.success = false;
+        return result;
+      }
+
       const localTests = await getAllTests();
 
       const { data: remoteTests, error: fetchError } = await supabase
@@ -376,7 +404,10 @@ export class SyncService {
         .select("*")
         .eq("user_id", this.userId);
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error("Erro ao buscar testes remotos:", fetchError);
+        throw fetchError;
+      }
 
       const remoteMap = new Map(
         (remoteTests || []).map((t) => [Number(t.id), t]),
@@ -398,7 +429,7 @@ export class SyncService {
               continue;
             }
 
-            const { error } = await supabase.from("tests").insert({
+            const testData = {
               id: testId,
               user_id: this.userId,
               title: local.title,
@@ -412,13 +443,29 @@ export class SyncService {
               school_unit: local.schoolUnit,
               category: local.category,
               tags: local.tags || "",
-            });
+            };
+
+            // Usar upsert para evitar erro 409 (insert ou update automaticamente)
+            // Se a constraint for apenas "id", usar apenas "id"
+            const { error } = await supabase
+              .from("tests")
+              .upsert(testData, {
+                onConflict: "id",
+              });
 
             if (error) {
               console.error(`Erro ao enviar prova ${local.id}:`, error);
-              result.errors.push(
-                `Erro ao enviar prova ${local.id}: ${error.message}`,
-              );
+              
+              // Se for erro 403, explicar que é problema de permissão
+              if (error.code === "42501" || error.message?.includes("permission")) {
+                result.errors.push(
+                  `Erro de permissão ao enviar prova ${local.id}. Verifique as políticas RLS no Supabase.`,
+                );
+              } else {
+                result.errors.push(
+                  `Erro ao enviar prova ${local.id}: ${error.message || JSON.stringify(error)}`,
+                );
+              }
             } else {
               result.uploaded++;
             }

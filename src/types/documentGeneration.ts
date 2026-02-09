@@ -74,3 +74,34 @@ export interface HeaderData {
     height: number;
   }[];
 }
+
+export interface TemplateField {
+  name: string;
+  type?: string;
+  defaultValue?: string;
+  sequentialIndices?: number[];
+}
+
+export interface DocumentTemplate {
+  id: number;
+  name: string;
+  filePath: string;
+  fileName: string;
+  fileSize: number;
+  fileContent?: string | null;
+  fields: TemplateField[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GeneratedDocument {
+  id: number;
+  templateId: number;
+  name: string;
+  filePath: string;
+  fileName: string;
+  fileContent?: string | null;
+  filledFields: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -14,6 +14,7 @@ import { LayoutFormData } from "@/types/layout";
 import { extractWordLayoutInfo } from "@/hooks/useDocumentGenerator/ExportWord";
 import { useTab } from "@/contexts/TabContext";
 import TestTab from "@/components/Tabs/Tests/TestTab";
+import DocumentGenerationTab from "@/components/Tabs/documentGeneration/DocumentGenerationTab";
 
 const Home = () => {
   const { activeTab } = useTab();
@@ -105,6 +106,13 @@ const Home = () => {
         </div>
         <div className={activeTab === "proves" ? "animate-fadeIn" : "hidden"}>
           <TestTab />
+        </div>
+        <div
+          className={
+            activeTab === "document-generation" ? "animate-fadeIn" : "hidden"
+          }
+        >
+          <DocumentGenerationTab />
         </div>
       </Container>
     </div>

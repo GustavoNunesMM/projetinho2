@@ -74,7 +74,6 @@ const ImageUpload = ({
 
   const handleMouseDown = (e: React.MouseEvent, handle: string) => {
     e.preventDefault();
-    e.stopPropagation();
 
     setIsResizing(true);
     setResizeHandle(handle);

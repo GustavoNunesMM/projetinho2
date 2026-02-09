@@ -10,6 +10,7 @@
     "fs:allow-write",
     "fs:allow-create",
     "fs:allow-exists",
+    "fs:write-files",
 
     "fs:allow-mkdir",
     "fs:allow-read-dir",

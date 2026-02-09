@@ -7,7 +7,7 @@ interface DeleteModalProps {
   onClose: () => void;
   onSubmit: () => void;
   elementName: string;
-  type: "question" | "layout" | "message" | "test";
+  type: "question" | "layout" | "message" | "test" | "template" | "document";
 }
 
 const DeleteModal = ({
@@ -28,6 +28,10 @@ const DeleteModal = ({
         return "a mensagem";
       case "test":
         return "o teste";
+      case "template":
+        return "o template";
+      case "document":
+        return "o documento";
       default:
         return "o item";
     }
