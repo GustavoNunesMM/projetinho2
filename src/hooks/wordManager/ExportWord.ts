@@ -14,11 +14,12 @@ import {
   WidthType,
   VerticalAlign,
 } from "docx";
+import JSZip from "jszip";
+import mammoth from "mammoth";
+
 import { getImageDimensions } from "@/utils/imageImport";
 import { Message } from "@/types/messages";
-import JSZip from "jszip";
 import { WordLayoutInfo } from "@/types/layout";
-import mammoth from "mammoth";
 import { Layout } from "@/types/layout";
 import { Question, GabaritoData } from "@/types/question";
 import { HeaderData, ParsedQuestion } from "@/types/documentGeneration";
@@ -27,13 +28,16 @@ const base64ToUint8Array = (base64: string): Uint8Array => {
   const base64Data = base64.includes(",") ? base64.split(",")[1] : base64;
   const binaryString = atob(base64Data);
   const bytes = new Uint8Array(binaryString.length);
+
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
+
   return bytes;
 };
+
 export function detectImageType(
-  input: string | ArrayBuffer | Uint8Array
+  input: string | ArrayBuffer | Uint8Array,
 ): "png" | "jpg" | "jpeg" | "gif" | "svg" {
   if (typeof input === "string") {
     if (input.startsWith("data:image/png")) return "png";
@@ -45,6 +49,7 @@ export function detectImageType(
 
     try {
       const bytes = base64ToUint8Array(input);
+
       return detectFromBytes(bytes) as "png";
     } catch {
       return "png";
@@ -94,6 +99,7 @@ function detectFromBytes(bytes: Uint8Array): string {
 
   // SVG (text)
   const asText = new TextDecoder().decode(bytes.slice(0, 100)).trim();
+
   if (asText.startsWith("<svg")) return "svg";
 
   return "unknown";
@@ -101,21 +107,25 @@ function detectFromBytes(bytes: Uint8Array): string {
 
 const marginToTwips = (margin: string): number => {
   const value = parseFloat(margin);
+
   if (margin.includes("cm")) {
     return convertInchesToTwip(value / 2.54);
   } else if (margin.includes("in")) {
     return convertInchesToTwip(value);
   }
+
   return convertInchesToTwip(value / 2.54);
 };
 
 const fontSizeToHalfPoints = (fontSize: string): number => {
   const value = parseFloat(fontSize);
+
   return value * 2;
 };
 
 export const lineSpacingToValue = (spacing: string): number => {
   const value = parseFloat(spacing);
+
   return Math.round(value * 240);
 };
 
@@ -124,7 +134,7 @@ export const generateDocx = async (
   layout: Layout,
   importedHeader?: HeaderData[],
   message?: Message,
-  gabaritoData?: GabaritoData
+  gabaritoData?: GabaritoData,
 ): Promise<Blob> => {
   const sections: (Paragraph | Table)[] = [];
 
@@ -148,7 +158,7 @@ export const generateDocx = async (
         heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
         spacing: { after: 200 },
-      })
+      }),
     );
   }
   sections.push(new Paragraph({ text: "" }));
@@ -164,12 +174,13 @@ export const generateDocx = async (
           }),
         ],
         spacing: { before: 200, after: 200, line: lineSpacing },
-      })
+      }),
     );
 
     if (message.isList) {
       message.items.forEach((item, index) => {
         const prefix = message.isOrdered ? `${index + 1}. ` : "• ";
+
         sections.push(
           new Paragraph({
             children: [
@@ -181,7 +192,7 @@ export const generateDocx = async (
             ],
             spacing: { after: 100, line: lineSpacing },
             indent: { left: 360 },
-          })
+          }),
         );
       });
     } else {
@@ -196,7 +207,7 @@ export const generateDocx = async (
               }),
             ],
             spacing: { after: 100, line: lineSpacing },
-          })
+          }),
         );
       });
     }
@@ -240,7 +251,7 @@ export const generateDocx = async (
               verticalAlign: VerticalAlign.CENTER,
               width: { size: cellWidth, type: WidthType.DXA },
               margins: { top: 40, bottom: 40, left: 40, right: 40 },
-            })
+            }),
         ),
       ],
     });
@@ -279,10 +290,10 @@ export const generateDocx = async (
                   verticalAlign: VerticalAlign.CENTER,
                   width: { size: cellWidth, type: WidthType.DXA },
                   margins: { top: 40, bottom: 40, left: 40, right: 40 },
-                })
+                }),
             ),
           ],
-        })
+        }),
     );
 
     sections.push(
@@ -298,7 +309,7 @@ export const generateDocx = async (
           insideVertical: { style: "single", size: 1, color: "000000" },
         },
         alignment: AlignmentType.CENTER,
-      })
+      }),
     );
   }
   sections.push(new Paragraph({ text: "" }));
@@ -322,7 +333,7 @@ export const generateDocx = async (
             after: lineIndex === contentLines.length - 1 ? 200 : 100,
             line: lineSpacing,
           },
-        })
+        }),
       );
     });
 
@@ -350,7 +361,7 @@ export const generateDocx = async (
           new Paragraph({
             children: [new ImageRun(imageRunOptions)],
             spacing: { before: 100, after: 200 },
-          })
+          }),
         );
       } catch (error) {
         console.error("Error processing image:", error);
@@ -376,14 +387,14 @@ export const generateDocx = async (
                 line: lineSpacing,
               },
               indent: { left: 720 },
-            })
+            }),
           );
         });
 
         if (q.optionImages?.[j]) {
           try {
             const { width, height } = await getImageDimensions(
-              q.optionImages[j]!
+              q.optionImages[j]!,
             );
             const bytes = base64ToUint8Array(q.optionImages[j]!);
             const type = detectImageType(bytes);
@@ -407,7 +418,7 @@ export const generateDocx = async (
                 children: [new ImageRun(imageRunOptions)],
                 spacing: { before: 50, after: 100 },
                 indent: { left: 720 },
-              })
+              }),
             );
           } catch (error) {
             console.error("Error processing option image:", error);
@@ -430,7 +441,7 @@ export const generateDocx = async (
         ],
         alignment: AlignmentType.CENTER,
         spacing: { before: 400 },
-      })
+      }),
     );
   }
 
@@ -442,11 +453,12 @@ export const generateDocx = async (
       } as ISectionOptions,
     ],
   });
+
   return Packer.toBlob(doc);
 };
 
 export const generateQuestionDocx = async (
-  question: Question
+  question: Question,
 ): Promise<Blob> => {
   return generateDocx([question], {
     id: 0,
@@ -469,6 +481,7 @@ export const readDocx = async (blob: Blob): Promise<string> => {
   try {
     const arrayBuffer = await blob.arrayBuffer();
     const result = await mammoth.extractRawText({ arrayBuffer });
+
     return result.value;
   } catch (error) {
     console.error("Erro ao ler DOCX:", error);
@@ -489,6 +502,7 @@ export const parseQuestionsFromText = (text: string) => {
   const flush = () => {
     if (buffer.length === 0) return;
     const statement = buffer.join("\n").trim();
+
     if (statement) {
       if (!current.statement) current.statement = statement;
       else current.statement += "\n" + statement;
@@ -498,6 +512,7 @@ export const parseQuestionsFromText = (text: string) => {
 
   for (const line of lines) {
     const numMatch = line.match(/^\s*(?:\d+[\.\)]|\d+\s*[-–—])\s*(.+)/i);
+
     if (numMatch) {
       flush();
       if (current.statement) {
@@ -508,6 +523,7 @@ export const parseQuestionsFromText = (text: string) => {
     }
 
     const altMatch = line.match(/^([a-zA-Z])\s*[)\.\s]\s*(.+)/);
+
     if (altMatch && current.alternatives) {
       flush();
       current.alternatives.push({
@@ -533,11 +549,12 @@ export const parseQuestionsFromText = (text: string) => {
 };
 
 export const extractWordLayoutInfo = async (
-  file: File
+  file: File,
 ): Promise<WordLayoutInfo> => {
   const zip = await JSZip.loadAsync(file);
   const docXml = await zip.file("word/document.xml")?.async("text");
   const stylesXml = await zip.file("word/styles.xml")?.async("text");
+
   if (!docXml || !stylesXml)
     throw new Error("Arquivo Word inválido ou sem informações de layout");
 
@@ -558,7 +575,7 @@ export const extractWordLayoutInfo = async (
     : 2.5;
 
   const docDefaults = styles.querySelector(
-    "w\\:docDefaults w\\:rPrDefault rPr, docDefaults rPrDefault rPr"
+    "w\\:docDefaults w\\:rPrDefault rPr, docDefaults rPrDefault rPr",
   );
   const fontEl = docDefaults?.querySelector("w\\:rFonts, rFonts");
   const szEl = docDefaults?.querySelector("w\\:sz, sz");
@@ -588,5 +605,6 @@ export const extractWordLayoutInfo = async (
 
 function pxToCm(twips: string): number {
   const dxa = parseInt(twips) || 0;
+
   return dxa / 567;
 }

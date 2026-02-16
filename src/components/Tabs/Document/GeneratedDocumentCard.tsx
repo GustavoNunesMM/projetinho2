@@ -1,4 +1,5 @@
 import { FileText, Download, Trash2, Calendar } from "lucide-react";
+
 import { GeneratedDocument } from "@/types/documentGeneration";
 import Button from "@/components/common/Button";
 
@@ -24,25 +25,27 @@ const GeneratedDocumentCard = ({
             <h3 className="text-lg font-bold text-gray-800 group-hover:text-primary-700 transition-colors duration-300 break-words overflow-wrap-anywhere">
               {document.name}
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5 truncate">{document.fileName}</p>
+            <p className="text-xs text-gray-500 mt-0.5 truncate">
+              {document.fileName}
+            </p>
           </div>
         </div>
         <div className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
           <Button
             isIconOnly
-            variant="custom"
-            onClick={onDownload}
             aria-label="Baixar documento"
             className="w-9 h-9 bg-green-50 hover:bg-green-100 text-green-600 rounded-lg transition-all duration-200 hover:scale-110"
+            variant="custom"
+            onClick={onDownload}
           >
             <Download size={16} />
           </Button>
           <Button
             isIconOnly
-            variant="custom"
-            onClick={onDelete}
             aria-label="Excluir documento"
             className="w-9 h-9 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition-all duration-200 hover:scale-110"
+            variant="custom"
+            onClick={onDelete}
           >
             <Trash2 size={16} />
           </Button>
@@ -52,7 +55,7 @@ const GeneratedDocumentCard = ({
       <div className="space-y-3">
         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl group-hover:bg-green-50/50 transition-colors duration-300">
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-            <Calendar size={16} className="text-green-600" />
+            <Calendar className="text-green-600" size={16} />
           </div>
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
@@ -70,14 +73,16 @@ const GeneratedDocumentCard = ({
               Campos Preenchidos
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {Object.keys(document.filledFields).slice(0, 5).map((key) => (
-                <span
-                  key={key}
-                  className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-md font-medium"
-                >
-                  {key}
-                </span>
-              ))}
+              {Object.keys(document.filledFields)
+                .slice(0, 5)
+                .map((key) => (
+                  <span
+                    key={key}
+                    className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-md font-medium"
+                  >
+                    {key}
+                  </span>
+                ))}
               {Object.keys(document.filledFields).length > 5 && (
                 <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-md font-medium">
                   +{Object.keys(document.filledFields).length - 5}

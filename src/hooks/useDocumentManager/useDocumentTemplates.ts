@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
+
 import {
   getAllDocumentTemplates,
   insertDocumentTemplate,
@@ -24,7 +25,13 @@ function deserializeTemplate(t: DBTemplate): DocumentTemplate {
   return {
     ...t,
     fileContent: t.fileContent || null,
-    fields: typeof t.fields === "string" ? JSON.parse(t.fields) : [],
+    fields: JSON.parse(t.fields),
+    structure:
+      typeof (t as any).structure === "string"
+        ? JSON.parse((t as any).structure)
+        : Array.isArray((t as any).structure)
+          ? (t as any).structure
+          : [],
   };
 }
 
@@ -34,10 +41,7 @@ function deserializeGeneratedDocument(
   return {
     ...d,
     fileContent: d.fileContent || null,
-    filledFields:
-      typeof d.filledFields === "string"
-        ? JSON.parse(d.filledFields)
-        : {},
+    filledFields: JSON.parse(d.filledFields),
   };
 }
 
@@ -60,9 +64,11 @@ export const useDocumentTemplates = () => {
       setError(null);
       const data = await getAllDocumentTemplates();
       const deserialized = data.map(deserializeTemplate);
+
       setTemplates(deserialized);
     } catch (err) {
       const message = `Erro ao carregar templates: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
     } finally {
@@ -74,6 +80,7 @@ export const useDocumentTemplates = () => {
     try {
       const data = await getAllGeneratedDocuments();
       const deserialized = data.map(deserializeGeneratedDocument);
+
       setGeneratedDocuments(deserialized);
     } catch (err) {
       console.error("Erro ao carregar documentos gerados:", err);
@@ -89,11 +96,13 @@ export const useDocumentTemplates = () => {
       const fileName = file.name;
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
-      
+
       const chunkSize = 0x8000; // 32KB chunks
       let base64String = "";
+
       for (let i = 0; i < uint8Array.length; i += chunkSize) {
         const chunk = uint8Array.subarray(i, i + chunkSize);
+
         base64String += String.fromCharCode.apply(null, Array.from(chunk));
       }
       base64String = btoa(base64String);
@@ -109,12 +118,14 @@ export const useDocumentTemplates = () => {
 
       const saved = await insertDocumentTemplate(templateData);
       const deserialized = deserializeTemplate(saved);
+
       setTemplates((prev) => [deserialized, ...prev]);
       await loadTemplates();
 
       return deserialized;
     } catch (err) {
       const message = `Erro ao fazer upload do template: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
       throw err;
@@ -124,13 +135,13 @@ export const useDocumentTemplates = () => {
   const deleteTemplate = async (id: number): Promise<void> => {
     try {
       setError(null);
-      const template = templates.find((t) => t.id === id);
-      
+      templates.find((t) => t.id === id);
 
       await deleteTemplateDB(id);
       setTemplates((prev) => prev.filter((t) => t.id !== id));
     } catch (err) {
       const message = `Erro ao deletar template: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
       throw err;
@@ -146,6 +157,7 @@ export const useDocumentTemplates = () => {
       setError(null);
 
       const templateData = await getDocumentTemplate(templateId);
+
       if (!templateData) {
         throw new Error("Template não encontrado");
       }
@@ -153,9 +165,11 @@ export const useDocumentTemplates = () => {
       const template = deserializeTemplate(templateData);
 
       let templateBlob: Blob;
+
       if (template.fileContent) {
         const binaryString = atob(template.fileContent);
         const bytes = new Uint8Array(binaryString.length);
+
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
@@ -168,21 +182,33 @@ export const useDocumentTemplates = () => {
 
       // Criar mapa expandido de fieldValues para campos sequenciais
       // Isso permite que o processador encontre valores por fieldName_index
-      const expandedFieldValues: Record<string, string | string[]> = { ...fieldValues };
-      
+      const expandedFieldValues: Record<string, string | string[]> = {
+        ...fieldValues,
+      };
+
       console.log("Template fields:", template.fields);
       console.log("Field values recebidos:", fieldValues);
-      
+
       // Para cada campo sequencial, criar chaves fieldName_index
       template.fields.forEach((field) => {
         if (field.sequentialIndices && field.sequentialIndices.length > 0) {
           const arrayValue = fieldValues[field.name];
-          console.log(`Campo sequencial: ${field.name}, indices:`, field.sequentialIndices, "valores:", arrayValue);
+
+          console.log(
+            `Campo sequencial: ${field.name}, indices:`,
+            field.sequentialIndices,
+            "valores:",
+            arrayValue,
+          );
           if (Array.isArray(arrayValue)) {
-            const sortedIndices = [...field.sequentialIndices].sort((a, b) => a - b);
+            const sortedIndices = [...field.sequentialIndices].sort(
+              (a, b) => a - b,
+            );
+
             sortedIndices.forEach((index, arrayIndex) => {
               if (arrayValue[arrayIndex] !== undefined) {
                 const key = `${field.name}_${index}`;
+
                 expandedFieldValues[key] = arrayValue[arrayIndex];
                 console.log(`Expandindo: ${key} = ${arrayValue[arrayIndex]}`);
               }
@@ -193,24 +219,31 @@ export const useDocumentTemplates = () => {
 
       console.log("Expanded field values:", expandedFieldValues);
 
-      const processedBlob = await processDocxTemplate(templateBlob, expandedFieldValues);
+      const processedBlob = await processDocxTemplate(
+        templateBlob,
+        expandedFieldValues,
+      );
 
       const fileName = `${documentName || "documento_gerado"}_${Date.now()}.docx`;
       const arrayBuffer = await processedBlob.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
-      
+
       const chunkSize = 0x8000; // 32KB chunks
       let base64String = "";
+
       for (let i = 0; i < uint8Array.length; i += chunkSize) {
         const chunk = uint8Array.subarray(i, i + chunkSize);
+
         base64String += String.fromCharCode.apply(null, Array.from(chunk));
       }
       base64String = btoa(base64String);
 
       // Converter fieldValues para formato serializável (arrays viram objetos com índices)
       const serializableFieldValues: Record<string, string> = {};
+
       Object.keys(fieldValues).forEach((key) => {
         const value = fieldValues[key];
+
         if (Array.isArray(value)) {
           // Para arrays sequenciais, salvar como objeto com índices
           value.forEach((v, i) => {
@@ -232,6 +265,7 @@ export const useDocumentTemplates = () => {
 
       const saved = await insertGeneratedDocument(documentData);
       const deserialized = deserializeGeneratedDocument(saved);
+
       setGeneratedDocuments((prev) => [deserialized, ...prev]);
       await loadGeneratedDocuments();
 
@@ -240,6 +274,7 @@ export const useDocumentTemplates = () => {
       return deserialized;
     } catch (err) {
       const message = `Erro ao gerar documento: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
       throw err;
@@ -251,6 +286,7 @@ export const useDocumentTemplates = () => {
   ): Promise<void> => {
     try {
       const document = generatedDocuments.find((d) => d.id === documentId);
+
       if (!document) {
         throw new Error("Documento não encontrado");
       }
@@ -261,6 +297,7 @@ export const useDocumentTemplates = () => {
 
       const binaryString = atob(document.fileContent);
       const bytes = new Uint8Array(binaryString.length);
+
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
@@ -271,6 +308,7 @@ export const useDocumentTemplates = () => {
       saveAs(blob, document.fileName);
     } catch (err) {
       const message = `Erro ao baixar documento: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
       throw err;
@@ -280,13 +318,13 @@ export const useDocumentTemplates = () => {
   const deleteGeneratedDocument = async (id: number): Promise<void> => {
     try {
       setError(null);
-      const document = generatedDocuments.find((d) => d.id === id);
-      
+      generatedDocuments.find((d) => d.id === id);
 
       await deleteGeneratedDocDB(id);
       setGeneratedDocuments((prev) => prev.filter((d) => d.id !== id));
     } catch (err) {
       const message = `Erro ao deletar documento: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
       throw err;

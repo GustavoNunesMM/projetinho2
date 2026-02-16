@@ -1,5 +1,6 @@
 // exportPdf.ts
 import { jsPDF } from "jspdf";
+
 import { Layout } from "@/types/layout";
 import { Question } from "@/types/question";
 import { HeaderData } from "@/types/documentGeneration";
@@ -8,7 +9,7 @@ import { getImageDimensions } from "@/utils/imageImport";
 export const generatePdf = async (
   questions: Question[],
   layout: Layout,
-  importedHeader?: HeaderData[]
+  importedHeader?: HeaderData[],
 ): Promise<Blob> => {
   try {
     const doc = new jsPDF();
@@ -41,24 +42,27 @@ export const generatePdf = async (
           ? hd.colWidths.map((w) => (w / totalW) * availW)
           : Array.from(
               { length: Math.max(...tableData.map((r) => r.length)) },
-              () => availW / Math.max(tableData[0]?.length || 1, 1)
+              () => availW / Math.max(tableData[0]?.length || 1, 1),
             );
       const proc = new Set<string>();
 
       tableData.forEach((row: any[], rIdx) => {
         const rowH = (hd.rowHeights[rIdx] || 20) * 0.35;
+
         checkPageBreak(rowH);
         let x = marginLeft;
 
         row.forEach((cell: any, cIdx) => {
           const key = `${rIdx}-${cIdx}`;
+
           if (proc.has(key)) {
             x += colWidthsPdf[cIdx];
+
             return;
           }
           const style = hd.styles[rIdx]?.[cIdx] || {};
           const merge = hd.mergedCells.find(
-            (m) => m.row === rIdx && m.col === cIdx
+            (m) => m.row === rIdx && m.col === cIdx,
           );
 
           let cellW = colWidthsPdf[cIdx] ?? availW / (row.length || 1);
@@ -83,7 +87,7 @@ export const generatePdf = async (
 
           const drawBorder = (
             b: { style?: string; color?: string } | undefined,
-            line: () => void
+            line: () => void,
           ) => {
             if (b) {
               doc.setDrawColor(`#${b.color || "000000"}`);
@@ -91,39 +95,42 @@ export const generatePdf = async (
               line();
             }
           };
+
           drawBorder(style.borders?.top, () =>
-            doc.line(x, yPosition, x + cellW, yPosition)
+            doc.line(x, yPosition, x + cellW, yPosition),
           );
           drawBorder(style.borders?.bottom, () =>
             doc.line(
               x,
               yPosition + rowH * rowSpan,
               x + cellW,
-              yPosition + rowH * rowSpan
-            )
+              yPosition + rowH * rowSpan,
+            ),
           );
           drawBorder(style.borders?.left, () =>
-            doc.line(x, yPosition, x, yPosition + rowH * rowSpan)
+            doc.line(x, yPosition, x, yPosition + rowH * rowSpan),
           );
           drawBorder(style.borders?.right, () =>
             doc.line(
               x + cellW,
               yPosition,
               x + cellW,
-              yPosition + rowH * rowSpan
-            )
+              yPosition + rowH * rowSpan,
+            ),
           );
 
           const cellImgs = hd.images.filter(
-            (i) => i.row === rIdx && i.col === cIdx
+            (i) => i.row === rIdx && i.col === cIdx,
           );
           let imgY = yPosition + 2;
+
           cellImgs.forEach((img) => {
             try {
               const maxW = cellW - 4;
               const scale = img.width > maxW ? maxW / img.width : 1;
               const w = img.width * scale * 0.264583;
               const h = img.height * scale * 0.264583;
+
               doc.addImage(img.data, "PNG", x + 2, imgY, w, h);
               imgY += h + 2;
             } catch (e) {
@@ -190,8 +197,9 @@ export const generatePdf = async (
       doc.setFont("helvetica", "bold");
       const lines = doc.splitTextToSize(
         layout.header || layout.headerText || "",
-        pageWidth - marginLeft - marginRight
+        pageWidth - marginLeft - marginRight,
       );
+
       doc.text(lines, marginLeft, yPosition);
       yPosition += lineHeight * (lines.length + 1);
       doc.setFontSize(fontSize);
@@ -201,6 +209,7 @@ export const generatePdf = async (
       const q = questions[i];
       const qHeight =
         lineHeight * (q.title ? 3 : 2) + (q.contentImage ? 50 : 0);
+
       checkPageBreak(qHeight);
 
       doc.setFont("helvetica", "bold");
@@ -211,8 +220,9 @@ export const generatePdf = async (
         doc.setFont("helvetica", "bold");
         const tLines = doc.splitTextToSize(
           q.title,
-          pageWidth - marginLeft - marginRight
+          pageWidth - marginLeft - marginRight,
         );
+
         doc.text(tLines, marginLeft + 5, yPosition);
         yPosition += lineHeight * tLines.length;
       }
@@ -220,8 +230,9 @@ export const generatePdf = async (
       doc.setFont("helvetica", "normal");
       const cLines = doc.splitTextToSize(
         q.content || "",
-        pageWidth - marginLeft - marginRight
+        pageWidth - marginLeft - marginRight,
       );
+
       doc.text(cLines, marginLeft + 5, yPosition);
       yPosition += lineHeight * cLines.length + lineHeight;
 
@@ -232,6 +243,7 @@ export const generatePdf = async (
           const scale = width > maxW ? maxW / width : 1;
           const w = width * scale * 0.264583;
           const h = height * scale * 0.264583;
+
           checkPageBreak(h + lineHeight);
           doc.addImage(q.contentImage, "PNG", marginLeft + 5, yPosition, w, h);
           yPosition += h + lineHeight;
@@ -244,8 +256,9 @@ export const generatePdf = async (
           const optText = `${letter}) ${q.options[j]}`;
           const optLines = doc.splitTextToSize(
             optText,
-            pageWidth - marginLeft - marginRight - 10
+            pageWidth - marginLeft - marginRight - 10,
           );
+
           checkPageBreak(lineHeight * optLines.length);
           doc.text(optLines, marginLeft + 10, yPosition);
           yPosition += lineHeight * optLines.length;
@@ -253,12 +266,13 @@ export const generatePdf = async (
           if (q.optionImages?.[j]) {
             try {
               const { width, height } = await getImageDimensions(
-                q.optionImages[j]!
+                q.optionImages[j]!,
               );
               const maxW = pageWidth - marginLeft - marginRight - 20;
               const scale = width > maxW ? maxW / width : 1;
               const w = width * scale * 0.264583;
               const h = height * scale * 0.264583;
+
               checkPageBreak(h + lineHeight);
               doc.addImage(
                 q.optionImages[j]!,
@@ -266,7 +280,7 @@ export const generatePdf = async (
                 marginLeft + 10,
                 yPosition,
                 w,
-                h
+                h,
               );
               yPosition += h + lineHeight;
             } catch {}
@@ -278,13 +292,14 @@ export const generatePdf = async (
 
     if (layout.footer || layout.footerText) {
       const totalPages = (doc as any).internal.pages.length;
+
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(10);
         doc.text(
           layout.footer || layout.footerText || "",
           marginLeft,
-          pageHeight - 10
+          pageHeight - 10,
         );
       }
     }

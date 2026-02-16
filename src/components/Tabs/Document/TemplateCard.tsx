@@ -1,4 +1,5 @@
-import { FileText, Trash2, Tag } from "lucide-react";
+import { FileText, Tag, Trash2 } from "lucide-react";
+
 import { DocumentTemplate } from "@/types/documentGeneration";
 import Button from "@/components/common/Button";
 
@@ -14,13 +15,14 @@ const TemplateCard = ({ template, onDelete, onSelect }: TemplateCardProps) => {
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   return (
-    <div
-      onClick={onSelect}
+    <button
       className="group bg-white rounded-2xl shadow-md border border-gray-100 p-6 transition-all duration-300 ease-out hover:shadow-xl hover:border-primary-200 hover:scale-[1.02] cursor-pointer"
+      onClick={onSelect}
     >
       <div className="flex justify-between items-start mb-4 gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -31,29 +33,31 @@ const TemplateCard = ({ template, onDelete, onSelect }: TemplateCardProps) => {
             <h3 className="text-lg font-bold text-gray-800 group-hover:text-primary-700 transition-colors duration-300 break-words overflow-wrap-anywhere">
               {template.name}
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5 truncate">{template.fileName}</p>
+            <p className="text-xs text-gray-500 mt-0.5 truncate">
+              {template.fileName}
+            </p>
           </div>
         </div>
-        <div
+        <button
           className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0"
           onClick={(e) => e.stopPropagation()}
         >
           <Button
             isIconOnly
-            variant="custom"
-            onClick={onDelete}
             aria-label="Excluir template"
             className="w-9 h-9 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition-all duration-200 hover:scale-110"
+            variant="custom"
+            onClick={onDelete}
           >
             <Trash2 size={16} />
           </Button>
-        </div>
+        </button>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl group-hover:bg-primary-50/50 transition-colors duration-300">
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-            <Tag size={16} className="text-primary-600" />
+            <Tag className="text-primary-600" size={16} />
           </div>
           <div className="flex-1">
             <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
@@ -82,7 +86,7 @@ const TemplateCard = ({ template, onDelete, onSelect }: TemplateCardProps) => {
           <span>{new Date(template.createdAt).toLocaleDateString()}</span>
         </div>
       </div>
-    </div>
+    </button>
   );
 };
 

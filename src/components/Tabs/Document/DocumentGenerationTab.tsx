@@ -1,14 +1,19 @@
 import { useState } from "react";
-import { FileText, Plus, Loader } from "lucide-react";
-import { useDocumentTemplates } from "@/hooks/useDocumentTemplates";
+import { FileText, Loader, Plus } from "lucide-react";
+
 import TemplateCard from "./TemplateCard";
 import TemplateUploadModal from "./TemplateUploadModal";
 import DocumentGeneratorForm from "./DocumentGeneratorForm";
 import GeneratedDocumentCard from "./GeneratedDocumentCard";
+
+import { useDocumentTemplates } from "@/hooks/useDocumentTemplates";
 import Button from "@/components/common/Button";
 import { Toast } from "@/components/common/Toast";
 import DeleteModal from "@/components/modal/DeleteModal";
-import { DocumentTemplate, GeneratedDocument } from "@/types/documentGeneration";
+import {
+  DocumentTemplate,
+  GeneratedDocument,
+} from "@/types/documentGeneration";
 
 const DocumentGenerationTab = () => {
   const {
@@ -28,13 +33,23 @@ const DocumentGenerationTab = () => {
     useState<DocumentTemplate | null>(null);
   const [deleteTemplateModal, setDeleteTemplateModal] = useState(false);
   const [deleteDocumentModal, setDeleteDocumentModal] = useState(false);
-  const [templateToDelete, setTemplateToDelete] = useState<DocumentTemplate | null>(null);
-  const [documentToDelete, setDocumentToDelete] = useState<GeneratedDocument | null>(null);
+  const [templateToDelete, setTemplateToDelete] =
+    useState<DocumentTemplate | null>(null);
+  const [documentToDelete, setDocumentToDelete] =
+    useState<GeneratedDocument | null>(null);
 
   const handleUpload = async (file: File) => {
     try {
       await uploadTemplate(file);
+      Toast({
+        message: "Template uploaded successfully!",
+        color: "success",
+      });
     } catch (error: any) {
+      Toast({
+        message: error.message || "Error uploading template",
+        color: "danger",
+      });
       throw error;
     }
   };
@@ -63,7 +78,7 @@ const DocumentGenerationTab = () => {
   };
 
   const handleGenerate = async (
-    fieldValues: Record<string, string>,
+    fieldValues: Record<string, string | string[]>,
     documentName: string,
   ) => {
     if (!selectedTemplate) return;
@@ -128,7 +143,9 @@ const DocumentGenerationTab = () => {
         <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
           <Loader className="w-8 h-8 text-white animate-spin" />
         </div>
-        <p className="mt-4 text-gray-600 font-medium">Carregando templates...</p>
+        <p className="mt-4 text-gray-600 font-medium">
+          Carregando templates...
+        </p>
       </div>
     );
   }
@@ -143,7 +160,6 @@ const DocumentGenerationTab = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
@@ -154,10 +170,10 @@ const DocumentGenerationTab = () => {
           </p>
         </div>
         <Button
-          variant="custom"
-          icon={Plus}
-          onClick={() => setIsUploadModalOpen(true)}
           className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white shadow-lg hover:shadow-xl transform hover:scale-105 px-6 py-2.5 rounded-xl font-semibold transition-all duration-300"
+          icon={Plus}
+          variant="custom"
+          onClick={() => setIsUploadModalOpen(true)}
         >
           Novo Template
         </Button>
@@ -167,8 +183,8 @@ const DocumentGenerationTab = () => {
       {selectedTemplate ? (
         <DocumentGeneratorForm
           template={selectedTemplate}
-          onGenerate={handleGenerate}
           onClose={() => setSelectedTemplate(null)}
+          onGenerate={handleGenerate}
         />
       ) : (
         <>
@@ -190,10 +206,10 @@ const DocumentGenerationTab = () => {
                   Comece fazendo upload de um template DOCX com campos marcados
                 </p>
                 <Button
-                  variant="custom"
-                  icon={Plus}
-                  onClick={() => setIsUploadModalOpen(true)}
                   className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white shadow-lg hover:shadow-xl transform hover:scale-105 px-6 py-2.5 rounded-xl font-semibold transition-all duration-300"
+                  icon={Plus}
+                  variant="custom"
+                  onClick={() => setIsUploadModalOpen(true)}
                 >
                   Adicionar Primeiro Template
                 </Button>
@@ -224,8 +240,8 @@ const DocumentGenerationTab = () => {
                   <GeneratedDocumentCard
                     key={document.id}
                     document={document}
-                    onDownload={() => handleDownload(document.id)}
                     onDelete={() => handleDeleteGenerated(document)}
+                    onDownload={() => handleDownload(document.id)}
                   />
                 ))}
               </div>
@@ -244,28 +260,28 @@ const DocumentGenerationTab = () => {
       {/* Delete Template Modal */}
       {deleteTemplateModal && templateToDelete && (
         <DeleteModal
+          elementName={templateToDelete.name}
           isOpen={deleteTemplateModal}
+          type="template"
           onClose={() => {
             setDeleteTemplateModal(false);
             setTemplateToDelete(null);
           }}
           onSubmit={confirmDeleteTemplate}
-          elementName={templateToDelete.name}
-          type="template"
         />
       )}
 
       {/* Delete Document Modal */}
       {deleteDocumentModal && documentToDelete && (
         <DeleteModal
+          elementName={documentToDelete.name}
           isOpen={deleteDocumentModal}
+          type="document"
           onClose={() => {
             setDeleteDocumentModal(false);
             setDocumentToDelete(null);
           }}
           onSubmit={confirmDeleteDocument}
-          elementName={documentToDelete.name}
-          type="document"
         />
       )}
     </div>

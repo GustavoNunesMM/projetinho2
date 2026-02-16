@@ -1,13 +1,14 @@
 import { useCallback } from "react";
 import { saveAs } from "file-saver";
+
 import {
   generateDocx,
   readDocx,
   generateQuestionDocx,
   parseQuestionsFromText,
-} from "./useDocumentGenerator/ExportWord";
-import { importHeaderFromDocx } from "./useDocumentGenerator/importHeader";
-import { generatePdf } from "./useDocumentGenerator/exportPdf";
+} from "@/hooks/wordManager/ExportWord.ts";
+import { importHeaderFromDocx } from "@/hooks/wordManager/importHeader.ts";
+import { generatePdf } from "@/hooks/wordManager/exportPdf.ts";
 
 export function useDocumentGenerator() {
   const saveFile = useCallback((blob: Blob, fileName: string): void => {

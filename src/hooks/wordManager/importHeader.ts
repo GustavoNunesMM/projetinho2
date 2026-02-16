@@ -10,13 +10,15 @@ import {
   AlignmentType,
   VerticalAlign,
 } from "docx";
+
+import { detectImageType } from "./ExportWord";
+
 import {
   HeaderData,
   CellStyle,
   CellBorder,
   borderStyle,
 } from "@/types/documentGeneration";
-import { detectImageType } from "./ExportWord";
 interface ParsedCell {
   text: string;
   bold: boolean;
@@ -48,6 +50,7 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
   const zip = await JSZip.loadAsync(arrayBuffer);
 
   const docXml = await zip.file("word/document.xml")?.async("text");
+
   if (!docXml) throw new Error("Documento Word inválido");
 
   const relsXml = await zip.file("word/_rels/document.xml.rels")?.async("text");
@@ -57,10 +60,11 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
   const doc = parser.parseFromString(docXml, "text/xml");
 
   const tableEl = doc.querySelector("w\\:tbl, tbl");
+
   if (!tableEl) throw new Error("Nenhuma tabela encontrada no Word");
 
   const tblBorders = tableEl.querySelector(
-    "w\\:tblPr w\\:tblBorders, tblPr tblBorders"
+    "w\\:tblPr w\\:tblBorders, tblPr tblBorders",
   );
   const defaultBorder: Record<
     keyof ParsedCell["borders"],
@@ -104,6 +108,7 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
       while (grid[r][gridCol] !== undefined) gridCol++;
 
       const cell = parsedTable[r][cellIndex];
+
       if (cell.vMerge === "continue") {
         cellIndex++;
         continue;
@@ -115,9 +120,11 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
 
       if (cell.vMerge === "restart") {
         let rowspanCount = 1;
+
         for (let nextR = r + 1; nextR < parsedTable.length; nextR++) {
           let foundContinue = false;
           let tempGridCol = 0;
+
           for (const nextCell of parsedTable[nextR]) {
             while (grid[nextR] && grid[nextR][tempGridCol] !== undefined)
               tempGridCol++;
@@ -144,6 +151,7 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
   for (let r = 0; r < grid.length; r++) {
     for (let c = 0; c < grid[r].length; c++) {
       const cell = grid[r][c];
+
       if (!cell) continue;
       if (!cell.borders.top) cell.borders.top = defaultBorder.top;
       if (!cell.borders.bottom) cell.borders.bottom = defaultBorder.bottom;
@@ -171,10 +179,10 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
   }[] = [];
   const rows: TableRow[] = [];
   const gridColEls = Array.from(
-    tableEl.querySelectorAll("w\\:tblGrid w\\:gridCol, tblGrid gridCol")
+    tableEl.querySelectorAll("w\\:tblGrid w\\:gridCol, tblGrid gridCol"),
   );
   const colWidthsDXA: number[] = gridColEls.map((col) =>
-    parseInt(col.getAttribute("w:w") || "2500")
+    parseInt(col.getAttribute("w:w") || "2500"),
   );
 
   for (let r = 0; r < grid.length; r++) {
@@ -185,6 +193,7 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
 
     for (let c = 0; c < grid[r].length; c++) {
       const cell = grid[r][c];
+
       if (cell === null) continue;
 
       rowData.push(cell.text);
@@ -209,22 +218,28 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
 
       let imgData: { base64: string; width: number; height: number } | null =
         null;
+
       if (cell.hasImage && cell.imageId) {
         const target = relationshipMap.get(cell.imageId);
+
         if (target) {
           const filename = target.replace("media/", "");
+
           imgData = imageMap.get(filename) ?? null;
           const tcEl = tcElements[r]?.[originalCellIndex];
 
           if (tcEl) {
             const drawing = tcEl.querySelector("w\\:drawing, drawing");
             const extent = drawing?.querySelector("wp\\:extent, extent");
+
             if (extent) {
               const cx = extent.getAttribute("cx");
               const cy = extent.getAttribute("cy");
+
               if (cx && cy) {
                 const width = Math.round(parseInt(cx) / 9525);
                 const height = Math.round(parseInt(cy) / 9525);
+
                 if (imgData) imgData = { ...imgData, width, height };
               }
             }
@@ -232,6 +247,7 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
         }
       }
       const cellChildren: any[] = [];
+
       if (imgData) {
         images.push({
           row: r,
@@ -261,7 +277,7 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
             children: [new ImageRun(imageRunOptions)],
             alignment: AlignmentType.CENTER,
             spacing: { line: 360 },
-          })
+          }),
         );
       }
 
@@ -286,7 +302,7 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
                   ? AlignmentType.RIGHT
                   : AlignmentType.LEFT,
             spacing: cell.spacing,
-          })
+          }),
         );
 
       if (cellChildren.length === 0)
@@ -314,7 +330,7 @@ export async function importHeaderFromDocx(file: File): Promise<HeaderData[]> {
             left: convertBorderToDocx(cell.borders.left),
             right: convertBorderToDocx(cell.borders.right),
           },
-        })
+        }),
       );
     }
 
@@ -357,13 +373,16 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
 
   const vMerge = tcPr?.querySelector("w\\:vMerge, vMerge");
   let vMergeStatus: "restart" | "continue" | null = null;
+
   if (vMerge) {
     const val = vMerge.getAttribute("w:val");
+
     vMergeStatus = !val || val === "continue" ? "continue" : "restart";
   }
 
   const shd = tcPr?.querySelector("w\\:shd, shd");
   let backgroundColor = shd?.getAttribute("w:fill") ?? undefined;
+
   if (backgroundColor === "auto" || backgroundColor === "000000")
     backgroundColor = undefined;
 
@@ -390,14 +409,17 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
   paragraphs.forEach((p) => {
     const pPr = p.querySelector("w\\:pPr, pPr");
     const jc = pPr?.querySelector("w\\:jc, jc");
+
     if (jc) {
       const alignVal = jc.getAttribute("w:val");
+
       if (alignVal === "center") alignment = "center";
       else if (alignVal === "right") alignment = "right";
       else if (alignVal === "left") alignment = "left";
     }
 
     const spacingEl = pPr?.querySelector("w\\:spacing, spacing");
+
     if (spacingEl) {
       spacing = normalizeParagraphSpacing({
         before: parseInt(spacingEl.getAttribute("w:before") || ""),
@@ -407,9 +429,11 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
     }
 
     const drawing = p.querySelector("w\\:drawing, drawing");
+
     if (drawing) {
       hasImage = true;
       const blip = drawing.querySelector("a\\:blip, blip");
+
       imageId =
         blip?.getAttribute("r:embed") ||
         blip?.getAttribute("embed") ||
@@ -417,16 +441,20 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
     }
 
     const runs = p.querySelectorAll("w\\:r, r");
+
     runs.forEach((r) => {
       const rPr = r.querySelector("w\\:rPr, rPr");
+
       if (rPr?.querySelector("w\\:b, b")) bold = true;
       if (rPr?.querySelector("w\\:i, i")) italic = true;
       if (rPr?.querySelector("w\\:u, u")) underline = true;
 
       const sz = rPr?.querySelector("w\\:sz, sz");
+
       if (sz) fontSize = parseInt(sz.getAttribute("w:val") || "22") / 2;
 
       const rFonts = rPr?.querySelector("w\\:rFonts, rFonts");
+
       if (rFonts)
         fontFamily =
           rFonts.getAttribute("w:ascii") ||
@@ -434,12 +462,15 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
           "Calibri";
 
       const colorEl = rPr?.querySelector("w\\:color, color");
+
       if (colorEl) {
         const colorVal = colorEl.getAttribute("w:val");
+
         if (colorVal && colorVal !== "auto") color = colorVal;
       }
 
       const textEl = r.querySelector("w\\:t, t");
+
       if (textEl) text += textEl.textContent || "";
     });
   });
@@ -477,10 +508,11 @@ function parseCellFromXml(tcEl: Element): ParsedCell {
 function parseBorderFromXml(borderEl?: Element | null): CellBorder | undefined {
   if (!borderEl) return;
   const val = borderEl.getAttribute("w:val") || borderEl.getAttribute("val");
+
   if (!val || val === "none" || val === "nil") return;
 
   const size = parseInt(
-    borderEl.getAttribute("w:sz") || borderEl.getAttribute("sz") || "4"
+    borderEl.getAttribute("w:sz") || borderEl.getAttribute("sz") || "4",
   );
   const colorAttr =
     borderEl.getAttribute("w:color") ||
@@ -498,6 +530,7 @@ function getCellBordersFromXml(tcPr?: Element | null): {
   right?: CellBorder;
 } {
   const tcBorders = tcPr?.querySelector("w\\:tcBorders, tcBorders");
+
   if (!tcBorders) return {};
 
   return {
@@ -512,23 +545,28 @@ function applyAdjacentBorders(grid: (ParsedCell | null)[][]) {
   for (let r = 0; r < grid.length; r++) {
     for (let c = 0; c < grid[r].length; c++) {
       const cell = grid[r][c];
+
       if (cell === null) continue;
 
       if (!cell.borders.top && r > 0) {
         const above = grid[r - 1][c];
+
         if (above && above.borders.bottom)
           cell.borders.top = above.borders.bottom;
       }
       if (!cell.borders.bottom && r < grid.length - 1) {
         const below = grid[r + 1][c];
+
         if (below && below.borders.top) cell.borders.bottom = below.borders.top;
       }
       if (!cell.borders.left && c > 0) {
         const left = grid[r][c - 1];
+
         if (left && left.borders.right) cell.borders.left = left.borders.right;
       }
       if (!cell.borders.right && c < grid[r].length - 1) {
         const right = grid[r][c + 1];
+
         if (right && right.borders.left)
           cell.borders.right = right.borders.left;
       }
@@ -549,6 +587,7 @@ const DOCX_BORDER_MAP: Record<string, any> = {
 function convertBorderToDocx(border?: CellBorder) {
   if (!border) return { style: "single" as const, size: 0, color: "FFFFFF" };
   const safeStyle = DOCX_BORDER_MAP[border.style] ?? "single";
+
   return { style: safeStyle, size: border.size, color: border.color };
 }
 
@@ -556,22 +595,26 @@ function parseRelationships(relsXml: string): Map<string, string> {
   const doc = new DOMParser().parseFromString(relsXml, "text/xml");
   const map = new Map<string, string>();
   const rels = Array.from(
-    doc.getElementsByTagName("Relationship") || doc.getElementsByTagName("Rel")
+    doc.getElementsByTagName("Relationship") || doc.getElementsByTagName("Rel"),
   ) as Element[];
+
   rels.forEach((rel) => {
     const id =
       rel.getAttribute("Id") ||
       rel.getAttribute("id") ||
       rel.getAttribute("r:id");
     const target = rel.getAttribute("Target") || rel.getAttribute("target");
+
     if (id && target) map.set(id, target);
   });
   if (map.size === 0)
     doc.querySelectorAll("[Id],[id]").forEach((n) => {
       const id = n.getAttribute("Id") || n.getAttribute("id");
       const target = n.getAttribute("Target") || n.getAttribute("target");
+
       if (id && target) map.set(id, target);
     });
+
   return map;
 }
 
@@ -581,6 +624,7 @@ async function extractImages(zip: JSZip) {
     { base64: string; width: number; height: number }
   >();
   const mediaFiles = zip.file(/^word\/media\/.+$/) || [];
+
   for (const file of mediaFiles) {
     const shortName = file.name.replace("word/media/", "");
     const ext = shortName.split(".").pop()?.toLowerCase() || "png";
@@ -593,16 +637,19 @@ async function extractImages(zip: JSZip) {
       }[ext] || "image/png";
     const base64 = `data:${mime};base64,${await file.async("base64")}`;
     const dims = await getImageDimensions(base64);
+
     imageMap.set(shortName, { base64, width: dims.width, height: dims.height });
   }
+
   return imageMap;
 }
 
 function getImageDimensions(
-  base64: string
+  base64: string,
 ): Promise<{ width: number; height: number }> {
   return new Promise((resolve) => {
     const img = new Image();
+
     img.onload = () => resolve({ width: img.width, height: img.height });
     img.onerror = () => resolve({ width: 150, height: 60 });
     img.src = base64;
@@ -613,7 +660,9 @@ function base64ToUint8Array(base64: string): Uint8Array {
   const data = base64.includes(",") ? base64.split(",")[1] : base64;
   const binary = atob(data);
   const bytes = new Uint8Array(binary.length);
+
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
   return bytes;
 }
 
