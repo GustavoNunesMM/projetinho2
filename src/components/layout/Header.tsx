@@ -24,7 +24,7 @@ import AIConfigModal from "@/components/modal/AIConfigModal.tsx";
 const Header = () => {
   const { user, logout, syncData, isSyncing } = useAuth();
   const { activeTab, setActiveTab } = useTab();
-  const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(true);
+  const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {

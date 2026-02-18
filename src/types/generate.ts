@@ -123,30 +123,3 @@ export interface DocumentTemplate {
   createdAt: string;
   updatedAt: string;
 }
-
-export interface GeneratedDocument {
-  id: number;
-  templateId: number;
-  name: string;
-  filePath: string;
-  fileName: string;
-  fileContent?: string | null;
-  filledFields: Record<string, string>;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AIFieldSuggestion {
-  fieldName: string;
-  suggestedValue: string | string[];
-  confidence: number;
-  reasoning: string;
-  sources?: string[];
-  isSequential?: boolean;
-}
-
-export interface DefaultValuesProvider {
-  getDefaultValues(
-    template: DocumentTemplate,
-  ): Record<string, string | string[]>;
-}

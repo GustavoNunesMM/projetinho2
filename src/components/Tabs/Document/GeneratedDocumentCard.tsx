@@ -1,6 +1,6 @@
 import { FileText, Download, Trash2, Calendar } from "lucide-react";
 
-import { GeneratedDocument } from "@/types/documentGeneration";
+import { GeneratedDocument } from "@/types/document.ts";
 import Button from "@/components/common/Button";
 
 interface GeneratedDocumentCardProps {

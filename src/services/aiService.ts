@@ -1,19 +1,6 @@
-import {
-  AIFieldSuggestion,
-  DocumentTemplate,
-  TemplateField,
-} from "@/types/documentGeneration";
-
-export type AIProvider = "openai" | "anthropic" | "deepseek" | "custom";
-
-export interface AIServiceConfig {
-  provider: AIProvider;
-  apiKey: string;
-  model?: string;
-  temperature?: number;
-  maxTokens?: number;
-  baseURL?: string;
-}
+import { DocumentTemplate, TemplateField } from "@/types/generate.ts";
+import { AIFieldSuggestion } from "@/types/document.ts";
+import { AIServiceConfig } from "@/types/aiTypes.ts";
 
 export class AIDocumentService {
   config: AIServiceConfig;
@@ -90,7 +77,7 @@ export class AIDocumentService {
   ): string {
     const now = new Date();
     const anoAtual = now.getFullYear();
-    const mesAtual = now.getMonth() + 1; // 0-11 -> 1-12
+    const mesAtual = now.getMonth() + 1;
     const trimestreAtual = Math.ceil(mesAtual / 3);
     const dataAtual = now.toLocaleDateString("pt-BR");
 
@@ -272,7 +259,6 @@ Responda APENAS com um JSON válido (sem \`\`\`json ou markdown):
     return data.content[0]?.text || "";
   }
 
-  // ✅ NOVO: Suporte ao DeepSeek
   private async callDeepSeek(
     prompt: string,
     apiKey: string,
@@ -356,7 +342,6 @@ REGRAS CRÍTICAS:
       return data.response || "";
     }
 
-    // Formato genérico compatível com OpenAI
     const endpoint = `${baseURL.replace(/\/$/, "")}/v1/chat/completions`;
     const requestBody = {
       model,
@@ -395,12 +380,10 @@ REGRAS CRÍTICAS:
     try {
       let cleanResponse = response.trim();
 
-      // Remover blocos de código markdown
       cleanResponse = cleanResponse
         .replace(/```json\n?/g, "")
         .replace(/```\n?/g, "");
 
-      // Tentar extrair JSON
       const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
 
       if (!jsonMatch) {
@@ -422,7 +405,6 @@ REGRAS CRÍTICAS:
           const field = fields.find((f) => f.name === s.fieldName);
           let value = s.suggestedValue;
 
-          // ✅ DETECTAR E LIMPAR PLACEHOLDERS
           if (
             typeof value === "string" &&
             (value.includes("{{") || value.includes("}}"))
@@ -447,7 +429,6 @@ REGRAS CRÍTICAS:
             }
           }
 
-          // ✅ PROCESSAR CAMPOS SEQUENCIAIS
           if (field?.sequentialIndices && field.sequentialIndices.length > 0) {
             let sequentialValues: string[] = [];
 
@@ -479,7 +460,6 @@ REGRAS CRÍTICAS:
             };
           }
 
-          // Campo único
           return {
             fieldName: s.fieldName,
             suggestedValue: String(value),

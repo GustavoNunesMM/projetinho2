@@ -10,8 +10,9 @@ import {
   Upload,
   Trash2,
 } from "lucide-react";
-import { Test } from "@/types/test";
 import { renderAsync } from "docx-preview";
+
+import { Test } from "@/types/test";
 import Button from "@/components/common/Button";
 import Portal from "@/components/common/Portal";
 
@@ -36,6 +37,7 @@ export const TestModal: React.FC<TestModalProps> = ({
   useEffect(() => {
     if (!isOpen || !test) {
       setPreviewHtml("");
+
       return;
     }
 
@@ -47,12 +49,14 @@ export const TestModal: React.FC<TestModalProps> = ({
           test.filePath.startsWith("https://")
         ) {
           const response = await fetch(test.filePath);
+
           if (!response.ok) {
             throw new Error("Erro ao carregar arquivo");
           }
           const blob = await response.blob();
 
           const container = document.createElement("div");
+
           await renderAsync(blob, container, undefined, {
             className: "docx-preview",
             inWrapper: true,
@@ -70,12 +74,14 @@ export const TestModal: React.FC<TestModalProps> = ({
         } else if (test.filePath.startsWith("blob:")) {
           try {
             const response = await fetch(test.filePath);
+
             if (!response.ok) {
               throw new Error("Blob URL expirada");
             }
             const blob = await response.blob();
 
             const container = document.createElement("div");
+
             await renderAsync(blob, container, undefined, {
               className: "docx-preview",
               inWrapper: true,
@@ -104,6 +110,7 @@ export const TestModal: React.FC<TestModalProps> = ({
         console.error("Erro ao gerar preview:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Erro desconhecido";
+
         setPreviewHtml(`
           <div class="text-center py-8">
             <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -132,6 +139,7 @@ export const TestModal: React.FC<TestModalProps> = ({
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
@@ -150,8 +158,8 @@ export const TestModal: React.FC<TestModalProps> = ({
               </div>
             </div>
             <button
-              onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+              onClick={onClose}
             >
               <X className="w-5 h-5" />
             </button>
@@ -248,21 +256,21 @@ export const TestModal: React.FC<TestModalProps> = ({
 
               <div className="pt-4 border-t border-gray-200 space-y-2">
                 <Button
-                  variant="primary"
-                  icon={Download}
-                  onClick={() => onDownload(test)}
                   className="w-full justify-center"
+                  icon={Download}
+                  variant="primary"
+                  onClick={() => onDownload(test)}
                 >
                   Baixar Documento
                 </Button>
                 {onDelete && (
                   <Button
-                    variant="light-danger"
+                    className="w-full"
                     icon={Trash2}
+                    variant="light-danger"
                     onClick={() => {
                       onDelete(test);
                     }}
-                    className="w-full"
                   >
                     Deletar Prova
                   </Button>
@@ -270,7 +278,6 @@ export const TestModal: React.FC<TestModalProps> = ({
               </div>
             </div>
 
-            {/* Preview do documento */}
             <div className="flex-1 overflow-auto bg-gray-50 p-6">
               {loading ? (
                 <div className="flex items-center justify-center h-full">
@@ -283,8 +290,8 @@ export const TestModal: React.FC<TestModalProps> = ({
                 </div>
               ) : (
                 <div
-                  className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8"
                   dangerouslySetInnerHTML={{ __html: previewHtml }}
+                  className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8"
                 />
               )}
             </div>

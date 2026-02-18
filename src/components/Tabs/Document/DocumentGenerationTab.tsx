@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from "react";
-import { FileText, Loader, Plus, Sparkles } from "lucide-react";
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { FileText, Loader, Plus } from "lucide-react";
 
 import TemplateCard from "./TemplateCard";
 import TemplateUploadModal from "./TemplateUploadModal";
@@ -9,17 +11,12 @@ import DocumentGeneratorForm, {
 import GeneratedDocumentCard from "./GeneratedDocumentCard";
 import DefaultValuesManager from "./DefaultValuesManager";
 
-import { AIAssistantPanel } from "@/components/AiAssist/AIAssistantPanel.tsx";
 import { useDocumentTemplates } from "@/hooks/useDocumentManager/useDocumentTemplates";
 import Button from "@/components/common/Button";
 import { Toast } from "@/components/common/Toast";
 import DeleteModal from "@/components/modal/DeleteModal";
-import Textarea from "@/components/common/Textarea";
-import {
-  DocumentTemplate,
-  GeneratedDocument,
-  AIFieldSuggestion,
-} from "@/types/documentGeneration";
+import { DocumentTemplate } from "@/types/generate.ts";
+import { GeneratedDocument, AIFieldSuggestion } from "@/types/document.ts";
 import { AIDocumentService } from "@/services/aiService";
 
 const DocumentGenerationTab = () => {
@@ -58,34 +55,30 @@ const DocumentGenerationTab = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiService, setAiService] = useState<AIDocumentService | null>(null);
 
-  useEffect(() => {
-    const loadAIService = () => {
-      try {
-        const aiConfig = localStorage.getItem("aiServiceConfig");
+  const loadAIService = () => {
+    try {
+      const aiConfig = localStorage.getItem("aiServiceConfig");
 
-        if (aiConfig) {
-          const config = JSON.parse(aiConfig);
+      if (aiConfig) {
+        const config = JSON.parse(aiConfig);
 
-          setAiService(new AIDocumentService(config));
-        }
-      } catch (error) {
-        console.warn("Erro ao carregar configuração de IA:", error);
+        setAiService(new AIDocumentService(config));
       }
-    };
+    } catch (error) {
+      console.warn("Erro ao carregar configuração de IA:", error);
+    }
+  };
 
+  useEffect(() => {
     loadAIService();
   }, []);
 
   const handleGenerateAISuggestions = async () => {
     if (!selectedTemplate) {
-      Toast({
-        message: "Selecione um template primeiro",
-        color: "warning",
-      });
+      Toast({ message: "Selecione um template primeiro", color: "warning" });
 
       return;
     }
-
     if (!aiContext.trim()) {
       Toast({
         message: "Por favor, forneça um contexto para a IA gerar sugestões.",
@@ -94,7 +87,6 @@ const DocumentGenerationTab = () => {
 
       return;
     }
-
     if (!aiService) {
       Toast({
         message: "Serviço de IA não configurado. Configure nas preferências.",
@@ -106,7 +98,6 @@ const DocumentGenerationTab = () => {
 
     try {
       setAiLoading(true);
-
       const suggestions = await aiService.suggestFieldValues(
         selectedTemplate,
         aiContext,
@@ -142,10 +133,7 @@ const DocumentGenerationTab = () => {
   const handleUpload = async (file: File) => {
     try {
       await uploadTemplate(file);
-      Toast({
-        message: "Template uploaded successfully!",
-        color: "success",
-      });
+      Toast({ message: "Template uploaded successfully!", color: "success" });
     } catch (error: any) {
       Toast({
         message: error.message || "Error uploading template",
@@ -164,10 +152,7 @@ const DocumentGenerationTab = () => {
     if (!templateToDelete) return;
     try {
       await deleteTemplate(templateToDelete.id);
-      Toast({
-        message: "Template excluído com sucesso!",
-        color: "success",
-      });
+      Toast({ message: "Template excluído com sucesso!", color: "success" });
       setDeleteTemplateModal(false);
       setTemplateToDelete(null);
     } catch (error: any) {
@@ -183,14 +168,12 @@ const DocumentGenerationTab = () => {
     documentName: string,
   ) => {
     if (!selectedTemplate) return;
-
     try {
       await generateDocument(selectedTemplate.id, fieldValues, documentName);
-      Toast({
-        message: "Documento gerado com sucesso!",
-        color: "success",
-      });
+      Toast({ message: "Documento gerado com sucesso!", color: "success" });
       setSelectedTemplate(null);
+      setAiSuggestions([]);
+      setAiContext("");
     } catch (error: any) {
       Toast({
         message: error.message || "Erro ao gerar documento",
@@ -203,10 +186,7 @@ const DocumentGenerationTab = () => {
   const handleDownload = async (id: number) => {
     try {
       await downloadGeneratedDocument(id);
-      Toast({
-        message: "Download iniciado!",
-        color: "success",
-      });
+      Toast({ message: "Download iniciado!", color: "success" });
     } catch (error: any) {
       Toast({
         message: error.message || "Erro ao baixar documento",
@@ -224,10 +204,7 @@ const DocumentGenerationTab = () => {
     if (!documentToDelete) return;
     try {
       await deleteGeneratedDocument(documentToDelete.id);
-      Toast({
-        message: "Documento excluído com sucesso!",
-        color: "success",
-      });
+      Toast({ message: "Documento excluído com sucesso!", color: "success" });
       setDeleteDocumentModal(false);
       setDocumentToDelete(null);
     } catch (error: any) {
@@ -270,7 +247,7 @@ const DocumentGenerationTab = () => {
             Crie documentos a partir de templates com campos preenchíveis
           </p>
         </div>
-        <div className="flex gap-2 ">
+        <div className="flex gap-2">
           <Button
             className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white shadow-lg hover:shadow-xl transform hover:scale-105 px-6 py-2.5 rounded-xl font-semibold transition-all duration-300"
             icon={Plus}
@@ -289,89 +266,31 @@ const DocumentGenerationTab = () => {
         </div>
       </div>
 
-      {/* Template Selection or Form */}
       {selectedTemplate ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Form Principal */}
-          <div className="lg:col-span-2">
-            <DocumentGeneratorForm
-              ref={formRef}
-              defaultValues={defaultValues}
-              template={selectedTemplate}
-              onApplyAISuggestion={(fieldName, suggestion, applyTo) => {
-                // Confirmação de aplicação
-                handleApplyAISuggestion(fieldName, suggestion, applyTo);
-              }}
-              onClose={() => {
-                setSelectedTemplate(null);
-                setAiSuggestions([]);
-                setAiContext("");
-                setDefaultValues({});
-              }}
-              onGenerate={handleGenerate}
-            />
-          </div>
-
-          {/* Painel de IA */}
-          <div className="lg:col-span-1">
-            <div className="space-y-4">
-              {/* Campo de Contexto */}
-              <div className="bg-white rounded-lg shadow-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-5 h-5 text-purple-500" />
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Assistente IA
-                  </h3>
-                </div>
-                <Textarea
-                  placeholder="Descreva o contexto do documento (ex: Plano de aula para 3º ano, tema: Meio Ambiente)..."
-                  rows={4}
-                  value={aiContext}
-                  onChange={(e) =>
-                    setAiContext((e.target as HTMLInputElement).value)
-                  }
-                />
-                <Button
-                  className="w-full mt-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg"
-                  disabled={aiLoading || !aiContext.trim() || !aiService}
-                  icon={Sparkles}
-                  variant="custom"
-                  onClick={handleGenerateAISuggestions}
-                >
-                  {aiLoading ? "Gerando..." : "Gerar Sugestões com IA"}
-                </Button>
-                {!aiService && (
-                  <p className="text-xs text-amber-600 mt-2">
-                    ⚠️ Serviço de IA não configurado. Configure nas
-                    preferências.
-                  </p>
-                )}
-              </div>
-
-              {/* Painel de Sugestões */}
-              <AIAssistantPanel
-                loading={aiLoading}
-                suggestions={aiSuggestions}
-                onApplySuggestion={(fieldName, suggestion, applyTo) => {
-                  // Aplicar sugestão diretamente no form através da ref
-                  if (formRef.current) {
-                    formRef.current.applyAISuggestion(
-                      fieldName,
-                      suggestion,
-                      applyTo,
-                    );
-                    // Confirmar aplicação
-                    handleApplyAISuggestion(fieldName, suggestion, applyTo);
-                  }
-                }}
-                onRegenerate={handleGenerateAISuggestions}
-              />
-            </div>
-          </div>
-        </div>
+        <DocumentGeneratorForm
+          ref={formRef}
+          aiContext={aiContext}
+          aiLoading={aiLoading}
+          aiServiceAvailable={!!aiService}
+          aiSuggestions={aiSuggestions}
+          defaultValues={defaultValues}
+          template={selectedTemplate}
+          onAiContextChange={setAiContext}
+          onApplyAISuggestion={(fieldName, suggestion, applyTo) => {
+            handleApplyAISuggestion(fieldName, suggestion, applyTo);
+          }}
+          onClose={() => {
+            setSelectedTemplate(null);
+            setAiSuggestions([]);
+            setAiContext("");
+            setDefaultValues({});
+          }}
+          onGenerate={handleGenerate}
+          onGenerateAISuggestions={handleGenerateAISuggestions}
+          onRegenerate={handleGenerateAISuggestions}
+        />
       ) : (
         <>
-          {/* Templates Section */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5 text-primary-600" />
@@ -411,7 +330,6 @@ const DocumentGenerationTab = () => {
             )}
           </div>
 
-          {/* Generated Documents Section */}
           {generatedDocuments.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -433,14 +351,12 @@ const DocumentGenerationTab = () => {
         </>
       )}
 
-      {/* Upload Modal */}
       <TemplateUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onUpload={handleUpload}
       />
 
-      {/* Delete Template Modal */}
       {deleteTemplateModal && templateToDelete && (
         <DeleteModal
           elementName={templateToDelete.name}
@@ -454,7 +370,6 @@ const DocumentGenerationTab = () => {
         />
       )}
 
-      {/* Delete Document Modal */}
       {deleteDocumentModal && documentToDelete && (
         <DeleteModal
           elementName={documentToDelete.name}

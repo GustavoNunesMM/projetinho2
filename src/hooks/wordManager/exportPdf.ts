@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 
 import { Layout } from "@/types/layout";
 import { Question } from "@/types/question";
-import { HeaderData } from "@/types/documentGeneration";
+import { HeaderData } from "@/types/generate.ts";
 import { getImageDimensions } from "@/utils/imageImport";
 
 export const generatePdf = async (

@@ -82,7 +82,7 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen w-full ">
+    <div className="w-full ">
       <Container>
         <div className={activeTab === "generate" ? "animate-fadeIn" : "hidden"}>
           <GenerateTab layouts={layouts} questions={questions} />

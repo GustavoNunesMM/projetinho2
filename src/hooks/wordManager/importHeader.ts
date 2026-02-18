@@ -18,7 +18,7 @@ import {
   CellStyle,
   CellBorder,
   borderStyle,
-} from "@/types/documentGeneration";
+} from "@/types/generate.ts";
 interface ParsedCell {
   text: string;
   bold: boolean;

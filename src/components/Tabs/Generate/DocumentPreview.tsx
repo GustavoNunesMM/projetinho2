@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { renderAsync } from "docx-preview";
+
 import { Question, GabaritoData } from "@/types/question";
 import { Layout } from "@/types/layout";
 import { Message } from "@/types/messages";
-import { useDocumentGenerator } from "@/hooks/useDocumentGenerator";
+import { useDocumentGenerator } from "@/hooks/wordManager/useDocumentGenerator";
 
 interface DocumentPreviewProps {
   questions: Question[];
@@ -33,7 +34,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           layout,
           importedHeader || undefined,
           selectedMessage || undefined,
-          gabaritoData || undefined
+          gabaritoData || undefined,
         );
 
         containerRef.current!.innerHTML = "";

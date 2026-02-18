@@ -1,13 +1,7 @@
 import { FileText, Tag, Trash2 } from "lucide-react";
 
-import { DocumentTemplate } from "@/types/documentGeneration";
 import Button from "@/components/common/Button";
-
-interface TemplateCardProps {
-  template: DocumentTemplate;
-  onDelete: () => void;
-  onSelect: () => void;
-}
+import { TemplateCardProps } from "@/types/document.ts";
 
 const TemplateCard = ({ template, onDelete, onSelect }: TemplateCardProps) => {
   const formatFileSize = (bytes: number) => {
@@ -20,9 +14,17 @@ const TemplateCard = ({ template, onDelete, onSelect }: TemplateCardProps) => {
   };
 
   return (
-    <button
+    <div
       className="group bg-white rounded-2xl shadow-md border border-gray-100 p-6 transition-all duration-300 ease-out hover:shadow-xl hover:border-primary-200 hover:scale-[1.02] cursor-pointer"
       onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       <div className="flex justify-between items-start mb-4 gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -38,9 +40,11 @@ const TemplateCard = ({ template, onDelete, onSelect }: TemplateCardProps) => {
             </p>
           </div>
         </div>
-        <button
+        <div
           className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0"
           onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          role="presentation"
         >
           <Button
             isIconOnly
@@ -51,7 +55,7 @@ const TemplateCard = ({ template, onDelete, onSelect }: TemplateCardProps) => {
           >
             <Trash2 size={16} />
           </Button>
-        </button>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -86,7 +90,7 @@ const TemplateCard = ({ template, onDelete, onSelect }: TemplateCardProps) => {
           <span>{new Date(template.createdAt).toLocaleDateString()}</span>
         </div>
       </div>
-    </button>
+    </div>
   );
 };
 

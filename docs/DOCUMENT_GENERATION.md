@@ -763,7 +763,7 @@ structure: [{
 
 ## 📚 Referências
 
-- **Tipos TypeScript:** `src/types/documentGeneration.ts`
+- **Tipos TypeScript:** `src/types/generate.ts`
 - **Hook Principal:** `src/hooks/useDocumentTemplates.ts`
 - **Serviço de IA:** `src/services/aiService.ts`
 - **Processador de Templates:** `src/utils/templateProcessor.ts`

@@ -1,10 +1,4 @@
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
-import { Question, QuestionFormData } from "@/types/question";
-import { Toast } from "@/components/common/Toast";
-import Button from "@/components/common/Button";
-import Portal from "@/components/common/Portal";
 import {
   X,
   Search,
@@ -16,6 +10,13 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Chip } from "@heroui/react";
+
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { Question, QuestionFormData } from "@/types/question";
+import { Toast } from "@/components/common/Toast";
+import Button from "@/components/common/Button";
+import Portal from "@/components/common/Portal";
 
 interface ImportQuestionsModalProps {
   isOpen: boolean;
@@ -57,6 +58,7 @@ export default function ImportQuestionsModal({
   const handleSearch = async (page: number = 1) => {
     if (!user?.id) {
       Toast({ message: "Usuário não autenticado", color: "danger" });
+
       return;
     }
 
@@ -76,6 +78,7 @@ export default function ImportQuestionsModal({
           message: "Erro de autenticação. Faça login novamente.",
           color: "danger",
         });
+
         return;
       }
 
@@ -84,6 +87,7 @@ export default function ImportQuestionsModal({
           message: "Sessão expirada. Faça login novamente.",
           color: "danger",
         });
+
         return;
       }
 
@@ -100,8 +104,9 @@ export default function ImportQuestionsModal({
 
       if (filters.content.trim()) {
         const searchTerm = `%${filters.content}%`;
+
         query = query.or(
-          `title.ilike.${searchTerm},content.ilike.${searchTerm}`
+          `title.ilike.${searchTerm},content.ilike.${searchTerm}`,
         );
       }
 
@@ -150,6 +155,7 @@ export default function ImportQuestionsModal({
       if (!data) {
         console.warn("Data is null or undefined");
         setQuestions([]);
+
         return;
       }
 
@@ -177,13 +183,14 @@ export default function ImportQuestionsModal({
       }));
 
       let filtered = convertedQuestions;
+
       if (filters.hasImage === "with") {
         filtered = filtered.filter(
-          (q) => q.contentImage && q.contentImage.trim() !== ""
+          (q) => q.contentImage && q.contentImage.trim() !== "",
         );
       } else if (filters.hasImage === "without") {
         filtered = filtered.filter(
-          (q) => !q.contentImage || q.contentImage.trim() === ""
+          (q) => !q.contentImage || q.contentImage.trim() === "",
         );
       }
 
@@ -241,6 +248,7 @@ export default function ImportQuestionsModal({
       media: "warning",
       dificil: "danger",
     };
+
     return colors[difficulty] || "default";
   };
 
@@ -250,7 +258,6 @@ export default function ImportQuestionsModal({
     <Portal>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] animate-fadeIn">
         <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-gray-100 animate-scaleIn">
-          {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
@@ -261,14 +268,13 @@ export default function ImportQuestionsModal({
               </p>
             </div>
             <button
-              onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={onClose}
             >
               <X className="w-6 h-6" />
             </button>
           </div>
 
-          {/* Filtros */}
           <div className="p-6 border-b border-gray-200 bg-gray-50">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
@@ -276,13 +282,13 @@ export default function ImportQuestionsModal({
                   Buscar conteúdo
                 </label>
                 <input
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Título ou conteúdo..."
                   type="text"
                   value={filters.content}
                   onChange={(e) =>
                     setFilters({ ...filters, content: e.target.value })
                   }
-                  placeholder="Título ou conteúdo..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
 
@@ -291,6 +297,7 @@ export default function ImportQuestionsModal({
                   Tipo
                 </label>
                 <select
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   value={filters.type}
                   onChange={(e) =>
                     setFilters({
@@ -298,7 +305,6 @@ export default function ImportQuestionsModal({
                       type: e.target.value as any,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="all">Todos</option>
                   <option value="multipla">Múltipla Escolha</option>
@@ -311,6 +317,7 @@ export default function ImportQuestionsModal({
                   Dificuldade
                 </label>
                 <select
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   value={filters.difficulty}
                   onChange={(e) =>
                     setFilters({
@@ -318,7 +325,6 @@ export default function ImportQuestionsModal({
                       difficulty: e.target.value as any,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="all">Todas</option>
                   <option value="facil">Fácil</option>
@@ -332,13 +338,13 @@ export default function ImportQuestionsModal({
                   Categoria
                 </label>
                 <input
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Ex: Matemática..."
                   type="text"
                   value={filters.category}
                   onChange={(e) =>
                     setFilters({ ...filters, category: e.target.value })
                   }
-                  placeholder="Ex: Matemática..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
 
@@ -347,6 +353,7 @@ export default function ImportQuestionsModal({
                   Imagem
                 </label>
                 <select
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   value={filters.hasImage}
                   onChange={(e) =>
                     setFilters({
@@ -354,7 +361,6 @@ export default function ImportQuestionsModal({
                       hasImage: e.target.value as any,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="all">Todas</option>
                   <option value="with">Com imagem</option>
@@ -364,11 +370,11 @@ export default function ImportQuestionsModal({
 
               <div className="flex items-end">
                 <Button
-                  variant="custom"
-                  icon={searching ? Loader : Search}
-                  onClick={() => handleSearch(1)}
-                  disabled={searching}
                   className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
+                  disabled={searching}
+                  icon={searching ? Loader : Search}
+                  variant="custom"
+                  onClick={() => handleSearch(1)}
                 >
                   {searching ? "Buscando..." : "Pesquisar"}
                 </Button>
@@ -376,7 +382,6 @@ export default function ImportQuestionsModal({
             </div>
           </div>
 
-          {/* Resultados */}
           <div className="p-6 overflow-y-auto max-h-[50vh]">
             {loading ? (
               <div className="text-center py-12">
@@ -406,7 +411,6 @@ export default function ImportQuestionsModal({
                       key={question.id}
                       className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow"
                     >
-                      {/* Card Resumido */}
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
@@ -414,19 +418,19 @@ export default function ImportQuestionsModal({
                               {question.title}
                             </h3>
                             <Chip
-                              size="sm"
                               color={getDifficultyColor(question.difficulty)}
+                              size="sm"
                               variant="flat"
                             >
                               {question.difficulty}
                             </Chip>
-                            <Chip size="sm" color="secondary" variant="flat">
+                            <Chip color="secondary" size="sm" variant="flat">
                               {question.type === "multipla"
                                 ? "Múltipla Escolha"
                                 : "Aberta"}
                             </Chip>
                             {question.contentImage && (
-                              <Chip size="sm" color="primary" variant="flat">
+                              <Chip color="primary" size="sm" variant="flat">
                                 📷 Com imagem
                               </Chip>
                             )}
@@ -441,21 +445,27 @@ export default function ImportQuestionsModal({
                         </div>
                         <div className="flex gap-2 ml-4">
                           <Button
-                            variant="custom"
-                            icon={
-                              expandedId === question.id ? ChevronUp : ChevronDown
-                            }
-                            onClick={() => toggleExpand(question.id)}
                             className="px-3 py-1.5 text-sm"
+                            icon={
+                              expandedId === question.id
+                                ? ChevronUp
+                                : ChevronDown
+                            }
+                            variant="custom"
+                            onClick={() => toggleExpand(question.id)}
                           >
-                            {expandedId === question.id ? "Recolher" : "Expandir"}
+                            {expandedId === question.id
+                              ? "Recolher"
+                              : "Expandir"}
                           </Button>
                           <Button
-                            variant="custom"
-                            icon={importingId === question.id ? Loader : Download}
-                            onClick={() => handleImport(question)}
-                            disabled={importingId === question.id}
                             className="px-3 py-1.5 text-sm bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white"
+                            disabled={importingId === question.id}
+                            icon={
+                              importingId === question.id ? Loader : Download
+                            }
+                            variant="custom"
+                            onClick={() => handleImport(question)}
                           >
                             {importingId === question.id
                               ? "Importando..."
@@ -464,7 +474,6 @@ export default function ImportQuestionsModal({
                         </div>
                       </div>
 
-                      {/* Conteúdo Expandido */}
                       {expandedId === question.id && (
                         <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
                           <div>
@@ -477,9 +486,9 @@ export default function ImportQuestionsModal({
                             {question.contentImage && (
                               <div className="mt-2">
                                 <img
-                                  src={question.contentImage}
                                   alt="Questão"
                                   className="max-w-full h-auto rounded-lg border border-gray-200"
+                                  src={question.contentImage}
                                 />
                               </div>
                             )}
@@ -508,8 +517,8 @@ export default function ImportQuestionsModal({
                                         <span className="flex-1">{option}</span>
                                         {option === question.correctAnswer && (
                                           <Chip
-                                            size="sm"
                                             color="success"
+                                            size="sm"
                                             variant="flat"
                                           >
                                             Correta
@@ -518,9 +527,9 @@ export default function ImportQuestionsModal({
                                       </div>
                                       {question.optionImages[idx] && (
                                         <img
-                                          src={question.optionImages[idx]!}
                                           alt={`Alternativa ${String.fromCharCode(65 + idx)}`}
                                           className="mt-2 max-w-xs h-auto rounded border border-gray-200"
+                                          src={question.optionImages[idx]!}
                                         />
                                       )}
                                     </div>
@@ -548,45 +557,64 @@ export default function ImportQuestionsModal({
                 {totalCount > itemsPerPage && (
                   <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
                     <div className="text-sm text-gray-600">
-                      Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, totalCount)} -{" "}
-                      {Math.min(currentPage * itemsPerPage, totalCount)} de {totalCount} questões
+                      Mostrando{" "}
+                      {Math.min(
+                        (currentPage - 1) * itemsPerPage + 1,
+                        totalCount,
+                      )}{" "}
+                      - {Math.min(currentPage * itemsPerPage, totalCount)} de{" "}
+                      {totalCount} questões
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="custom"
-                        icon={ChevronLeft}
-                        onClick={() => handleSearch(currentPage - 1)}
-                        disabled={currentPage === 1 || loading}
                         className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={currentPage === 1 || loading}
+                        icon={ChevronLeft}
+                        variant="custom"
+                        onClick={() => handleSearch(currentPage - 1)}
                       >
                         Anterior
                       </Button>
-                      
+
                       <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.ceil(totalCount / itemsPerPage) }, (_, i) => i + 1)
+                        {Array.from(
+                          { length: Math.ceil(totalCount / itemsPerPage) },
+                          (_, i) => i + 1,
+                        )
                           .filter((pageNum) => {
-                            const totalPages = Math.ceil(totalCount / itemsPerPage);
+                            const totalPages = Math.ceil(
+                              totalCount / itemsPerPage,
+                            );
+
                             return (
                               pageNum === 1 ||
                               pageNum === totalPages ||
-                              (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                              (pageNum >= currentPage - 1 &&
+                                pageNum <= currentPage + 1)
                             );
                           })
                           .map((pageNum, idx, arr) => {
-                            const showEllipsis = idx > 0 && pageNum - arr[idx - 1] > 1;
+                            const showEllipsis =
+                              idx > 0 && pageNum - arr[idx - 1] > 1;
+
                             return (
-                              <div key={pageNum} className="flex items-center gap-1">
+                              <div
+                                key={pageNum}
+                                className="flex items-center gap-1"
+                              >
                                 {showEllipsis && (
-                                  <span className="px-2 text-gray-400">...</span>
+                                  <span className="px-2 text-gray-400">
+                                    ...
+                                  </span>
                                 )}
                                 <button
-                                  onClick={() => handleSearch(pageNum)}
-                                  disabled={loading}
                                   className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
                                     currentPage === pageNum
                                       ? "bg-primary-600 text-white font-semibold"
                                       : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                                   } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  disabled={loading}
+                                  onClick={() => handleSearch(pageNum)}
                                 >
                                   {pageNum}
                                 </button>
@@ -596,13 +624,14 @@ export default function ImportQuestionsModal({
                       </div>
 
                       <Button
-                        variant="custom"
-                        icon={ChevronRight}
-                        onClick={() => handleSearch(currentPage + 1)}
-                        disabled={
-                          currentPage >= Math.ceil(totalCount / itemsPerPage) || loading
-                        }
                         className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={
+                          currentPage >= Math.ceil(totalCount / itemsPerPage) ||
+                          loading
+                        }
+                        icon={ChevronRight}
+                        variant="custom"
+                        onClick={() => handleSearch(currentPage + 1)}
                       >
                         Próxima
                       </Button>
@@ -613,12 +642,11 @@ export default function ImportQuestionsModal({
             )}
           </div>
 
-          {/* Footer */}
           <div className="flex justify-end gap-2 p-6 border-t border-gray-200">
             <Button
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-xl transition-all duration-300 font-medium"
               variant="custom"
               onClick={onClose}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-xl transition-all duration-300 font-medium"
             >
               Fechar
             </Button>

@@ -284,7 +284,7 @@ updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 🔧 Tipos TypeScript Atualizados
 typescript
 
-// types/documentGeneration.ts
+// types/generate.ts
 
 export interface TemplateField {
 name: string;

@@ -12,7 +12,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-import { DocumentTemplate, TableStructure } from "@/types/documentGeneration";
+import { DocumentTemplate, TableStructure } from "@/types/generate.ts";
 import { WordTableExtractor } from "@/services/wordTableExtractor";
 
 interface WordTableEditorProps {
@@ -48,7 +48,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
       const extractor = new WordTableExtractor();
       const result = await extractor.extractFromDocx(file);
 
-      // Criar template
       const newTemplate: DocumentTemplate = {
         id: Date.now(),
         name: file.name.replace(".docx", ""),
@@ -63,7 +62,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
 
       setTemplate(newTemplate);
 
-      // Inicializar valores vazios
       const initialValues: Record<string, string | string[]> = {};
 
       result.fields.forEach((field) => {
@@ -87,9 +85,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
     }
   };
 
-  /**
-   * Atualizar valor de um campo sequencial
-   */
   const handleSequentialFieldChange = (
     fieldName: string,
     index: number,
@@ -105,9 +100,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
     });
   };
 
-  /**
-   * Adicionar nova linha em uma tabela
-   */
   const handleAddRow = (tableIndex: number) => {
     if (!template || !template.structure) return;
 
@@ -115,7 +107,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
 
     if (!structure || !structure.isDynamic) return;
 
-    // Adicionar índice para cada campo sequencial da tabela
     structure.columnMapping.forEach((col) => {
       if (col.isSequential) {
         const field = template.fields.find((f) => f.name === col.fieldName);
@@ -125,7 +116,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
 
           field.sequentialIndices.push(newIndex);
 
-          // Adicionar valor vazio
           const currentValues = Array.isArray(values[col.fieldName])
             ? [...(values[col.fieldName] as string[])]
             : [];
@@ -140,14 +130,10 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
       }
     });
 
-    // Atualizar contagem de linhas
     structure.rows += 1;
     setTemplate({ ...template });
   };
 
-  /**
-   * Remover linha de uma tabela
-   */
   const handleRemoveRow = (tableIndex: number, rowIndex: number) => {
     if (!template || !template.structure) return;
     if (!confirm("Tem certeza que deseja remover esta linha?")) return;
@@ -156,23 +142,19 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
 
     if (!structure || !structure.isDynamic) return;
 
-    // Remover índice de cada campo sequencial
     structure.columnMapping.forEach((col) => {
       if (col.isSequential) {
         const field = template.fields.find((f) => f.name === col.fieldName);
 
         if (field && field.sequentialIndices) {
-          // Calcular índice real (considerando header)
           const dataRowIndex = rowIndex - structure.headerRows;
 
           if (
             dataRowIndex >= 0 &&
             dataRowIndex < field.sequentialIndices.length
           ) {
-            // Remover índice
             field.sequentialIndices.splice(dataRowIndex, 1);
 
-            // Remover valor
             const currentValues = Array.isArray(values[col.fieldName])
               ? [...(values[col.fieldName] as string[])]
               : [];
@@ -188,14 +170,10 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
       }
     });
 
-    // Atualizar contagem de linhas
     structure.rows -= 1;
     setTemplate({ ...template });
   };
 
-  /**
-   * Salvar template e valores
-   */
   const handleSave = async () => {
     if (!template || !onSave) return;
 
@@ -212,9 +190,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
     }
   };
 
-  /**
-   * Renderizar tabela para edição
-   */
   const renderTable = (structure: TableStructure) => {
     const dataRows = structure.rows - structure.headerRows;
 
@@ -223,7 +198,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
         key={structure.tableIndex}
         className="border rounded-lg overflow-hidden mb-6"
       >
-        {/* Header */}
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4">
           <div className="flex justify-between items-center">
             <div>
@@ -251,7 +225,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
           </div>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -414,7 +387,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
             <FileText className="w-8 h-8 text-blue-600" />
@@ -425,7 +397,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
           </p>
         </div>
 
-        {/* Upload Area */}
         {!template && (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -451,7 +422,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
           </div>
         )}
 
-        {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
@@ -459,7 +429,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -470,7 +439,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
           </div>
         )}
 
-        {/* Success */}
         {success && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -478,7 +446,6 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
           </div>
         )}
 
-        {/* Template Info */}
         {template && (
           <div className="mb-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -503,14 +470,12 @@ export function TableEditor({ onSave }: WordTableEditorProps) {
           </div>
         )}
 
-        {/* Tables */}
         {template && template.structure && template.structure.length > 0 && (
           <div className="space-y-6">
             {template.structure.map((structure) => renderTable(structure))}
           </div>
         )}
 
-        {/* Actions */}
         {template && (
           <div className="flex gap-3 pt-6 border-t border-gray-200">
             <button

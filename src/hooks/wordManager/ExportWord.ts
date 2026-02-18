@@ -22,7 +22,7 @@ import { Message } from "@/types/messages";
 import { WordLayoutInfo } from "@/types/layout";
 import { Layout } from "@/types/layout";
 import { Question, GabaritoData } from "@/types/question";
-import { HeaderData, ParsedQuestion } from "@/types/documentGeneration";
+import { HeaderData, ParsedQuestion } from "@/types/generate.ts";
 
 const base64ToUint8Array = (base64: string): Uint8Array => {
   const base64Data = base64.includes(",") ? base64.split(",")[1] : base64;

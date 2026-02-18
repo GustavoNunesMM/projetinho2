@@ -9,7 +9,7 @@ import {
   TableStructure,
   ColumnMapping,
   FieldType,
-} from "@/types/documentGeneration.ts";
+} from "@/types/generate.ts";
 
 interface ExtractedTable {
   rows: string[][];

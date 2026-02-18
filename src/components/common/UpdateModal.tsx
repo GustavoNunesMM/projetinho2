@@ -7,8 +7,9 @@ import {
   ModalFooter,
   Progress,
 } from "@heroui/react";
-import Button from "./Button";
 import { RefreshCw, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+
+import Button from "./Button";
 
 interface UpdateModalProps {
   isOpen: boolean;
@@ -44,7 +45,6 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   >("idle");
   const [error, setError] = useState<string | null>(null);
 
-  // Sincronizar progresso e estado externos
   useEffect(() => {
     if (externalProgress > 0) {
       setDownloadProgress(externalProgress);
@@ -56,7 +56,6 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
       setStatus("downloading");
     } else if (!isDownloading && status === "downloading") {
       setStatus("installing");
-      // Após instalar, marcar como concluído
       setTimeout(() => {
         setStatus("completed");
       }, 2000);
@@ -121,7 +120,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} size="lg" onClose={onClose}>
       <ModalContent>
         {(onClose) => (
           <>
@@ -141,7 +140,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                     <p className="text-sm text-blue-700 mb-2">
                       Data de lançamento:{" "}
                       {new Date(updateInfo.releaseDate).toLocaleDateString(
-                        "pt-BR"
+                        "pt-BR",
                       )}
                     </p>
                     <p className="text-sm text-blue-700">
@@ -169,11 +168,11 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                   </div>
                   {status === "downloading" && (
                     <Progress
-                      value={downloadProgress}
                       className="w-full"
                       color="primary"
-                      showValueLabel={true}
                       formatOptions={{ style: "percent" }}
+                      showValueLabel={true}
+                      value={downloadProgress}
                     />
                   )}
                 </div>

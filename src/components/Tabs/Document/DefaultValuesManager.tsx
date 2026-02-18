@@ -42,7 +42,6 @@ export default function DefaultValuesManager({
     }
   }, [isOpen]);
 
-  // Salvar valores
   const saveEntries = (newEntries: DefaultValueEntry[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
     setEntries(newEntries);
@@ -87,7 +86,6 @@ export default function DefaultValuesManager({
   };
 
   const handleApply = () => {
-    // Converter array de entradas para objeto Record
     const values: Record<string, string | string[]> = {};
 
     entries.forEach((entry) => {
@@ -103,7 +101,6 @@ export default function DefaultValuesManager({
     <Portal>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-          {/* Header */}
           <div className="flex justify-between items-center p-6 border-b border-gray-200">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">
@@ -122,9 +119,7 @@ export default function DefaultValuesManager({
             </button>
           </div>
 
-          {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Adicionar Novo */}
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">
                 Adicionar Novo Valor Padrão
@@ -167,7 +162,6 @@ export default function DefaultValuesManager({
               </Button>
             </div>
 
-            {/* Lista de Valores */}
             <div>
               <h3 className="text-lg font-semibold text-gray-700 mb-4">
                 Valores Padrões Configurados ({entries.length})
@@ -239,7 +233,6 @@ export default function DefaultValuesManager({
             </div>
           </div>
 
-          {/* Footer */}
           <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
             <Button
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-xl"

@@ -51,7 +51,12 @@ const DEFAULT_MODELS: Record<AIProvider, string[]> = {
     "claude-3-haiku-20240307",
   ],
   deepseek: ["deepseek-chat", "deepseek-reasoner"],
-  custom: ["llama3.1:8b", "llama3.1:70b"],
+  custom: [
+    "llama3.1:8b",
+    "llama3.1:70b",
+    "qwen3:14b",
+    "qwen2.5-coder:7b-ctx8k",
+  ],
 };
 
 const DEFAULT_CONFIG: AIServiceConfig = {
@@ -184,7 +189,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] animate-fadeIn">
         <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-gray-100 animate-scaleIn max-h-[90vh] overflow-y-auto">
           <div className="p-6">
-            {/* Header */}
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
@@ -208,7 +212,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
               </button>
             </div>
 
-            {/* Info banner */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-start gap-3">
               <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
@@ -223,7 +226,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
               </div>
             </div>
 
-            {/* General error */}
             {errors.general && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-red-700">{errors.general}</p>
@@ -231,7 +233,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
             )}
 
             <div className="space-y-4">
-              {/* Provider */}
               <Select
                 classNames={{
                   label: "text-sm",
@@ -257,7 +258,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
                 ))}
               </Select>
 
-              {/* API Key */}
               <Input
                 classNames={{
                   input: "text-sm",
@@ -296,7 +296,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
                 }}
               />
 
-              {/* Model select */}
               <Select
                 classNames={{
                   label: "text-sm",
@@ -317,7 +316,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
                 ))}
               </Select>
 
-              {/* Custom model name */}
               {config.provider === "custom" && (
                 <Input
                   classNames={{
@@ -335,7 +333,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
                 />
               )}
 
-              {/* Base URL (custom only) */}
               {config.provider === "custom" && (
                 <Input
                   isRequired
@@ -357,7 +354,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
                 />
               )}
 
-              {/* Temperature */}
               <Input
                 classNames={{
                   input: "text-sm",
@@ -384,7 +380,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
                 }}
               />
 
-              {/* Max Tokens */}
               <Input
                 classNames={{
                   input: "text-sm",
@@ -411,7 +406,6 @@ export default function AIConfigModal({ isOpen, onClose }: AIConfigModalProps) {
               />
             </div>
 
-            {/* Footer */}
             <div className="flex gap-3 mt-6 pt-6 border-t border-gray-100">
               <Button
                 className={`flex-1 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 ${

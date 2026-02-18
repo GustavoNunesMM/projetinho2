@@ -12,10 +12,8 @@ import {
   DocumentTemplate as DBTemplate,
   GeneratedDocument as DBGeneratedDocument,
 } from "@/database/database";
-import {
-  DocumentTemplate,
-  GeneratedDocument,
-} from "@/types/documentGeneration";
+import { DocumentTemplate } from "@/types/generate.ts";
+import { GeneratedDocument } from "@/types/document.ts";
 import {
   extractFieldsFromDocx,
   processDocxTemplate,

@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+
 import { AuthProvider } from "./contexts/AuthContext";
 import App from "./App.js";
 import { Provider } from "./provider.js";
 import "./styles/globals.css";
 
-// Tratamento de erros globais
 window.addEventListener("error", (event) => {
   console.error("Erro global capturado:", event.error);
 });
@@ -16,6 +16,7 @@ window.addEventListener("unhandledrejection", (event) => {
 });
 
 const rootElement = document.getElementById("root");
+
 if (!rootElement) {
   throw new Error("Elemento root não encontrado!");
 }
