@@ -1,5 +1,6 @@
-import { Message } from "@/types/messages";
 import Database from "@tauri-apps/plugin-sql";
+
+import { Message } from "@/types/messages";
 
 // ==================== Tipagens ====================
 
@@ -61,6 +62,7 @@ export async function getDatabase(): Promise<Database> {
   db = await Database.load("sqlite:banco_questoes.db");
 
   await initializeDatabase(db);
+
   return db;
 }
 
@@ -168,7 +170,6 @@ async function initializeDatabase(db: Database) {
 
 async function migrateDatabase(db: Database) {
   try {
-    // Verificar se a tabela document_templates existe antes de verificar colunas
     const tables = await db.select<{ name: string }[]>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='document_templates'",
     );
@@ -188,7 +189,6 @@ async function migrateDatabase(db: Database) {
       }
     }
 
-    // Verificar se a tabela generated_documents existe antes de verificar colunas
     const generatedTables = await db.select<{ name: string }[]>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='generated_documents'",
     );
@@ -209,7 +209,6 @@ async function migrateDatabase(db: Database) {
     }
   } catch (error) {
     console.error("Erro na migração do banco de dados:", error);
-    // Relançar o erro para que seja visível
     throw error;
   }
 }
@@ -325,17 +324,20 @@ export async function getAllQuestions(): Promise<Question[]> {
   const rows = await db.select<Question[]>(
     "SELECT * FROM questions ORDER BY created_at DESC",
   );
+
   return rows;
 }
 
 export async function deleteQuestion(id: number): Promise<void> {
   const db = await getDatabase();
+
   await db.execute("DELETE FROM questions WHERE id = $1", [id]);
   await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
 }
 
 export async function deleteAllQuestion(): Promise<void> {
   const db = await getDatabase();
+
   await db.execute("DELETE FROM questions");
   await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
 }
@@ -451,24 +453,27 @@ export async function getAllLayouts(): Promise<Layout[]> {
   const rows = await db.select<Layout[]>(
     "SELECT * FROM layouts ORDER BY created_at DESC",
   );
+
   return rows;
 }
 
 export async function deleteLayout(id: number): Promise<void> {
   const db = await getDatabase();
-  console.log(db, id);
+
   await db.execute("DELETE FROM layouts WHERE id = $1", [id]);
   await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
 }
 
 export async function deleteAllLayout(): Promise<void> {
   const db = await getDatabase();
+
   await db.execute("DELETE FROM layouts");
   await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
 }
 // ===================== CRUD: Messages ===================
 export async function getAllMessages(): Promise<Message[]> {
   const db = await getDatabase();
+
   return await db.select("SELECT * FROM messages ORDER BY createdAt DESC");
 }
 
@@ -534,6 +539,7 @@ export async function updateMessage(
   message: Omit<Message, "createdAt" | "updatedAt">,
 ): Promise<void> {
   const db = await getDatabase();
+
   await db.execute(
     `UPDATE messages 
      SET title = ?, items = ?, isList = ?, isOrdered = ?, updatedAt = datetime('now')
@@ -550,11 +556,13 @@ export async function updateMessage(
 
 export async function deleteMessage(id: number): Promise<void> {
   const db = await getDatabase();
+
   await db.execute("DELETE FROM messages WHERE id = ?", [id]);
 }
 
 export async function deleteAllMessages(): Promise<void> {
   const db = await getDatabase();
+
   await db.execute("DELETE FROM messages");
 }
 
@@ -565,6 +573,7 @@ export async function getAllTests(): Promise<TestDB[]> {
   const result = await db.select<TestDB[]>(
     "SELECT * FROM tests ORDER BY createdAt DESC",
   );
+
   return result || [];
 }
 
@@ -580,6 +589,7 @@ export async function insertTest(
       "SELECT * FROM tests WHERE id = $1",
       [t.id],
     );
+
     if (existing && existing.length > 0) {
       return existing[0];
     }
@@ -624,7 +634,6 @@ export async function insertTest(
     `INSERT INTO tests (${columns}) VALUES (${placeholders})`,
     values,
   );
-  console.log("resultado insercao teste", result);
 
   const insertedId = hasId ? t.id! : Number(result.lastInsertId);
 
@@ -671,6 +680,7 @@ export async function updateTest(
 
 export async function deleteTest(id: number): Promise<void> {
   const db = await getDatabase();
+
   await db.execute("DELETE FROM tests WHERE id = $1", [id]);
 }
 
@@ -701,7 +711,9 @@ export interface GeneratedDocument {
 }
 
 export async function insertDocumentTemplate(
-  template: Omit<DocumentTemplate, "id" | "createdAt" | "updatedAt"> & { id?: number },
+  template: Omit<DocumentTemplate, "id" | "createdAt" | "updatedAt"> & {
+    id?: number;
+  },
 ): Promise<DocumentTemplate> {
   const db = await getDatabase();
 
@@ -767,28 +779,35 @@ export async function getAllDocumentTemplates(): Promise<DocumentTemplate[]> {
   const rows = await db.select<DocumentTemplate[]>(
     "SELECT * FROM document_templates ORDER BY createdAt DESC",
   );
+
   return rows;
 }
 
 export async function deleteDocumentTemplate(id: number): Promise<void> {
   const db = await getDatabase();
+
   await db.execute("DELETE FROM document_templates WHERE id = $1", [id]);
   await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
 }
 
-export async function getDocumentTemplate(id: number): Promise<DocumentTemplate | null> {
+export async function getDocumentTemplate(
+  id: number,
+): Promise<DocumentTemplate | null> {
   const db = await getDatabase();
   const rows = await db.select<DocumentTemplate[]>(
     "SELECT * FROM document_templates WHERE id = $1",
     [id],
   );
+
   return rows && rows.length > 0 ? rows[0] : null;
 }
 
 // ==================== CRUD: Generated Documents ====================
 
 export async function insertGeneratedDocument(
-  document: Omit<GeneratedDocument, "id" | "createdAt" | "updatedAt"> & { id?: number },
+  document: Omit<GeneratedDocument, "id" | "createdAt" | "updatedAt"> & {
+    id?: number;
+  },
 ): Promise<GeneratedDocument> {
   const db = await getDatabase();
 
@@ -854,11 +873,13 @@ export async function getAllGeneratedDocuments(): Promise<GeneratedDocument[]> {
   const rows = await db.select<GeneratedDocument[]>(
     "SELECT * FROM generated_documents ORDER BY createdAt DESC",
   );
+
   return rows;
 }
 
 export async function deleteGeneratedDocument(id: number): Promise<void> {
   const db = await getDatabase();
+
   await db.execute("DELETE FROM generated_documents WHERE id = $1", [id]);
   await db.execute("PRAGMA wal_checkpoint(TRUNCATE)");
 }
@@ -871,6 +892,7 @@ export async function getGeneratedDocumentsByTemplate(
     "SELECT * FROM generated_documents WHERE templateId = $1 ORDER BY createdAt DESC",
     [templateId],
   );
+
   return rows;
 }
 
@@ -903,6 +925,7 @@ export async function getStatistics() {
 
 export async function clearDatabase() {
   const db = await getDatabase();
+
   await db.execute("DELETE FROM questions");
   await db.execute("DELETE FROM tests");
   await db.execute("DELETE FROM layouts");

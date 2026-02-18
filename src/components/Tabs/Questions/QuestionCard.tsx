@@ -1,11 +1,13 @@
 import { Edit2, Trash2, Save, FileText } from "lucide-react";
 import { Chip } from "@heroui/react";
-import { useDocumentGenerator } from "@/hooks/useDocumentGenerator";
 import { useState, useRef } from "react";
+
+import PreviewModal from "./PreviewModal";
+
+import { useDocumentGenerator } from "@/hooks/wordManager/useDocumentGenerator";
 import { Question } from "@/types/question";
 import { Toast } from "@/components/common/Toast.tsx";
 import Button from "@/components/common/Button.tsx";
-import PreviewModal from "./PreviewModal";
 
 interface QuestionCardProps {
   question: Question;
@@ -71,6 +73,7 @@ const QuestionCard = ({
       media: "warning",
       dificil: "danger",
     };
+
     return variants[difficulty] || "default";
   };
 
@@ -82,6 +85,7 @@ const QuestionCard = ({
     try {
       const blob = await generateQuestionDocx(question);
       const fileName = `${question.title || "questao"}.docx`;
+
       saveFile(blob, fileName);
       Toast({
         message: `Documento ${fileName.toUpperCase()} gerado com sucesso!`,
@@ -129,28 +133,28 @@ const QuestionCard = ({
           <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
             <Button
               isIconOnly
-              variant="custom"
-              onClick={onEdit}
               aria-label="Editar"
               className="w-9 h-9 bg-primary-50 hover:bg-primary-100 text-primary-600 rounded-lg transition-all duration-200 hover:scale-110"
+              variant="custom"
+              onClick={onEdit}
             >
               <Edit2 size={16} />
             </Button>
             <Button
               isIconOnly
-              variant="custom"
-              onClick={onDelete}
               aria-label="Excluir"
               className="w-9 h-9 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition-all duration-200 hover:scale-110"
+              variant="custom"
+              onClick={onDelete}
             >
               <Trash2 size={16} />
             </Button>
             <Button
               isIconOnly
-              variant="custom"
-              onClick={handleSaveFile}
               aria-label="Salvar como Word"
               className="w-9 h-9 bg-green-50 hover:bg-green-100 text-green-600 rounded-lg transition-all duration-200 hover:scale-110"
+              variant="custom"
+              onClick={handleSaveFile}
             >
               <Save size={16} />
             </Button>
@@ -166,26 +170,26 @@ const QuestionCard = ({
             <p className="leading-relaxed">{question.content}</p>
             <div className="flex gap-2 flex-wrap">
               <Chip
-                size="sm"
-                color={getDifficultyColor(question.difficulty)}
                 className="font-medium"
+                color={getDifficultyColor(question.difficulty)}
+                size="sm"
               >
                 {question.difficulty}
               </Chip>
               <Chip
-                size="sm"
-                color={getTypeColor(question.type)}
                 className="font-medium"
+                color={getTypeColor(question.type)}
+                size="sm"
               >
                 {question.type === "multipla" ? "Múltipla Escolha" : "Aberta"}
               </Chip>
               {question.subject && (
-                <Chip size="sm" className="bg-gray-100 text-gray-700">
+                <Chip className="bg-gray-100 text-gray-700" size="sm">
                   {question.subject}
                 </Chip>
               )}
               {question.category && (
-                <Chip size="sm" className="bg-primary-50 text-primary-700">
+                <Chip className="bg-primary-50 text-primary-700" size="sm">
                   {question.category}
                 </Chip>
               )}
@@ -200,7 +204,7 @@ const QuestionCard = ({
                         <li key={idx} className="pl-1">
                           {opt}
                         </li>
-                      )
+                      ),
                   )}
                 </ol>
               </div>
@@ -213,26 +217,26 @@ const QuestionCard = ({
             </p>
             <div className="flex gap-2 mb-4 flex-wrap">
               <Chip
-                size="sm"
-                color={getTypeColor(question.type)}
                 className="font-medium"
+                color={getTypeColor(question.type)}
+                size="sm"
               >
                 {question.type === "multipla" ? "Múltipla Escolha" : "Aberta"}
               </Chip>
               <Chip
-                size="sm"
-                color={getDifficultyColor(question.difficulty)}
                 className="font-medium"
+                color={getDifficultyColor(question.difficulty)}
+                size="sm"
               >
                 {question.difficulty}
               </Chip>
               {question.subject && (
-                <Chip size="sm" className="bg-gray-100 text-gray-700">
+                <Chip className="bg-gray-100 text-gray-700" size="sm">
                   {question.subject}
                 </Chip>
               )}
               {question.category && (
-                <Chip size="sm" className="bg-primary-50 text-primary-700">
+                <Chip className="bg-primary-50 text-primary-700" size="sm">
                   {question.category}
                 </Chip>
               )}
@@ -256,7 +260,7 @@ const QuestionCard = ({
                             </span>
                             <p className="text-sm text-gray-700">{option}</p>
                           </div>
-                        )
+                        ),
                     )}
                   </div>
                 </div>
@@ -268,8 +272,8 @@ const QuestionCard = ({
       {showPreview && (
         <PreviewModal
           isOpen={showPreview}
-          onClose={() => setShowPreview(false)}
           question={question}
+          onClose={() => setShowPreview(false)}
         />
       )}
     </div>

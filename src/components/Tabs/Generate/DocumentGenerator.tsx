@@ -12,8 +12,9 @@ import {
   ClipboardList,
   Sparkles,
 } from "lucide-react";
+
 import Button from "@/components/common/Button";
-import { useDocumentGenerator } from "@/hooks/useDocumentGenerator";
+import { useDocumentGenerator } from "@/hooks/wordManager/useDocumentGenerator";
 import { useDriveClient } from "@/hooks/useDriveClient";
 import { useMessages } from "@/hooks/useMessages";
 import { Layout } from "@/types/layout";
@@ -71,6 +72,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
 
   useEffect(() => {
     const valid = selectedQuestionsData.some((q) => q.type === "multipla");
+
     sethaveValidQuestion(valid);
   }, [selectedQuestionsData]);
 
@@ -78,16 +80,19 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
+
     if (!file) return;
 
     if (!file.name.endsWith(".docx")) {
       Toast({ message: "Por favor, selecione um arquivo .docx" });
+
       return;
     }
 
     try {
       Toast({ message: "Importando cabeçalho..." });
       const headerContent = await importHeaderFromDocx(file);
+
       setImportedHeader(headerContent);
       setHeaderFileName(file.name);
       Toast({ message: "Cabeçalho importado com sucesso!" });
@@ -124,10 +129,12 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   const handleGenerateDocument = async (format: "docx" | "pdf") => {
     if (!selectedLayout) {
       Toast({ message: "Selecione um layout primeiro!" });
+
       return;
     }
     if (selectedCount === 0) {
       Toast({ message: "Selecione pelo menos uma questão!", color: "warning" });
+
       return;
     }
 
@@ -199,9 +206,11 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         selectedMessage || undefined,
         gabaritoData || undefined,
       );
+
       setPreviewBlob(blob);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       const url = URL.createObjectURL(blob);
+
       setPreviewUrl(url);
       setIsPreviewOpen(true);
     } catch (err: any) {
@@ -224,6 +233,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
             message: "Selecione questões para gerar o documento!",
             color: "warning",
           });
+
           return;
         }
 
@@ -242,6 +252,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
             message: `Erro ao gerar documento: ${err.message}`,
             color: "danger",
           });
+
           return;
         } finally {
           setGenerating(false);
@@ -249,6 +260,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       }
 
       const fileName = `prova_${Date.now()}.docx`;
+
       saveFile(blobToSave, fileName);
 
       setPendingBlob(blobToSave);
@@ -292,6 +304,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
             pendingFileName || testData.fileName,
             user.id,
           );
+
           filePath = publicUrl;
           Toast({ message: "Arquivo enviado para a nuvem com sucesso!" });
         } catch (uploadError: any) {
@@ -401,18 +414,18 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           {!importedHeader ? (
             <div className="pl-11">
               <label
-                htmlFor="header-upload"
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl cursor-pointer hover:from-primary-700 hover:to-primary-800 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm font-medium"
+                htmlFor="header-upload"
               >
                 <Upload className="w-4 h-4" />
                 Importar Cabeçalho (.docx)
               </label>
               <input
+                accept=".docx"
+                className="hidden"
                 id="header-upload"
                 type="file"
-                accept=".docx"
                 onChange={handleImportHeader}
-                className="hidden"
               />
             </div>
           ) : (
@@ -426,9 +439,9 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
                 </span>
               </div>
               <button
-                onClick={handleRemoveHeader}
                 className="w-7 h-7 bg-red-100 hover:bg-red-200 text-red-500 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
                 title="Remover cabeçalho"
+                onClick={handleRemoveHeader}
               >
                 <X size={16} />
               </button>
@@ -453,12 +466,12 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           <div className="pl-11">
             {!selectedMessage ? (
               <Button
+                className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm font-medium"
+                disabled={loadingMessages}
                 variant="custom"
                 onClick={() => openModalMessages(true)}
-                disabled={loadingMessages}
-                className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm font-medium"
               >
-                <MessageSquareText size={16} className="mr-2" />
+                <MessageSquareText className="mr-2" size={16} />
                 Selecionar Texto
               </Button>
             ) : (
@@ -472,9 +485,9 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
                   </span>
                 </div>
                 <button
-                  onClick={handleRemoveMessage}
                   className="w-7 h-7 bg-red-100 hover:bg-red-200 text-red-500 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
                   title="Remover texto"
+                  onClick={handleRemoveMessage}
                 >
                   <X size={16} />
                 </button>
@@ -500,20 +513,21 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           <div className="pl-11">
             {!gabaritoData ? (
               <Button
-                variant="custom"
                 className={`px-4 py-2.5 rounded-xl shadow-md text-sm font-medium transition-all duration-300 ${
                   haveValidQuestion
                     ? "bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white hover:shadow-lg transform hover:scale-105"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
+                disabled={!haveValidQuestion}
+                variant="custom"
                 onClick={() => {
                   const gabarito = gerarGabarito(selectedQuestionsData);
+
                   setGabaritoData(gabarito);
                   setIsGabaritoModalOpen(true);
                 }}
-                disabled={!haveValidQuestion}
               >
-                <ClipboardList size={16} className="mr-2" />
+                <ClipboardList className="mr-2" size={16} />
                 Adicionar Gabarito
               </Button>
             ) : (
@@ -527,9 +541,9 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
                   </span>
                 </div>
                 <button
-                  onClick={handleRemoveGabarito}
                   className="w-7 h-7 bg-red-100 hover:bg-red-200 text-red-500 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
                   title="Remover gabarito"
+                  onClick={handleRemoveGabarito}
                 >
                   <X size={16} />
                 </button>
@@ -540,24 +554,24 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
       </div>
 
       <MessagesModal
-        isModalMessagesOpen={isModalMessagesOpen}
-        openModalMessages={() => openModalMessages(false)}
-        messages={messages}
-        loadingMessages={loadingMessages}
-        selectedMessage={selectedMessage}
         handleSelectMessage={handleSelectMessage}
+        isModalMessagesOpen={isModalMessagesOpen}
+        loadingMessages={loadingMessages}
+        messages={messages}
+        openModalMessages={() => openModalMessages(false)}
+        selectedMessage={selectedMessage}
       />
       <PreviewModal
         isPreviewOpen={isPreviewOpen}
-        setIsPreviewOpen={setIsPreviewOpen}
         previewBlob={previewBlob}
+        setIsPreviewOpen={setIsPreviewOpen}
         setPreviewUrl={setPreviewUrl}
       />
       {gabaritoData && (
         <GabaritoModal
+          gabarito={gabaritoData}
           isOpen={isGabaritoModalOpen}
           onClose={() => setIsGabaritoModalOpen(false)}
-          gabarito={gabaritoData}
           onConfirm={(cols) => {
             setGabaritoData({ ...gabaritoData, colunasPorLinha: cols });
           }}
@@ -566,6 +580,9 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
 
       {isSaveTestModalOpen && pendingBlob && (
         <SaveTestModal
+          fileName={pendingFileName}
+          filePath={URL.createObjectURL(pendingBlob)}
+          fileSize={pendingBlob.size}
           isOpen={isSaveTestModalOpen}
           onClose={() => {
             setIsSaveTestModalOpen(false);
@@ -573,22 +590,19 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
             setPendingFileName("");
           }}
           onSave={handleSaveTest}
-          fileName={pendingFileName}
-          fileSize={pendingBlob.size}
-          filePath={URL.createObjectURL(pendingBlob)}
         />
       )}
 
       <div className="flex gap-3">
         <Button
-          variant="custom"
-          onClick={() => handleGenerateDocument("docx")}
-          disabled={!selectedLayout || selectedCount === 0 || generating}
           className={`flex-1 py-3 rounded-xl font-semibold transition-all duration-300 ${
             !selectedLayout || selectedCount === 0 || generating
               ? "bg-gray-200 text-gray-400 cursor-not-allowed"
               : "bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
           }`}
+          disabled={!selectedLayout || selectedCount === 0 || generating}
+          variant="custom"
+          onClick={() => handleGenerateDocument("docx")}
         >
           <span className="flex items-center justify-center gap-2">
             {generating ? (
@@ -600,22 +614,22 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           </span>
         </Button>
         <Button
-          variant="custom"
-          onClick={handlePreview}
-          disabled={generating || selectedCount === 0}
           className={`px-5 py-3 rounded-xl font-medium transition-all duration-300 ${
             generating || selectedCount === 0
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
               : "bg-white border-2 border-primary-300 text-primary-700 hover:bg-primary-50 hover:border-primary-400 shadow-md hover:shadow-lg"
           }`}
+          disabled={generating || selectedCount === 0}
+          variant="custom"
+          onClick={handlePreview}
         >
           <Eye className="w-4 h-4 mr-2" />
           Visualizar
         </Button>
         <Button
+          disabled={!selectedLayout || selectedCount === 0 || generating}
           variant="primary"
           onClick={handleSaveFromPreview}
-          disabled={!selectedLayout || selectedCount === 0 || generating}
         >
           <Download className="w-4 h-4 mr-2" />
           Salvar Documento

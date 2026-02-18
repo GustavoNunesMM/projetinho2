@@ -7,8 +7,8 @@ export default function DefaultLayout({
   children: React.ReactNode;
 }) {
   const { updateInfo } = useUpdater();
-  console.log(useUpdater());
   const version = `${updateInfo ? updateInfo.version : "v-0.0.0"}`;
+
   return (
     <TabProvider>
       <div className="relative flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white overflow-x-hidden">

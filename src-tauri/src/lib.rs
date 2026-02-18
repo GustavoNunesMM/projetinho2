@@ -24,10 +24,9 @@ pub fn run() {
         .setup(|app| {
             log::info!("Iniciando aplicação Banco de Questões...");
             log::info!("Versão: {}", app.package_info().version);
-            
+
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                // Aguardar 5 segundos antes de verificar atualizações
                 tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
                 match handle.updater() {

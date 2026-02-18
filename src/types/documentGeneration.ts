@@ -14,6 +14,7 @@ export interface ParsedQuestion {
   tags: string[];
   alternatives: Alternative[];
 }
+
 export type borderStyle =
   | "none"
   | "nil"
@@ -59,6 +60,7 @@ export interface CellStyle {
     right?: CellBorder;
   };
 }
+
 export interface HeaderData {
   docxTable: Table;
   rawData: any[][];
@@ -75,11 +77,38 @@ export interface HeaderData {
   }[];
 }
 
+export type FieldType = "text" | "number" | "date" | "select" | "sequential";
+
 export interface TemplateField {
   name: string;
-  type?: string;
+  type?: FieldType;
   defaultValue?: string;
   sequentialIndices?: number[];
+  description?: string;
+  aiHints?: string[];
+  validationRules?: ValidationRule[];
+}
+
+export interface ValidationRule {
+  type: "required" | "minLength" | "maxLength" | "pattern" | "custom";
+  value?: number | string;
+  message?: string;
+}
+
+export interface ColumnMapping {
+  fieldName: string;
+  fieldType: FieldType;
+  isSequential: boolean;
+  placeholder?: string;
+}
+
+export interface TableStructure {
+  tableIndex: number;
+  rows: number;
+  columns: number;
+  headerRows: number;
+  isDynamic: boolean;
+  columnMapping: ColumnMapping[];
 }
 
 export interface DocumentTemplate {
@@ -90,6 +119,7 @@ export interface DocumentTemplate {
   fileSize: number;
   fileContent?: string | null;
   fields: TemplateField[];
+  structure?: TableStructure[];
   createdAt: string;
   updatedAt: string;
 }
@@ -104,4 +134,19 @@ export interface GeneratedDocument {
   filledFields: Record<string, string>;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AIFieldSuggestion {
+  fieldName: string;
+  suggestedValue: string | string[];
+  confidence: number;
+  reasoning: string;
+  sources?: string[];
+  isSequential?: boolean;
+}
+
+export interface DefaultValuesProvider {
+  getDefaultValues(
+    template: DocumentTemplate,
+  ): Record<string, string | string[]>;
 }

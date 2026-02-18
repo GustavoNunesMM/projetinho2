@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import { Question, QuestionFormData } from "@/types/question";
+
 import {
   getAllQuestions,
   insertQuestion,
   updateQuestion as updateQuestionDB,
   deleteQuestion as deleteQuestionDB,
 } from "../database/database";
-import { useDocumentGenerator } from "./useDocumentGenerator";
+
+import { useDocumentGenerator } from "./wordManager/useDocumentGenerator";
+
+import { Question, QuestionFormData } from "@/types/question";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -44,9 +47,11 @@ export const useQuestions = () => {
       setError(null);
       const data = await getAllQuestions();
       const deserialized = data.map(deserializeQuestion);
+
       setQuestions(deserialized);
     } catch (err) {
       const message = `Erro ao carregar questões: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
     } finally {
@@ -68,6 +73,7 @@ export const useQuestions = () => {
       return deserialized;
     } catch (err) {
       const message = `Erro ao adicionar questão: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
       throw err;
@@ -76,17 +82,20 @@ export const useQuestions = () => {
 
   const updateQuestion = async (
     id: number,
-    updatedQuestion: QuestionFormData
+    updatedQuestion: QuestionFormData,
   ): Promise<void> => {
     try {
       const serialized = serializeQuestion(updatedQuestion);
+
       await updateQuestionDB(id, serialized as any);
 
       const data = await getAllQuestions();
       const deserialized = data.map(deserializeQuestion);
+
       setQuestions(deserialized);
     } catch (err) {
       const message = `Erro ao atualizar questão: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
       throw err;
@@ -96,7 +105,7 @@ export const useQuestions = () => {
   const deleteQuestion = async (id: number): Promise<void> => {
     try {
       await deleteQuestionDB(id);
-      
+
       setQuestions((prev) => prev.filter((q) => q.id !== id));
 
       if (user?.id) {
@@ -108,14 +117,21 @@ export const useQuestions = () => {
             .eq("user_id", user.id);
 
           if (error) {
-            console.warn(`Aviso: Não foi possível deletar a questão ${id} do Supabase:`, error.message);
+            console.warn(
+              `Aviso: Não foi possível deletar a questão ${id} do Supabase:`,
+              error.message,
+            );
           }
         } catch (supabaseError) {
-          console.warn(`Erro ao sincronizar deleção com Supabase:`, supabaseError);
+          console.warn(
+            `Erro ao sincronizar deleção com Supabase:`,
+            supabaseError,
+          );
         }
       }
     } catch (err) {
       const message = `Erro ao deletar questão: ${(err as Error).message}`;
+
       setError(message);
       console.error(message, err);
       throw err;
@@ -156,12 +172,14 @@ export const useQuestions = () => {
         };
 
         const saved = await addQuestion(questionData);
+
         importedQuestions.push(saved);
       }
 
       return importedQuestions;
     } catch (err) {
       const message = `Erro ao importar questões: ${(err as Error).message}`;
+
       console.error(message, err);
       throw err;
     }

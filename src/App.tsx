@@ -1,15 +1,17 @@
 import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Spinner } from "@heroui/react";
+
 import { useAuth } from "./contexts/AuthContext";
 import { Login } from "./Pages/Login";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { Spinner } from "@heroui/react";
-import UpdateNotification from "@/components/common/UpdateNotification";
-import { useUpdater } from "@/hooks/useUpdater";
-import DefaultLayout from "@/layouts/default";
 import Home from "./Pages/home";
 import DevTools from "./components/common/DevTools";
 import DevOnly from "./components/common/DevOnly";
+
+import UpdateNotification from "@/components/common/UpdateNotification";
+import { useUpdater } from "@/hooks/useUpdater";
+import DefaultLayout from "@/layouts/default";
 
 const App = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -22,7 +24,7 @@ const App = () => {
       () => {
         checkForUpdates();
       },
-      60 * 60 * 1000
+      60 * 60 * 1000,
     );
 
     return () => clearInterval(interval);
@@ -31,7 +33,7 @@ const App = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Spinner size="lg" color="primary" />
+        <Spinner color="primary" size="lg" />
       </div>
     );
   }
@@ -40,11 +42,10 @@ const App = () => {
     <>
       <Routes>
         <Route
-          path="/auth"
           element={!isAuthenticated ? <Login /> : <Navigate to="/home" />}
+          path="/auth"
         />
         <Route
-          path="/home"
           element={
             <ProtectedRoute>
               <DefaultLayout>
@@ -52,10 +53,11 @@ const App = () => {
               </DefaultLayout>
             </ProtectedRoute>
           }
+          path="/home"
         />
         <Route
-          path="*"
           element={<Navigate to={isAuthenticated ? "/home" : "/auth"} />}
+          path="*"
         />
       </Routes>
       <UpdateNotification />

@@ -1,20 +1,20 @@
 import { useEffect } from "react";
+import { Loader } from "lucide-react";
 
 import Container from "@/components/layout/Container";
-import LayoutsTab from "@/components/Tabs/layouts/LayoutsTab";
-import QuestionsTab from "@/components/Tabs/questions/QuestionsTab";
-import GenerateTab from "@/components/Tabs/generate/GenerateTab";
+import LayoutsTab from "@/components/Tabs/Layouts/LayoutsTab";
+import QuestionsTab from "@/components/Tabs/Questions/QuestionsTab";
+import GenerateTab from "@/components/Tabs/Generate/GenerateTab";
 import MessageTab from "@/components/Tabs/MessageTab/MessageTab";
 import { useLayouts } from "@/hooks/useLayouts";
 import { useQuestions } from "@/hooks/useQuestions";
-import { useImportHandlers } from "@/hooks/useImportHandlers";
-import { Loader } from "lucide-react";
+import { useImportHandlers } from "@/hooks/useDocumentManager/useImportHandlers.ts";
 import { Toast } from "@/components/common/Toast";
 import { LayoutFormData } from "@/types/layout";
-import { extractWordLayoutInfo } from "@/hooks/useDocumentGenerator/ExportWord";
+import { extractWordLayoutInfo } from "@/hooks/wordManager/ExportWord";
 import { useTab } from "@/contexts/TabContext";
 import TestTab from "@/components/Tabs/Tests/TestTab";
-import DocumentGenerationTab from "@/components/Tabs/documentGeneration/DocumentGenerationTab";
+import DocumentGenerationTab from "@/components/Tabs/Document/DocumentGenerationTab";
 
 const Home = () => {
   const { activeTab } = useTab();
@@ -50,16 +50,19 @@ const Home = () => {
           importedFrom: file.name,
           ...wordInfo,
         };
+
         await addLayout(layoutForm);
       });
 
       Toast({ message: "Layout importado com sucesso!", color: "success" });
+
       return true;
     } catch (error: any) {
       Toast({
         message: `Erro ao importar layout: ${error.message}`,
         color: "danger",
       });
+
       return false;
     }
   };

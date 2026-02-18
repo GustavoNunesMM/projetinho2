@@ -1,7 +1,8 @@
-import { useDocumentGenerator } from "./useDocumentGenerator";
-import { useDriveClient } from "./useDriveClient";
-import { LayoutFormData } from "@/types/layout";
-import { QuestionFormData } from "@/types/question";
+import { useDriveClient } from "../useDriveClient.ts";
+
+import { useDocumentGenerator } from "@/hooks/wordManager/useDocumentGenerator";
+import { LayoutFormData } from "@/types/layout.ts";
+import { QuestionFormData } from "@/types/question.ts";
 
 export function useImportHandlers() {
   const { readDocx, parseQuestionsFromText } = useDocumentGenerator();
@@ -9,7 +10,7 @@ export function useImportHandlers() {
 
   const importQuestions = async (
     file: File | string,
-    onSuccess?: (questions: QuestionFormData[]) => void
+    onSuccess?: (questions: QuestionFormData[]) => void,
   ): Promise<QuestionFormData[]> => {
     try {
       let blob: Blob;
@@ -34,7 +35,9 @@ export function useImportHandlers() {
         content: q.statement || "",
         contentImage: null,
         difficulty:
-          q.difficulty === "dificil" || q.difficulty === "media" || q.difficulty === "facil"
+          q.difficulty === "dificil" ||
+          q.difficulty === "media" ||
+          q.difficulty === "facil"
             ? q.difficulty
             : "media",
         subject: q.subject || "Geral",
@@ -48,6 +51,7 @@ export function useImportHandlers() {
       }));
 
       if (onSuccess) onSuccess(questions);
+
       return questions;
     } catch (error) {
       console.error("Erro ao importar questões:", error);
@@ -57,7 +61,7 @@ export function useImportHandlers() {
 
   const importLayout = async (
     file: File | string,
-    onSuccess?: (layout: LayoutFormData) => void
+    onSuccess?: (layout: LayoutFormData) => void,
   ): Promise<LayoutFormData> => {
     try {
       let blob: Blob;
@@ -92,6 +96,7 @@ export function useImportHandlers() {
       };
 
       if (onSuccess) onSuccess(layout);
+
       return layout;
     } catch (error) {
       console.error("Erro ao importar layout:", error);

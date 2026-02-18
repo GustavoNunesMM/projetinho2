@@ -11,13 +11,15 @@ import {
   List,
   Download,
 } from "lucide-react";
+
 import QuestionCard from "./QuestionCard";
 import QuestionModal from "./QuestionModal";
 import ImportQuestionsModal from "./ImportQuestionsModal";
-import QuestionFilters from "@/components/Tabs/generate/QuestionFilters";
-import { useImportHandlers } from "@/hooks/useImportHandlers";
+
+import QuestionFilters from "@/components/Tabs/Generate/QuestionFilters";
+import { useImportHandlers } from "@/hooks/useDocumentManager/useImportHandlers.ts";
 import Button from "@/components/common/Button";
-import useDocumentGenerator from "@/hooks/useDocumentGenerator";
+import useDocumentGenerator from "@/hooks/wordManager/useDocumentGenerator";
 import { Toast } from "@/components/common/Toast";
 import { deleteAllQuestion } from "@/database/database";
 import { Question, QuestionFormData } from "@/types/question";
@@ -44,7 +46,7 @@ const QuestionsTab = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
-    null
+    null,
   );
   const [importing, setImporting] = useState(false);
   const [showDriveModal, setShowDriveModal] = useState(false);
@@ -66,6 +68,7 @@ const QuestionsTab = () => {
         Toast({ message: "Questão atualizada com sucesso!" });
       } else {
         const question = await addQuestion(questionData);
+
         Toast({ message: "Questão criada com sucesso!" });
         try {
           await generateQuestionDocx(question);
@@ -83,10 +86,12 @@ const QuestionsTab = () => {
 
   const handleLocalImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
     setImporting(true);
     try {
       const list = await importMultipleQuestions(file);
+
       Toast({ message: `${list.length} questão(ões) importada(s)!` });
     } catch (error) {
       Toast({ message: `Erro ao importar: ${(error as Error).message}` });
@@ -131,9 +136,12 @@ const QuestionsTab = () => {
     try {
       const list = await importQuestions(fileId, async (qs) => {
         const out: Question[] = [];
+
         for (const q of qs) out.push(await addQuestion(q));
+
         return out;
       });
+
       Toast({ message: `${list.length} do Drive!` });
       setShowDriveModal(false);
     } catch (error) {
@@ -167,9 +175,9 @@ const QuestionsTab = () => {
         <p className="text-red-600 font-medium mb-2">Erro ao carregar</p>
         <p className="text-gray-500 mb-6 text-sm max-w-md mx-auto">{error}</p>
         <Button
+          className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 shadow-lg hover:shadow-xl transition-all duration-300"
           variant="primary"
           onClick={() => window.location.reload()}
-          className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 shadow-lg hover:shadow-xl transition-all duration-300"
         >
           Recarregar Página
         </Button>
@@ -194,28 +202,28 @@ const QuestionsTab = () => {
         </div>
         <div className="flex gap-3">
           <input
-            type="file"
             ref={fileInputRef}
-            onChange={handleLocalImport}
             accept=".docx"
             className="hidden"
             disabled={importing}
+            type="file"
+            onChange={handleLocalImport}
           />
           <div className="flex gap-3 max-md:hidden">
             <Button
-              variant="custom"
-              icon={importing ? Loader : FileUp}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importing}
               className="bg-[#97dffc] hover:bg-[#87cfe8] text-gray-800 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-[#87cfe8]"
+              disabled={importing}
+              icon={importing ? Loader : FileUp}
+              variant="custom"
+              onClick={() => fileInputRef.current?.click()}
             >
               {importing ? "Importando..." : "Importar Local"}
             </Button>
             <DevOnly>
               <Button
+                className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
                 variant="light-danger"
                 onClick={() => deleteAllQuestion()}
-                className="  px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium "
               >
                 Deletar questões
               </Button>
@@ -223,40 +231,40 @@ const QuestionsTab = () => {
 
             {driveClient.ready && driveClient.authorized && (
               <Button
-                variant="custom"
-                icon={Cloud}
-                onClick={() => setShowDriveModal(true)}
-                disabled={importing}
                 className="bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium border border-gray-200"
+                disabled={importing}
+                icon={Cloud}
+                variant="custom"
+                onClick={() => setShowDriveModal(true)}
               >
                 Importar do Drive
               </Button>
             )}
 
             <Button
-              variant="custom"
-              icon={Download}
-              onClick={() => setShowImportModal(true)}
-              disabled={importing}
               className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
+              disabled={importing}
+              icon={Download}
+              variant="custom"
+              onClick={() => setShowImportModal(true)}
             >
               Importar da Comunidade
             </Button>
 
             <Button
-              variant="custom"
+              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
               icon={Plus}
+              variant="custom"
               onClick={() => {
                 setSelectedQuestion(null);
                 setShowModal(true);
               }}
-              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
             >
               Nova Questão
             </Button>
           </div>
           <DropDown
-            triggerLabel={"Criar questão"}
+            className="md:hidden"
             items={[
               { key: "new", title: "Nova questão", icon: Plus },
               { key: "import", title: "Importar Word", icon: Upload },
@@ -272,19 +280,19 @@ const QuestionsTab = () => {
                 icon: Download,
               },
             ]}
-            triggerIcon={List}
             placement="bottom-end"
+            triggerIcon={List}
+            triggerLabel={"Criar questão"}
             onAction={handleQuestionAction}
-            className="md:hidden"
-          ></DropDown>
+          />
         </div>
       </div>
 
       <div className="animate-slideUp stagger-1">
         <QuestionFilters
           filters={filters}
-          onUpdateFilter={updateFilter}
           format={format}
+          onUpdateFilter={updateFilter}
           onUpdateFormat={(newFormat) => setFormat(newFormat)}
         />
       </div>
@@ -301,10 +309,10 @@ const QuestionsTab = () => {
             Tente ajustar os filtros ou crie uma nova questão para começar.
           </p>
           <Button
-            variant="custom"
-            icon={Plus}
-            onClick={() => setShowModal(true)}
             className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 py-2.5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
+            icon={Plus}
+            variant="custom"
+            onClick={() => setShowModal(true)}
           >
             Criar Primeira Questão
           </Button>
@@ -318,13 +326,13 @@ const QuestionsTab = () => {
               style={{ animationDelay: `${Math.min(index * 0.05, 0.4)}s` }}
             >
               <QuestionCard
+                format={format}
                 question={question}
-                onEdit={() => handleEdit(question)}
                 onDelete={() => {
                   setDeleteModal(true);
                   setSelectedQuestion(question);
                 }}
-                format={format}
+                onEdit={() => handleEdit(question)}
               />
             </div>
           ))}
@@ -334,16 +342,18 @@ const QuestionsTab = () => {
       {showModal && (
         <QuestionModal
           question={selectedQuestion}
-          onSave={handleSave}
           onClose={() => {
             setShowModal(false);
             setSelectedQuestion(null);
           }}
+          onSave={handleSave}
         />
       )}
 
       {deleteModal && (
         <DeleteModal
+          elementName={selectedQuestion!.title}
+          type="question"
           onClose={() => {
             setSelectedQuestion(null);
             setDeleteModal(false);
@@ -353,15 +363,13 @@ const QuestionsTab = () => {
             setDeleteModal(false);
             setSelectedQuestion(null);
           }}
-          elementName={selectedQuestion!.title}
-          type="question"
         />
       )}
       {showDriveModal && (
         <DriveFileSelector
-          onSelect={handleDriveImport}
-          onClose={() => setShowDriveModal(false)}
           driveClient={driveClient}
+          onClose={() => setShowDriveModal(false)}
+          onSelect={handleDriveImport}
         />
       )}
 
@@ -389,7 +397,7 @@ const DriveFileSelector = ({
       .listDocxFiles()
       .then(setFiles)
       .catch((err) =>
-        Toast({ message: "Erro ao listar Drive: " + err.message })
+        Toast({ message: "Erro ao listar Drive: " + err.message }),
       )
       .finally(() => setLoading(false));
   }, [driveClient]);
@@ -428,9 +436,9 @@ const DriveFileSelector = ({
             {files.map((file, index) => (
               <button
                 key={file.id}
-                onClick={() => onSelect(file.id)}
                 className="w-full text-left p-4 border border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-primary-50 hover:to-white hover:border-primary-300 transition-all duration-300 group animate-slideUp"
                 style={{ animationDelay: `${index * 0.05}s` }}
+                onClick={() => onSelect(file.id)}
               >
                 <div className="font-medium text-gray-800 group-hover:text-primary-700 transition-colors">
                   {file.name}
@@ -442,9 +450,9 @@ const DriveFileSelector = ({
 
         <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
           <Button
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-xl transition-all duration-300 font-medium"
             variant="custom"
             onClick={onClose}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-xl transition-all duration-300 font-medium"
           >
             Cancelar
           </Button>
