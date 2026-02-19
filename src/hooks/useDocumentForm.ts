@@ -191,7 +191,6 @@ export function useDocumentForm({
             }));
           }
         } else {
-          // individual: apply only to the specific arrayIndex provided
           if (arrayIndex === undefined) return;
 
           const slotValue = Array.isArray(suggestion.suggestedValue)
@@ -209,7 +208,6 @@ export function useDocumentForm({
           });
         }
       } else {
-        // Unique field
         const value = Array.isArray(suggestion.suggestedValue)
           ? suggestion.suggestedValue[0] || ""
           : suggestion.suggestedValue;
@@ -222,7 +220,6 @@ export function useDocumentForm({
     [template, onApplyAISuggestionCallback],
   );
 
-  // ── Generate document ───────────────────────────────────────────────────
   const handleGenerate = useCallback(async () => {
     if (!documentName.trim()) return;
 
@@ -240,16 +237,13 @@ export function useDocumentForm({
   }, [documentName, fieldValues, onGenerate]);
 
   return {
-    // state
     fieldValues,
     documentName,
     generating,
     patterns,
     expandedSequential,
-    // derived
     uniqueFields,
     sequentialFields,
-    // handlers
     setDocumentName,
     handleFieldChange,
     handleSequentialFieldChange,

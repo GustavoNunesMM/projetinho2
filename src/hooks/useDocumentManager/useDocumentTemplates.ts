@@ -178,8 +178,6 @@ export const useDocumentTemplates = () => {
         throw new Error("Template não possui conteúdo armazenado");
       }
 
-      // Criar mapa expandido de fieldValues para campos sequenciais
-      // Isso permite que o processador encontre valores por fieldName_index
       const expandedFieldValues: Record<string, string | string[]> = {
         ...fieldValues,
       };
@@ -187,7 +185,6 @@ export const useDocumentTemplates = () => {
       console.log("Template fields:", template.fields);
       console.log("Field values recebidos:", fieldValues);
 
-      // Para cada campo sequencial, criar chaves fieldName_index
       template.fields.forEach((field) => {
         if (field.sequentialIndices && field.sequentialIndices.length > 0) {
           const arrayValue = fieldValues[field.name];
@@ -236,14 +233,12 @@ export const useDocumentTemplates = () => {
       }
       base64String = btoa(base64String);
 
-      // Converter fieldValues para formato serializável (arrays viram objetos com índices)
       const serializableFieldValues: Record<string, string> = {};
 
       Object.keys(fieldValues).forEach((key) => {
         const value = fieldValues[key];
 
         if (Array.isArray(value)) {
-          // Para arrays sequenciais, salvar como objeto com índices
           value.forEach((v, i) => {
             serializableFieldValues[`${key}_${i + 1}`] = v;
           });

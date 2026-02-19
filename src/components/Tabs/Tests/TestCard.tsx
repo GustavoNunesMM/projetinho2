@@ -1,4 +1,15 @@
-import { FileText, Download, Eye, Calendar, BookOpen, Building, Tag, Upload, Trash2 } from "lucide-react";
+import {
+  FileText,
+  Download,
+  Eye,
+  Calendar,
+  BookOpen,
+  Building,
+  Tag,
+  Upload,
+  Trash2,
+} from "lucide-react";
+
 import { Test } from "@/types/test";
 
 interface TestCardProps {
@@ -21,15 +32,16 @@ export const TestCard: React.FC<TestCardProps> = ({
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const getLayoutPreview = () => {
     if (format === "block") {
       return (
-        <div 
-          onClick={() => onView(test)}
+        <div
           className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer group"
+          onClick={() => onView(test)}
         >
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -45,27 +57,27 @@ export const TestCard: React.FC<TestCardProps> = ({
             </div>
             <div className="flex gap-2">
               <button
-                onClick={(e) => {
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                onClick={() => {
                   onView(test);
                 }}
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
               >
                 <Eye className="w-4 h-4" />
               </button>
               <button
-                onClick={(e) => {
+                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                onClick={() => {
                   onDownload(test);
                 }}
-                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
               >
                 <Download className="w-4 h-4" />
               </button>
               {onDelete && (
                 <button
-                  onClick={(e) => {
+                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                  onClick={() => {
                     onDelete(test);
                   }}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -102,9 +114,9 @@ export const TestCard: React.FC<TestCardProps> = ({
 
     if (format === "list") {
       return (
-        <div 
-          onClick={() => onView(test)}
+        <div
           className="bg-white rounded-lg p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+          onClick={() => onView(test)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
@@ -122,27 +134,27 @@ export const TestCard: React.FC<TestCardProps> = ({
             </div>
             <div className="flex gap-2">
               <button
-                onClick={(e) => {
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                onClick={() => {
                   onView(test);
                 }}
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
               >
                 <Eye className="w-4 h-4" />
               </button>
               <button
-                onClick={(e) => {
+                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                onClick={() => {
                   onDownload(test);
                 }}
-                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
               >
                 <Download className="w-4 h-4" />
               </button>
               {onDelete && (
                 <button
-                  onClick={(e) => {
+                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                  onClick={() => {
                     onDelete(test);
                   }}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -154,9 +166,9 @@ export const TestCard: React.FC<TestCardProps> = ({
     }
 
     return (
-      <div 
-        onClick={() => onView(test)}
+      <div
         className="bg-white rounded-lg p-6 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+        onClick={() => onView(test)}
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
@@ -171,7 +183,7 @@ export const TestCard: React.FC<TestCardProps> = ({
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
               <BookOpen className="w-4 h-4 text-gray-400" />
@@ -179,7 +191,9 @@ export const TestCard: React.FC<TestCardProps> = ({
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-600">{test.schoolYear} - {test.quarter}</span>
+              <span className="text-gray-600">
+                {test.schoolYear} - {test.quarter}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Building className="w-4 h-4 text-gray-400" />
@@ -191,36 +205,38 @@ export const TestCard: React.FC<TestCardProps> = ({
             </div>
             <div className="flex items-center gap-2 text-sm">
               <FileText className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-600">{formatFileSize(test.fileSize)}</span>
+              <span className="text-gray-600">
+                {formatFileSize(test.fileSize)}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
           <button
-            onClick={(e) => {
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => {
               onView(test);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Eye className="w-4 h-4" />
             Visualizar
           </button>
           <button
-            onClick={(e) => {
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            onClick={() => {
               onDownload(test);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <Download className="w-4 h-4" />
             Baixar
           </button>
           {onDelete && (
             <button
-              onClick={(e) => {
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              onClick={() => {
                 onDelete(test);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
               Deletar

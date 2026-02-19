@@ -97,7 +97,6 @@ function detectFromBytes(bytes: Uint8Array): string {
     return "png";
   }
 
-  // SVG (text)
   const asText = new TextDecoder().decode(bytes.slice(0, 100)).trim();
 
   if (asText.startsWith("<svg")) return "svg";

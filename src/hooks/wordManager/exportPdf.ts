@@ -1,4 +1,3 @@
-// exportPdf.ts
 import { jsPDF } from "jspdf";
 
 import { Layout } from "@/types/layout";
@@ -187,7 +186,6 @@ export const generatePdf = async (
         yPosition += rowH;
       });
 
-      // espaço após cabeçalho
       yPosition += lineHeight * 2;
       doc.setFontSize(fontSize);
       doc.setFont("helvetica", "normal");

@@ -1,7 +1,5 @@
-// wordTableExtractor.ts
-// Extrator de estrutura de tabelas de arquivos Word (.docx)
-
 import JSZip from "jszip";
+import { useState } from "React";
 
 import {
   DocumentTemplate,
@@ -25,9 +23,6 @@ interface ExtractionResult {
 }
 
 export class WordTableExtractor {
-  /**
-   * Extrai estrutura completa de tabelas de um arquivo Word
-   */
   async extractFromDocx(file: File | Buffer): Promise<ExtractionResult> {
     let buffer: ArrayBuffer;
 
@@ -37,24 +32,19 @@ export class WordTableExtractor {
       buffer = file.buffer;
     }
 
-    // Descompactar o arquivo .docx (é um ZIP)
     const zip = await JSZip.loadAsync(buffer);
 
-    // Extrair document.xml
     const documentXml = await zip.file("word/document.xml")?.async("text");
 
     if (!documentXml) {
       throw new Error("Arquivo Word inválido: document.xml não encontrado");
     }
 
-    // Parse do XML
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(documentXml, "text/xml");
 
-    // Extrair tabelas
     const tables = this.extractTables(xmlDoc);
 
-    // Identificar campos e estrutura
     const { fields, structure } = this.analyzeTablesStructure(tables);
 
     return {
@@ -65,9 +55,6 @@ export class WordTableExtractor {
     };
   }
 
-  /**
-   * Extrai todas as tabelas do documento XML
-   */
   private extractTables(xmlDoc: Document): ExtractedTable[] {
     const tables: ExtractedTable[] = [];
     const tblElements = xmlDoc.getElementsByTagNameNS(
@@ -113,7 +100,6 @@ export class WordTableExtractor {
       }
 
       if (rows.length > 0) {
-        // Primeira linha é header, restantes são dados
         const headerRow = rows[0];
         const placeholderRows = rows
           .slice(1)
@@ -132,9 +118,6 @@ export class WordTableExtractor {
     return tables;
   }
 
-  /**
-   * Analisa estrutura das tabelas e identifica campos
-   */
   private analyzeTablesStructure(tables: ExtractedTable[]): {
     fields: TemplateField[];
     structure: TableStructure[];
@@ -142,8 +125,7 @@ export class WordTableExtractor {
     const fieldsMap = new Map<string, Set<number>>();
     const structures: TableStructure[] = [];
 
-    tables.forEach((table, tableIndex) => {
-      // Pular tabelas sem placeholders (ex: cabeçalho do documento)
+    tables.forEach((table) => {
       if (table.placeholderRows.length === 0) {
         return;
       }
@@ -151,11 +133,9 @@ export class WordTableExtractor {
       const columns = table.headerRow.length;
       const columnMapping: ColumnMapping[] = [];
 
-      // Mapear cada coluna
       for (let colIdx = 0; colIdx < columns; colIdx++) {
         const headerText = table.headerRow[colIdx];
 
-        // Coletar todos os placeholders desta coluna
         const placeholders = new Set<string>();
         const indices = new Set<number>();
 
@@ -170,7 +150,6 @@ export class WordTableExtractor {
             placeholders.add(fieldName);
             indices.add(index);
 
-            // Registrar campo sequencial
             if (!fieldsMap.has(fieldName)) {
               fieldsMap.set(fieldName, new Set());
             }
@@ -178,9 +157,8 @@ export class WordTableExtractor {
           }
         });
 
-        // Se encontrou placeholders, mapear coluna
         if (placeholders.size > 0) {
-          const fieldName = Array.from(placeholders)[0]; // Primeiro placeholder
+          const fieldName = Array.from(placeholders)[0];
 
           columnMapping.push({
             fieldName,
@@ -189,7 +167,6 @@ export class WordTableExtractor {
             placeholder: headerText,
           });
         } else {
-          // Coluna sem placeholder
           columnMapping.push({
             fieldName: this.sanitizeFieldName(headerText),
             fieldType: "text",
@@ -199,7 +176,6 @@ export class WordTableExtractor {
         }
       }
 
-      // Criar estrutura da tabela
       if (columnMapping.length > 0) {
         structures.push({
           tableIndex: structures.length,
@@ -212,7 +188,6 @@ export class WordTableExtractor {
       }
     });
 
-    // Construir lista de campos
     const fields: TemplateField[] = [];
 
     fieldsMap.forEach((indices, fieldName) => {
@@ -223,16 +198,13 @@ export class WordTableExtractor {
         type: this.inferFieldType(fieldName),
         defaultValue: "",
         sequentialIndices: sortedIndices,
-        description: this.generateDescription(fieldName),
+        description: fieldName,
       });
     });
 
     return { fields, structure: structures };
   }
 
-  /**
-   * Inferir tipo do campo baseado no nome
-   */
   private inferFieldType(fieldName: string): FieldType {
     const name = fieldName.toUpperCase();
 
@@ -263,9 +235,6 @@ export class WordTableExtractor {
     return "text";
   }
 
-  /**
-   * Sanitizar nome de campo
-   */
   private sanitizeFieldName(text: string): string {
     return text
       .toUpperCase()
@@ -274,50 +243,16 @@ export class WordTableExtractor {
       .replace(/^_|_$/g, "")
       .substring(0, 50);
   }
-
-  /**
-   * Gerar descrição do campo
-   */
-  private generateDescription(fieldName: string): string {
-    const descriptions: Record<string, string> = {
-      ANO: "Ano letivo",
-      TRIMESTRE: "Trimestre do ano letivo (1º, 2º, 3º, 4º)",
-      COMPONENTECURRICULAR: "Componente curricular/Disciplina",
-      UNIDADETEMATICA: "Unidade temática do conteúdo",
-      HABILIDADEPRIORIZADA: "Habilidade BNCC priorizada",
-      HABILIDADERECOMP: "Habilidade de recomposição de aprendizagem",
-      HABILIDADESUPORTE: "Habilidade de suporte",
-      COMPETENCIAESPECIFICA: "Objeto do conhecimento e competência específica",
-      EXEMPLOPRATIC: "Exemplos de práticas pedagógicas",
-      EVIDENCIAHABILIDADE: "Evidências de consolidação de habilidade",
-    };
-
-    return descriptions[fieldName] || `Campo ${fieldName}`;
-  }
 }
 
-/**
- * Função auxiliar para processar upload de template
- */
 export async function processDocxUpload(file: File): Promise<DocumentTemplate> {
   const extractor = new WordTableExtractor();
   const result = await extractor.extractFromDocx(file);
 
-  console.log("📊 Extração concluída:");
-  console.log(`- Campos encontrados: ${result.fields.length}`);
-  console.log(`- Tabelas dinâmicas: ${result.structure.length}`);
-  console.log(
-    `- Campos sequenciais:`,
-    result.fields.filter(
-      (f) => f.sequentialIndices && f.sequentialIndices.length > 0,
-    ).length,
-  );
-
-  // Criar template
   const template: DocumentTemplate = {
-    id: 0, // Será gerado pelo backend
+    id: 0,
     name: file.name.replace(".docx", ""),
-    filePath: "", // Será preenchido pelo backend
+    filePath: "",
     fileName: file.name,
     fileSize: file.size,
     fields: result.fields,
@@ -329,9 +264,6 @@ export async function processDocxUpload(file: File): Promise<DocumentTemplate> {
   return template;
 }
 
-/**
- * Hook React para usar o extrator
- */
 export function useDocxExtractor() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

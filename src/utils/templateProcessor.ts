@@ -10,8 +10,6 @@ export function extractFields(text: string): TemplateField[] {
   const seenFields = new Set<string>();
   const sequentialFields = new Map<string, number[]>();
 
-
-
   const fieldRegex = new RegExp(FIELD_REGEX.source, FIELD_REGEX.flags);
 
   let match;
@@ -19,8 +17,6 @@ export function extractFields(text: string): TemplateField[] {
   while ((match = fieldRegex.exec(text)) !== null) {
     const fieldName = match[1];
     const index = match[2] ? parseInt(match[2], 10) : null;
-
-
 
     if (index !== null) {
       if (!sequentialFields.has(fieldName)) {
@@ -44,8 +40,6 @@ export function extractFields(text: string): TemplateField[] {
     }
   }
 
-
-
   sequentialFields.forEach((indices, fieldName) => {
     fields.push({
       name: fieldName,
@@ -54,7 +48,6 @@ export function extractFields(text: string): TemplateField[] {
       sequentialIndices: indices,
     });
   });
-
 
   return fields;
 }
@@ -95,7 +88,6 @@ export function replaceFields(
 
   return result;
 }
-
 
 function mergeFragmentedFields(xml: string): string {
   return xml.replace(
@@ -235,28 +227,22 @@ export async function processDocxTemplate(
 
     let processedXml = documentXml;
 
-
     processedXml = mergeFragmentedFields(processedXml);
-
 
     processedXml = processedXml.replace(
       FIELD_REGEX,
-      (match, fieldName, indexStr) => {
+      (_: string, fieldName, indexStr) => {
         let value = "";
-
 
         if (indexStr) {
           const index = parseInt(indexStr, 10);
           const fieldKey = `${fieldName}_${index}`;
           const specificValue = fieldValues[fieldKey];
 
-       
-
           if (typeof specificValue === "string") {
             value = specificValue;
           } else {
             const arrayValue = fieldValues[fieldName];
-
 
             if (Array.isArray(arrayValue)) {
               const arrayIndex = index - 1;
@@ -270,7 +256,6 @@ export async function processDocxTemplate(
           const fieldValue = fieldValues[fieldName];
 
           value = typeof fieldValue === "string" ? fieldValue : "";
-
         }
 
         const escapedValue = (value || "")
@@ -279,8 +264,6 @@ export async function processDocxTemplate(
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&apos;");
-
-
 
         return escapedValue;
       },

@@ -387,7 +387,6 @@ export class SyncService {
     };
 
     try {
-      // Verificar sessão ativa
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
@@ -445,8 +444,6 @@ export class SyncService {
               tags: local.tags || "",
             };
 
-            // Usar upsert para evitar erro 409 (insert ou update automaticamente)
-            // Se a constraint for apenas "id", usar apenas "id"
             const { error } = await supabase
               .from("tests")
               .upsert(testData, {
@@ -456,7 +453,6 @@ export class SyncService {
             if (error) {
               console.error(`Erro ao enviar prova ${local.id}:`, error);
               
-              // Se for erro 403, explicar que é problema de permissão
               if (error.code === "42501" || error.message?.includes("permission")) {
                 result.errors.push(
                   `Erro de permissão ao enviar prova ${local.id}. Verifique as políticas RLS no Supabase.`,

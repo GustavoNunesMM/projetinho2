@@ -88,8 +88,16 @@ export interface InlineSuggestionProps {
   onExpandHint?: () => void;
 }
 
+export interface TemplateCard {
+  name: string;
+  fileName: string;
+  fields: TemplateField[];
+  fileSize: number;
+  createdAt: string;
+}
+
 export interface TemplateCardProps {
-  template: TemplateField;
+  template: TemplateCard;
   onDelete: () => void;
   onSelect: () => void;
 }
